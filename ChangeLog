@@ -1,5 +1,11 @@
 2010-03-16  Florent Rougon  <flo@via.ecp.fr>
 
+	* dialog.py: add Peter Åstrand's modifications to deal with
+	Xdialog's incompatibilities with respect to dialog:
+	  - new "use_stdout" keyword argument for Dialog.__init__()
+	  - factoring of final newline removals with the addition of
+	    Dialog._strip_xdialog_newline().
+
 	* dialog.py: add support for dialog options --no-label,
 	--yes-label and --insecure (the last one not being so dangerous as
 	the name seems to imply: "Makes the password widget friendlier but

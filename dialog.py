@@ -537,21 +537,30 @@ class Dialog:
 
     """
 
-    def __init__(self, dialog="dialog", DIALOGRC=None, compat="dialog"):
+    def __init__(self, dialog="dialog", DIALOGRC=None,
+                 compat="dialog", use_stdout=None):
         """Constructor for Dialog instances.
 
-        dialog   -- name of (or path to) the dialog-like program to
-                    use; if it contains a '/', it is assumed to be a
-                    path and is used as is; otherwise, it is looked
-                    for according to the contents of the PATH
-                    environment variable, which defaults to
-                    ":/bin:/usr/bin" if unset.
-        DIALOGRC -- string to pass to the dialog-like program as the
-                    DIALOGRC environment variable, or None if no
-                    modification to the environment regarding this
-                    variable should be done in the call to the
-                    dialog-like program
-        compat   -- compatibility mode (see below)
+        dialog     -- name of (or path to) the dialog-like program to
+                      use; if it contains a '/', it is assumed to be
+                      a path and is used as is; otherwise, it is
+                      looked for according to the contents of the
+                      PATH environment variable, which defaults to
+                      ":/bin:/usr/bin" if unset.
+        DIALOGRC --   string to pass to the dialog-like program as
+                      the DIALOGRC environment variable, or None if
+                      no modification to the environment regarding
+                      this variable should be done in the call to the
+                      dialog-like program
+        compat     -- compatibility mode (see below)
+        use_stdout -- read dialog's standard output stream instead of
+                      its standard error stream in order to get
+                      most 'results' (user-supplied strings, etc.;
+                      basically everything apart from the exit
+                      status). This is for compatibility with Xdialog
+                      and should only be used if you have a good
+                      reason to do so.
+
 
         The officially supported dialog-like program in pythondialog
         is the well-known dialog program written in C, based on the
@@ -601,6 +610,18 @@ class Dialog:
         self.compat = compat
         self.dialog_persistent_arglist = []
 
+        # Use stderr or stdout for reading dialog's output?
+        if self.compat == "Xdialog":
+            # Default to using stdout for Xdialog
+            self.use_stdout = True
+        else:
+            self.use_stdout = False
+        if use_stdout is not None:
+            # Allow explicit setting
+            self.use_stdout = use_stdout
+        if self.use_stdout:
+            self.add_persistent_args(["--stdout"])
+
     def add_persistent_args(self, arglist):
         self.dialog_persistent_arglist.extend(arglist)
 
@@ -625,7 +646,7 @@ class Dialog:
         through one pipe(2) and optionally a user-specified file
         descriptor, depending on 'redir_child_stdin_from_fd'. The
         pipe allows the parent process to read what dialog writes on
-        its standard error stream.
+        its standard error[*] stream.
         
         If 'redir_child_stdin_from_fd' is not None, it should be an
         open file descriptor (i.e., an integer). That file descriptor
@@ -642,6 +663,8 @@ class Dialog:
         file descriptors that will be closed by the child process
         before it exec()s the dialog-like program.
         
+          [*] standard ouput stream with 'use_stdout'
+
         Notable exception: PythonDialogOSError (if any of the pipe(2)
                            or close(2) system calls fails...)
 
@@ -667,11 +690,12 @@ class Dialog:
         # for the shell and environment variables set.
 
         # Create a pipe so that the parent process can read dialog's
-        # output on stderr
+        # output on stderr (stdout with 'use_stdout')
+
         try:
             # rfd = File Descriptor for Reading
             # wfd = File Descriptor for Writing
-            (child_stderr_rfd, child_stderr_wfd) = os.pipe()
+            (child_output_rfd, child_output_wfd) = os.pipe()
         except os.error, v:
             raise PythonDialogOSError(v.strerror)
 
@@ -683,14 +707,16 @@ class Dialog:
                 #    will never see EOF, which can indefinitely block the
                 #    child waiting for input. To avoid this, the write end
                 #    must be closed in the father *and* child processes.
-                # 2) The child process doesn't need child_stderr_rfd.
-                for fd in close_fds + (child_stderr_rfd,):
+                # 2) The child process doesn't need child_output_rfd.
+                for fd in close_fds + (child_output_rfd,):
                     os.close(fd)
                 # We want:
-                #   - dialog's output on stderr to go to child_stderr_wfd;
+                #   - dialog's output on stderr[*] to go to child_output_wfd;
                 #   - data written to fd 'redir_child_stdin_from_fd'
                 #     (if not None) to go to dialog's stdin.
-                os.dup2(child_stderr_wfd, 2)
+                #
+                #       [*] stdout with 'use_stdout'
+                os.dup2(child_output_wfd, 1 if self.use_stdout else 2)
                 if redir_child_stdin_from_fd is not None:
                     os.dup2(redir_child_stdin_from_fd, 0)
 
@@ -703,36 +729,38 @@ class Dialog:
 
         # We are in the father process.
         #
-        # It is essential to close child_stderr_wfd, otherwise we will never
-        # see EOF while reading on child_stderr_rfd and the parent process
+        # It is essential to close child_output_wfd, otherwise we will never
+        # see EOF while reading on child_output_rfd and the parent process
         # will block forever on the read() call.
-        # [ after the fork(), the "reference count" of child_stderr_wfd from
+        # [ after the fork(), the "reference count" of child_output_wfd from
         #   the operating system's point of view is 2; after the child exits,
         #   it is 1 until the father closes it itself; then it is 0 and a read
-        #   on child_stderr_rfd encounters EOF once all the remaining data in
+        #   on child_output_rfd encounters EOF once all the remaining data in
         #   the pipe has been read. ]
         try:
-            os.close(child_stderr_wfd)
+            os.close(child_output_wfd)
         except os.error, e:
             raise PythonDialogOSError(e.strerror)
-        return (child_pid, child_stderr_rfd)
+        return (child_pid, child_output_rfd)
 
-    def _wait_for_program_termination(self, child_pid, child_stderr_rfd):
+    def _wait_for_program_termination(self, child_pid, child_output_rfd):
         """Wait for a dialog-like process to terminate.
 
         This function waits for the specified process to terminate,
         raises the appropriate exceptions in case of abnormal
-        termination and returns the exit status and standard error
-        output of the process as a tuple: (exit_code, stderr_string).
+        termination and returns the exit status and stderr[*] output
+        of the process as a tuple: (exit_code, output_string).
 
-        'child_stderr_rfd' must be the file descriptor for the
+        'child_output_rfd' must be the file descriptor for the
         reading end of the pipe created by self._call_program(), the
         writing end of which was connected by self._call_program()
-        to the child process's standard error.
+        to the child process's standard error[*].
 
-        This function reads the process' output on standard error
-        from 'child_stderr_rfd' and closes this file descriptor once
+        This function reads the process' output on standard error[*]
+        from 'child_output_rfd' and closes this file descriptor once
         this is done.
+
+          [*] actually, standard output if self.use_stdout is True
 
         Notable exceptions:
 
@@ -795,9 +823,9 @@ class Dialog:
         # codes already known by pythondialog. But in this situation, the
         # check that is being discussed wouldn't help at all.
 
-        # Read dialog's output on its stderr
+        # Read dialog's output on its stderr (stdout with 'use_stdout')
         try:
-            child_stderr_output = os.fdopen(child_stderr_rfd, "rb").read()
+            child_output = os.fdopen(child_output_rfd, "rb").read()
             # Now, since the file object has no reference anymore, the
             # standard IO stream behind it will be closed, causing the
             # end of the pipe we used to read dialog's output on its
@@ -807,7 +835,7 @@ class Dialog:
         except IOError, v:
             raise PythonDialogIOError(v)
 
-        return (exit_code, child_stderr_output)
+        return (exit_code, child_output)
 
     def _perform(self, cmdargs, **kwargs):
 	"""Perform a complete dialog-like program invocation.
@@ -822,12 +850,18 @@ class Dialog:
             self._wait_for_program_termination()
 
         """
-        (child_pid, child_stderr_rfd) = \
+        (child_pid, child_output_rfd) = \
                     self._call_program(cmdargs, **kwargs)
         (exit_code, output) = \
                     self._wait_for_program_termination(child_pid,
-                                                       child_stderr_rfd)
+                                                       child_output_rfd)
 	return (exit_code, output)
+
+    def _strip_xdialog_newline(self, output):
+        """Remove trailing newline (if any) in Xdialog compatibility mode"""
+        if self.compat == "Xdialog" and output.endswith("\n"):
+            output = output[:-1]
+        return output
 
     # This is for compatibility with the old dialog.py
     def _perform_no_options(self, cmd):
@@ -1215,11 +1249,7 @@ class Dialog:
             ["--fselect", filepath, str(height), str(width)],
             **kwargs)
 
-        # Xdialog (at least version 2.0.6) adds a trailing newline to
-        # the file name
-        if self.compat == "Xdialog" and output != "":
-            if output[-1] == '\n':
-                output = output[:-1]
+        output = self._strip_xdialog_newline(output)
         
 	return (code, output)
     
@@ -1266,7 +1296,7 @@ class Dialog:
             # wfd = File Descriptor for Writing
             (child_stdin_rfd, child_stdin_wfd)  = os.pipe()
 
-            (child_pid, child_stderr_rfd) = self._call_program(
+            (child_pid, child_output_rfd) = self._call_program(
                 ["--gauge", text, str(height), str(width), str(percent)],
                 redir_child_stdin_from_fd=child_stdin_rfd,
                 close_fds=(child_stdin_wfd,), **kwargs)
@@ -1278,7 +1308,7 @@ class Dialog:
             self._gauge_process = {
                 "pid": child_pid,
                 "stdin": os.fdopen(child_stdin_wfd, "wb"),
-                "child_stderr_rfd": child_stderr_rfd
+                "child_output_rfd": child_output_rfd
                 }
         except os.error, e:
             raise PythonDialogOSError(e.strerror)
@@ -1348,7 +1378,7 @@ class Dialog:
             raise PythonDialogIOError(v)
         exit_code = \
                   self._wait_for_program_termination(p["pid"],
-                                                      p["child_stderr_rfd"])[0]
+                                                      p["child_output_rfd"])[0]
         return exit_code
 
     def infobox(self, text, height=10, width=30, **kwargs):
@@ -1402,9 +1432,13 @@ class Dialog:
             any exception raised by self._perform()
 
 	"""
-	return self._perform(
+	(code, string_) = self._perform(
             ["--inputbox", text, str(height), str(width), init],
             **kwargs)
+
+        string_ = self._strip_xdialog_newline(string_)
+        
+	return (code, string_)
 
     def inputmenu(self, text, height=0, width=60, menu_height=7, choices=[],
              **kwargs):
@@ -1585,6 +1619,9 @@ class Dialog:
         for t in choices:
             cmd.extend(t)
 	(code, output) = self._perform(cmd, **kwargs)
+
+        output = self._strip_xdialog_newline(output)
+
         if "help_button" in kwargs.keys() and output.startswith("HELP "):
             return ("help", output[5:])
         else:
@@ -1750,9 +1787,13 @@ class Dialog:
             any exception raised by self._perform()
 
 	"""
-	return self._perform(
+	(code, password) = self._perform(
             ["--passwordbox", text, str(height), str(width), init],
             **kwargs)
+
+        password = self._strip_xdialog_newline(password)
+
+        return (code, password)
 
     def progressbox(self, file_path=None, file_flags=os.O_RDONLY,
                     fd=None, text=None, height=20, width=78, **kwargs):
@@ -1862,7 +1903,11 @@ class Dialog:
         cmd = ["--radiolist", text, str(height), str(width), str(list_height)]
         for t in choices:
             cmd.extend((t[0], t[1], _to_onoff(t[2])))
-	return self._perform(cmd, **kwargs)
+	(code, tag) = self._perform(cmd, **kwargs)
+
+        tag = self._strip_xdialog_newline(tag)
+
+        return (code, tag)
 
     def scrollbox(self, text, height=20, width=78, **kwargs):
 	"""Display a string in a scrollable box, with no line wrapping.
