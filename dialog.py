@@ -38,6 +38,23 @@
 #   Put into a package name to make more reusable - reduce the possibility
 #     of name collisions.
 #
+# NOTES:
+#         there is a bug in (at least) Linux-Mandrake 7.0 Russian Edition
+#         running on AMD K6-2 3D that causes core dump when 'dialog' 
+#         is running with --gauge option;
+#         in this case you'll have to recompile 'dialog' program.
+#
+# Modifications:
+# Jul 2000, Sultanbek Tezadov (http://sultan.da.ru)
+#    Added:
+#       - 'gauge' widget *)
+#       - 'title' option to some widgets
+#       - 'checked' option to checklist dialog; clicking "Cancel" is now
+#           recognizable
+#       - 'selected' option to radiolist dialog; clicking "Cancel" is now
+#           recognizable
+#       - some other cosmetic changes and improvements
+#   
 
 import os
 from tempfile import mktemp
@@ -230,6 +247,50 @@ class Dialog:
 	os.unlink(fName)
 
 
+    def gauge_start(self, perc=0, text='', height=8, width=54, title=''):
+	"""
+	Display gauge output window.
+	Gauge normal usage (assuming that there is an instace of 'Dialog'
+	class named 'd'):
+	    d.gauge_start()
+	    # do something
+	    d.gauge_iterate(10)  # passed throgh 10%
+	    # ...
+	    d.gauge_iterate(100, 'any text here')  # work is done
+	    d.stop_gauge()  # clean-up actions
+	"""
+	cmd = self.__handleTitle(title) +\
+	    '--gauge "%s" %d %d %d' % (text, height, width, perc)
+	cmd = '%s %s %s 2> /dev/null' % (DIALOG, self.__bgTitle, cmd)
+	self.pipe = os.popen(cmd, 'w')
+    #/gauge_start()
+
+
+    def gauge_iterate(self, perc, text=''):
+	"""
+	Update percentage point value.
+	
+	See gauge_start() function above for the usage.
+	"""
+	if text:
+	    text = 'XXX\n%d\n%s\nXXX\n' % (perc, text)
+	else:
+	    text = '%d\n' % perc
+	self.pipe.write(text)
+	self.pipe.flush()
+    #/gauge_iterate()
+    
+    
+    def gauge_stop(self):
+	"""
+	Finish previously started gauge.
+	
+	See gauge_start() function above for the usage.
+	"""
+	self.pipe.close()
+    #/gauge_stop()
+
+
 
 #
 # DEMO APPLICATION
@@ -273,5 +334,19 @@ if __name__ == '__main__':
     bigMessage = bigMessage + "Favorite sandwich: " + str(sand)
 
     d.scrollbox(bigMessage)
+
+    #<>#  Gauge Demo
+    d.gauge_start(0, 'percentage: 0', title='Gauge Demo')
+    for i in range(1, 101):
+	if i < 50:
+	    msg = 'percentage: %d' % i
+	elif i == 50:
+	    msg = 'Over 50%'
+	else:
+	    msg = ''
+	d.gauge_iterate(i, msg)
+	sleep(0.1)
+    d.gauge_stop()
+    #<>#
 
     d.clear()
