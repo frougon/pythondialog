@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 # setup.py --- Setup script for pythondialog
-# Copyright (c) 2002 Florent Rougon
+# Copyright (c) 2002, 2003, 2004 Florent Rougon
 #
 # This file is part of pythondialog.
 #
@@ -30,26 +30,28 @@ from distutils.core import setup
 #  Python 2.2.
 
 PACKAGE = "pythondialog"
-VERSION = "2.05"
+VERSION = "2.06"
 
 def main():
     setup(name=PACKAGE,
           version=VERSION,
-          description="A Python interface to the Unix dialog utility (or "
-          "compatible programs)",
+          description="A Python interface to the Unix dialog utility and "
+          "mostly-compatible programs",
 #         Doesn't work great with several authors...
           author="Robb Shecter, Sultanbek Tezadov, Florent Rougon",
           author_email="robb@acm.org, http://sultan.da.ru/, flo@via.ecp.fr",
           maintainer="Florent Rougon",
           maintainer_email="flo@via.ecp.fr",
-          url="http://www.via.ecp.fr/~flo/",
+          url="http://people.via.ecp.fr/~flo/",
           license="LGPL",
           platforms="Unix",
           long_description="""\
 A Python interface to the Unix dialog utility, designed to provide
 an easy, pythonic and as complete as possible way to use the dialog
-features from Python code.""",
-          keywords=["dialog", "whiptail", "text-mode interface"],
+features from Python code.
+Back-end programs that are almost compatible with dialog are also
+supported if someone cares about them.""",
+          keywords=["dialog", "Xdialog", "whiptail", "text-mode interface"],
           py_modules=["dialog"])
 
 if __name__ == "__main__": main()

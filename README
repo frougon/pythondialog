@@ -1,10 +1,11 @@
 Overview
 --------
 
-pythondialog is a Python wrapper for the Unix "dialog" utility by Savio
-Lam and Stuart Herbert. Its purpose is to provide an easy to use,
-pythonic and as complete as possible interface to dialog from Python
-code.
+pythondialog is a Python wrapper for the Unix "dialog" utility written
+by Savio Lam and modified by several people, whose home page you should
+find at http://dickey.his.com/dialog/dialog.html. Its purpose is to
+provide an easy to use, pythonic and as complete as possible interface
+to dialog from Python code.
 
 pythondialog is free software, licensed under the GNU LGPL.
 
@@ -51,14 +52,31 @@ directory.
 See the pydoc module's documentation for more information.
 
 
+Using Xdialog instead of dialog
+-------------------------------
+
+Starting with 2.06, there is an "Xdialog" compatibility mode that you
+can use if you want pythondialog to run the graphical Xdialog program
+(which *should* be found under http://xdialog.free.fr/) instead of
+dialog (text-mode, based on the ncurses library).
+
+The primary supported platform is still dialog, but as long as only
+small modifications are enough to make pythondialog work with Xdialog, I
+am willing to support Xdialog if people are interested in it (which
+turned out to be the case for Xdialog).
+
+The demo.py from pythondialog 2.06 has been tested with Xdialog 2.0.6
+and found to work well (barring Xdialog's annoying behaviour with the
+file selection dialog box).
+
+
 Troubleshooting
 ---------------
 
 * pythondialog seems not to work very well with whiptail. Well, whiptail
-  is not very compatible with dialog any more. Currently, although you
-  can tell pythondialog the program you want it to invoke, only
-  dialog-compatible programs are supported. Note that the above
-  "Currently" does not mean I plan to work on the subject.
+  is not very compatible with dialog any more. Although you can tell
+  pythondialog the program you want it to invoke, only programs that are
+  mostly dialog-compatible are supported.
 
 * It is said that there is a bug in (at least) the Mandrake 7.0 Russian
   Edition running on AMD K6-2 3D that causes core dump when `dialog' is run
@@ -72,5 +90,5 @@ History
 pythondialog was originally written by Robb Shecter. Sultanbek Tezadov
 added some features to it (mainly the first gauge implementation, I
 guess). Then I (Florent Rougon) rewrote most parts of the program to
-make it more robust and flexible so that it can give access to all
+make it more robust and flexible so that it can give access to most
 features of the dialog program.

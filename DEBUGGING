@@ -1,0 +1,23 @@
+                # The following lines are useful for debugging: they write the
+                # full command (with arguments quoted and environment
+                # variables set) to a file named "command.debug" in the
+                # current directory. See Dialog.__call_program() in dialog.py.
+
+                import commands
+                
+                envvar_settings_list = []
+
+                if new_environ.has_key("DIALOGRC"):
+                     envvar_settings_list.append(
+                         "DIALOGRC='%s'" % new_environ["DIALOGRC"])
+
+                for var in _dialog_exit_status_vars.keys():
+                    varname = "DIALOG_" + var
+                    envvar_settings_list.append(
+                        "%s=%s" % (varname, new_environ[varname]))
+
+                envvar_settings = string.join(envvar_settings_list, " ")
+
+                file("command.debug", "wb").write(
+                    envvar_settings +
+                    string.join(map(commands.mkarg, arglist), ""))

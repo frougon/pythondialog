@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 
 # demo.py --- A simple demonstration program for pythondialog
-# Copyright (C) 2000, 2002 Robb Shecter, Sultanbek Tezadov,
-#                          Florent Rougon
+# Copyright (C) 2000  Robb Shecter, Sultanbek Tezadov
+# Copyright (C) 2002, 2004  Florent Rougon
 #
 # This program is in the public domain.
 
@@ -24,21 +24,23 @@ import sys, os, os.path, time, string, dialog
 FAST_DEMO = 0
 
 
+# XXX We should handle the new DIALOG_HELP and DIALOG_EXTRA return codes here.
 def handle_exit_code(d, code):
     """Sample function showing how to interpret the dialog exit codes.
 
     This function is not used after every call to dialog in this demo
     for two reasons:
+
        1. For some boxes, unfortunately, dialog returns the code for
           ERROR when the user presses ESC (instead of the one chosen
           for ESC). As these boxes only have an OK button, and an
           exception is raised and correctly handled here in case of
           real dialog errors, there is no point in testing the dialog
           exit status (it can't be CANCEL as there is no CANCEL
-          button ; it can't be ESC as unfortunately, the dialog makes
-          it appear as an error ; it can't be ERROR as this is handled
-          in dialog.py to raise an exception ; therefore, it *is*
-          OK).
+          button; it can't be ESC as unfortunately, the dialog makes
+          it appear as an error; it can't be ERROR as this is handled
+          in dialog.py to raise an exception; therefore, it *is* OK).
+
        2. To not clutter simple code with things that are
           demonstrated elsewhere.
 
@@ -199,12 +201,12 @@ def passwordbox_demo(d):
 
 
 def comment_on_sarge_release_date(day, month, year):
-    if year < 2002 or (year == 2002 and month <= 9):
+    if year < 2004 or (year == 2004 and month <= 3):
         return "Mmm... what about a little tour on http://www.debian.org/?"
-    elif year == 2002 or (year == 2003 and month <= 2):
+    elif year == 2004 and month <= 4:
         return """\
 Damn, how optimistic! You don't know much about Debian, do you?"""
-    elif year == 2003:
+    elif year == 2004 and month <= 7:
         return """\
 Well, good guess. But who knows what the future reserves to us? ;-)"""
     elif year == 2004:
@@ -213,7 +215,7 @@ Oh, well. That's plausible. But please, please don't depress
 other people with your pronostics... ;-)"""
     else:
         return "Hey, you're a troll! (or do you know Debian *so* well? ;-)"
-    
+
 
 def scrollbox_demo(d, name, favorite_day, toppings, sandwich, date,
                    password):
@@ -239,7 +241,14 @@ Your root password is: ************************** (looks good!)""" \
 
 def fselect_demo(d):
     while 1:
-        (code, path) = d.fselect(os.getenv("HOME", "/"), 10, 50,
+        root_dir = os.sep               # This is OK for Unix systems
+        dir = os.getenv("HOME", root_dir)
+        # Make sure the directory we chose ends with os.sep() so that dialog
+        # shows its contents right away
+        if dir and dir[-1] != os.sep:
+            dir = dir + os.sep
+
+        (code, path) = d.fselect(dir, 10, 50,
                                  title="Cute little file to show as "
                                  "in a `tail -f'")
         if handle_exit_code(d, code):
@@ -257,7 +266,11 @@ def tailbox_demo(d, file):
 
 
 def demo():
+#   If you want to use Xdialog (pathnames are also OK for the 'dialog'
+#   argument)
+#   d = dialog.Dialog(dialog="Xdialog", compat="Xdialog")
     d = dialog.Dialog(dialog="dialog")
+
     d.add_persistent_args(["--backtitle", "pythondialog demo"])
 
     infobox_demo(d)
@@ -297,8 +310,7 @@ def main():
     """
     try:
         demo()
-    except (dialog.ExecutableNotFound, dialog.DialogTerminatedBySignal,
-            dialog.DialogError, dialog.PythonDialogBug), exc_instance:
+    except dialog.error, exc_instance:
         sys.stderr.write("Error:\n\n%s\n" % exc_instance.complete_message())
         sys.exit(1)
         
