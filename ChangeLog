@@ -1,6 +1,13 @@
+2003-09-16  Florent Rougon  <flo@via.ecp.fr>
+
+	* Released 2.05.
+
+	* Changed the "private" class names to start with two underscores
+	instead of one.
+
 2003-09-01  Florent Rougon  <flo@via.ecp.fr>
 
-	* Released 2.04
+	* Released 2.04.
 
 	* dialog.py: Replaced the apply() calls with calls using the
 	"extended call syntax" since apply() is deprecated since the

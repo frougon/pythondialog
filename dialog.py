@@ -337,8 +337,8 @@ class Dialog:
         self.DIALOG_ESC    = DIALOG_ESC
         self.DIALOG_ERROR  = DIALOG_ERROR
 
-        self._dialog_prg = _find_in_path(dialog) # Find the full pathname
-        if self._dialog_prg is None:
+        self.__dialog_prg = _find_in_path(dialog) # Find the full pathname
+        if self.__dialog_prg is None:
             raise ExecutableNotFound(
                 "can't find the dialog/whiptail/whatever executable")
         self.dialog_persistent_arglist = []
@@ -356,7 +356,7 @@ class Dialog:
 	"""
 	self.add_persistent_args(("--backtitle", text))
 
-    def _call_program(self, cmdargs, **kwargs):
+    def __call_program(self, cmdargs, **kwargs):
 	"""Do the actual work of invoking the dialog-like program.
 
         Return a Popen3 object just after dialog being invoked.
@@ -371,7 +371,7 @@ class Dialog:
         # arguments correctly quoted for the Bourne shell (note: the first
         # character is a space)
         cmd_plus_args_str = string.join(map(commands.mkarg,
-                                            [self._dialog_prg] +
+                                            [self.__dialog_prg] +
                                             self.dialog_persistent_arglist +
                                             _compute_common_args(kwargs) +
                                             cmdargs), "")
@@ -382,7 +382,7 @@ class Dialog:
                                 self.DIALOG_ESC, self.DIALOG_ERROR,
                                 cmd_plus_args_str), 1)
 
-    def _wait_for_program_termination(self, process):
+    def __wait_for_program_termination(self, process):
         """Wait for a dialog-like process to terminate.
 
         This function waits for the specified process to terminate,
@@ -415,7 +415,7 @@ class Dialog:
                               "code %d" % exit_code)
         return (exit_code, process.childerr.read())
 
-    def _perform(self, cmdargs, **kwargs):
+    def __perform(self, cmdargs, **kwargs):
 	"""Perform a complete dialog-like program invocation.
 
         This function invokes the dialog-like program, waits for its
@@ -425,8 +425,8 @@ class Dialog:
 
         """
         # Get the Popen3 object
-        p = self._call_program(*(cmdargs,), **kwargs)
-        (exit_code, output) = self._wait_for_program_termination(p)
+        p = self.__call_program(*(cmdargs,), **kwargs)
+        (exit_code, output) = self.__wait_for_program_termination(p)
         p.childerr.close()              # dialog's stderr
         p.fromchild.close()             # dialog's stdout
         p.tochild.close()               # dialog's stdin
@@ -434,9 +434,9 @@ class Dialog:
 	return (exit_code, output)
 
     # This is for compatibility with the old dialog.py
-    def _perform_no_options(self, cmd):
+    def __perform_no_options(self, cmd):
 	"""Call dialog without passing any more options."""
-	return os.system(self._dialog_prg + ' ' + cmd)
+	return os.system(self.__dialog_prg + ' ' + cmd)
 
     # For compatibility with the old dialog.py
     def clear(self):
@@ -446,7 +446,7 @@ class Dialog:
         programs.
 
 	"""
-	self._perform_no_options('--clear')
+	self.__perform_no_options('--clear')
 
     def calendar(self, text, height=6, width=0, day=0, month=0, year=0,
                  **kwargs):
@@ -476,7 +476,7 @@ class Dialog:
         it was closed with the Cancel button.
 
 	"""
-	(code, output) = self._perform(
+	(code, output) = self.__perform(
             *(["--calendar", text, str(height), str(width), str(day),
                str(month), str(year)],),
             **kwargs)
@@ -517,7 +517,7 @@ class Dialog:
         cmd = ["--checklist", text, str(height), str(width), str(list_height)]
         for t in choices:
             cmd.extend(((t[0], t[1], _to_onoff(t[2]))))
-	(code, output) = self._perform(*(cmd,), **kwargs)
+	(code, output) = self.__perform(*(cmd,), **kwargs)
         # Extract the list of tags from the result (which is a string like
         # '"tag 1" "tag 2" "tag 3"...')
         if output:
@@ -560,7 +560,7 @@ class Dialog:
         be a directory as well as a file).
               
 	"""
-	return self._perform(
+	return self.__perform(
             *(["--fselect", filepath, str(height), str(width)],),
             **kwargs)
     
@@ -595,7 +595,7 @@ class Dialog:
 	    exit_code = d.gauge_stop()           # cleanup actions
 
 	"""
-        self._gauge_process = self._call_program(
+        self.__gauge_process = self.__call_program(
             *(["--gauge", text, str(height), str(width), str(percent)],),
             **kwargs)
 
@@ -622,8 +622,8 @@ class Dialog:
 	    gauge_data = "XXX\n%d\n%s\nXXX\n" % (percent, text)
 	else:
 	    gauge_data = "%d\n" % percent
-	self._gauge_process.tochild.write(gauge_data)
-	self._gauge_process.tochild.flush()
+	self.__gauge_process.tochild.write(gauge_data)
+	self.__gauge_process.tochild.flush()
     
     # For "compatibility" with the old dialog.py...
     gauge_iterate = gauge_update
@@ -640,9 +640,9 @@ class Dialog:
         Return value: undefined.
 
 	"""
-        p = self._gauge_process
+        p = self.__gauge_process
         p.tochild.close()               # dialog's stdin
-        exit_code = self._wait_for_program_termination(p)[0]
+        exit_code = self.__wait_for_program_termination(p)[0]
         p.childerr.close()              # dialog's stderr
         p.fromchild.close()             # dialog's stdout
         return exit_code
@@ -666,7 +666,7 @@ class Dialog:
         program.
 
 	"""
-	return self._perform(
+	return self.__perform(
             *(["--infobox", text, str(height), str(width)],),
             **kwargs)[0]
 
@@ -690,7 +690,7 @@ class Dialog:
         string entered by the user.
 
 	"""
-	return self._perform(
+	return self.__perform(
             *(["--inputbox", text, str(height), str(width), init],),
             **kwargs)
 
@@ -774,7 +774,7 @@ class Dialog:
         cmd = ["--menu", text, str(height), str(width), str(menu_height)]
         for t in choices:
             cmd.extend(t)
-	(code, output) = self._perform(*(cmd,), **kwargs)
+	(code, output) = self.__perform(*(cmd,), **kwargs)
         if "help_button" in kwargs.keys() and output.startswith("HELP "):
             return ("help", output[5:])
         else:
@@ -799,7 +799,7 @@ class Dialog:
         program.
 
 	"""
-	return self._perform(
+	return self.__perform(
             *(["--msgbox", text, str(height), str(width)],),
             **kwargs)[0]
 
@@ -825,7 +825,7 @@ class Dialog:
         the password entered by the user.
 
 	"""
-	return self._perform(
+	return self.__perform(
             *(["--passwordbox", text, str(height), str(width), init],),
             **kwargs)
 
@@ -861,7 +861,7 @@ class Dialog:
         cmd = ["--radiolist", text, str(height), str(width), str(list_height)]
         for t in choices:
             cmd.extend(((t[0], t[1], _to_onoff(t[2]))))
-	return self._perform(*(cmd,), **kwargs)
+	return self.__perform(*(cmd,), **kwargs)
 
     def scrollbox(self, text, height=20, width=78, **kwargs):
 	"""Display a string in a scrollable box.
@@ -892,7 +892,7 @@ class Dialog:
             f = open(fName, "wb")
             f.write(text)
             f.close()
-            res = self._perform(
+            res = self.__perform(
                 *(["--textbox", fName, str(height), str(width)],), **kwargs)
         finally:
             if type(f) == types.FileType:
@@ -916,7 +916,7 @@ class Dialog:
         program.
 
 	"""
-	return self._perform(
+	return self.__perform(
             *(["--tailbox", filename, str(height), str(width)],),
             **kwargs)[0]
     # No tailboxbg widget, at least for now.
@@ -946,7 +946,7 @@ class Dialog:
         # stupid, but I prefer explicit programming.
         if "title" not in kwargs.keys():
 	    kwargs["title"] = filename
-	return self._perform(
+	return self.__perform(
             *(["--textbox", filename, str(height), str(width)],),
             **kwargs)[0]
 
@@ -977,7 +977,7 @@ class Dialog:
         or None if it was closed with the Cancel button.
 
 	"""
-	(code, output) = self._perform(
+	(code, output) = self.__perform(
             *(["--timebox", text, str(height), str(width),
                str(hour), str(minute), str(second)],),
             **kwargs)
@@ -1015,6 +1015,6 @@ class Dialog:
         program.
 
 	"""
-	return self._perform(
+	return self.__perform(
             *(["--yesno", text, str(height), str(width)],),
             **kwargs)[0]
