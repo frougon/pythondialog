@@ -1,7 +1,7 @@
 Overview
 --------
 
-pythondialog is a Python wrapper for the Unix "dialog" utility written
+pythondialog is a Python wrapper for the UNIX "dialog" utility written
 by Savio Lam and modified by several people, whose home page you should
 find at http://dickey.his.com/dialog/dialog.html. Its purpose is to
 provide an easy to use, pythonic and as complete as possible interface
@@ -35,8 +35,6 @@ or Python module.
 
 You can type "pydoc dialog" at the command prompt in pythondialog base
 directory. Alternatively, you can type:
-  - "import pydoc, dialog; pydoc.help(dialog)" at a Python 2.1 command
-    prompt (and probably any earlier version with pydoc installed)
   - "import dialog; help(dialog)" at at a Python 2.2 command prompt (and
     probably any later version)
 
@@ -89,6 +87,8 @@ History
 
 pythondialog was originally written by Robb Shecter. Sultanbek Tezadov
 added some features to it (mainly the first gauge implementation, I
-guess). Then I (Florent Rougon) rewrote most parts of the program to
-make it more robust and flexible so that it can give access to most
-features of the dialog program.
+guess). Florent Rougon rewrote most parts of the program to make it
+more robust and flexible so that it can give access to most features
+of the dialog program. Finally, I (Peter Astrand) took over
+maintainership for both the original version and Florents updated
+version. 

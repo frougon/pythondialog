@@ -241,7 +241,7 @@ Your root password is: ************************** (looks good!)""" \
 
 def fselect_demo(d):
     while 1:
-        root_dir = os.sep               # This is OK for Unix systems
+        root_dir = os.sep               # This is OK for UNIX systems
         dir = os.getenv("HOME", root_dir)
         # Make sure the directory we chose ends with os.sep() so that dialog
         # shows its contents right away
