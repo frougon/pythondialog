@@ -30,7 +30,7 @@ from distutils.core import setup
 #  Python 2.2.
 
 PACKAGE = "pythondialog"
-VERSION = "2.03"
+VERSION = "2.04"
 
 def main():
     setup(name=PACKAGE,

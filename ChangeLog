@@ -1,8 +1,16 @@
+2003-09-01  Florent Rougon  <flo@via.ecp.fr>
+
+	* Released 2.04
+
+	* dialog.py: Replaced the apply() calls with calls using the
+	"extended call syntax" since apply() is deprecated since the
+	release of Python 2.3.
+
 2002-09-05  Florent Rougon  <flo@via.ecp.fr>
 
 	* Released 2.03.
 
-	* dialog.py: reorganized the documentation between the module's
+	* dialog.py: Reorganized the documentation between the module's
 	docstring and that of the Dialog class.
 
 	* README: Added the "history" section and other improvements.

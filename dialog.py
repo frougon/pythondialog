@@ -425,7 +425,7 @@ class Dialog:
 
         """
         # Get the Popen3 object
-        p = apply(self._call_program, [cmdargs], kwargs)
+        p = self._call_program(*(cmdargs,), **kwargs)
         (exit_code, output) = self._wait_for_program_termination(p)
         p.childerr.close()              # dialog's stderr
         p.fromchild.close()             # dialog's stdout
@@ -476,10 +476,10 @@ class Dialog:
         it was closed with the Cancel button.
 
 	"""
-	(code, output) = apply(self._perform,
-                               [["--calendar", text, str(height), str(width),
-                                 str(day), str(month), str(year)]],
-                               kwargs)
+	(code, output) = self._perform(
+            *(["--calendar", text, str(height), str(width), str(day),
+               str(month), str(year)],),
+            **kwargs)
         if code == self.DIALOG_OK:
             mo = _calendar_date_rec.match(output)
             if mo is None:
@@ -517,7 +517,7 @@ class Dialog:
         cmd = ["--checklist", text, str(height), str(width), str(list_height)]
         for t in choices:
             cmd.extend(((t[0], t[1], _to_onoff(t[2]))))
-	(code, output) = apply(self._perform, [cmd], kwargs)
+	(code, output) = self._perform(*(cmd,), **kwargs)
         # Extract the list of tags from the result (which is a string like
         # '"tag 1" "tag 2" "tag 3"...')
         if output:
@@ -560,9 +560,9 @@ class Dialog:
         be a directory as well as a file).
               
 	"""
-	return apply(self._perform,
-                     [["--fselect", filepath, str(height), str(width)]],
-                     kwargs)
+	return self._perform(
+            *(["--fselect", filepath, str(height), str(width)],),
+            **kwargs)
     
     def gauge_start(self, text="", height=8, width=54, percent=0, **kwargs):
 	"""Display gauge box.
@@ -595,10 +595,9 @@ class Dialog:
 	    exit_code = d.gauge_stop()           # cleanup actions
 
 	"""
-        self._gauge_process = apply(self._call_program,
-                                    [["--gauge", text, str(height),
-                                      str(width), str(percent)]],
-                                    kwargs)
+        self._gauge_process = self._call_program(
+            *(["--gauge", text, str(height), str(width), str(percent)],),
+            **kwargs)
 
     def gauge_update(self, percent, text="", update_text=0):
 	"""Update a running gauge box.
@@ -667,9 +666,9 @@ class Dialog:
         program.
 
 	"""
-	return apply(self._perform,
-                     [["--infobox", text, str(height), str(width)]],
-                     kwargs)[0]
+	return self._perform(
+            *(["--infobox", text, str(height), str(width)],),
+            **kwargs)[0]
 
     def inputbox(self, text, height=10, width=30, init='', **kwargs):
         """Display an input dialog box.
@@ -691,9 +690,9 @@ class Dialog:
         string entered by the user.
 
 	"""
-	return apply(self._perform,
-                     [["--inputbox", text, str(height), str(width), init]],
-                     kwargs)
+	return self._perform(
+            *(["--inputbox", text, str(height), str(width), init],),
+            **kwargs)
 
     def menu(self, text, height=15, width=54, menu_height=7, choices=[],
              **kwargs):
@@ -775,7 +774,7 @@ class Dialog:
         cmd = ["--menu", text, str(height), str(width), str(menu_height)]
         for t in choices:
             cmd.extend(t)
-	(code, output) = apply(self._perform, [cmd], kwargs)
+	(code, output) = self._perform(*(cmd,), **kwargs)
         if "help_button" in kwargs.keys() and output.startswith("HELP "):
             return ("help", output[5:])
         else:
@@ -800,9 +799,9 @@ class Dialog:
         program.
 
 	"""
-	return apply(self._perform,
-                     [["--msgbox", text, str(height), str(width)]],
-                     kwargs)[0]
+	return self._perform(
+            *(["--msgbox", text, str(height), str(width)],),
+            **kwargs)[0]
 
     def passwordbox(self, text, height=10, width=60, init='', **kwargs):
         """Display an password input dialog box.
@@ -826,9 +825,9 @@ class Dialog:
         the password entered by the user.
 
 	"""
-	return apply(self._perform,
-                     [["--passwordbox", text, str(height), str(width), init]],
-                     kwargs)
+	return self._perform(
+            *(["--passwordbox", text, str(height), str(width), init],),
+            **kwargs)
 
     def radiolist(self, text, height=15, width=54, list_height=7,
                   choices=[], **kwargs):
@@ -862,7 +861,7 @@ class Dialog:
         cmd = ["--radiolist", text, str(height), str(width), str(list_height)]
         for t in choices:
             cmd.extend(((t[0], t[1], _to_onoff(t[2]))))
-	return apply(self._perform, [cmd], kwargs)
+	return self._perform(*(cmd,), **kwargs)
 
     def scrollbox(self, text, height=20, width=78, **kwargs):
 	"""Display a string in a scrollable box.
@@ -893,9 +892,8 @@ class Dialog:
             f = open(fName, "wb")
             f.write(text)
             f.close()
-            res = apply(self._perform,
-                        [["--textbox", fName, str(height),
-                          str(width)]], kwargs)
+            res = self._perform(
+                *(["--textbox", fName, str(height), str(width)],), **kwargs)
         finally:
             if type(f) == types.FileType:
                 f.close()               # Safe, even several times
@@ -918,9 +916,9 @@ class Dialog:
         program.
 
 	"""
-	return apply(self._perform,
-                     [["--tailbox", filename, str(height), str(width)]],
-                     kwargs)[0]
+	return self._perform(
+            *(["--tailbox", filename, str(height), str(width)],),
+            **kwargs)[0]
     # No tailboxbg widget, at least for now.
 
     def textbox(self, filename, height=20, width=60, **kwargs):
@@ -948,9 +946,9 @@ class Dialog:
         # stupid, but I prefer explicit programming.
         if "title" not in kwargs.keys():
 	    kwargs["title"] = filename
-	return apply(self._perform,
-                     [["--textbox", filename, str(height), str(width)]],
-                     kwargs)[0]
+	return self._perform(
+            *(["--textbox", filename, str(height), str(width)],),
+            **kwargs)[0]
 
     def timebox(self, text, height=3, width=30, hour=-1, minute=-1,
                 second=-1, **kwargs):
@@ -979,10 +977,10 @@ class Dialog:
         or None if it was closed with the Cancel button.
 
 	"""
-	(code, output) = apply(self._perform,
-                               [["--timebox", text, str(height), str(width),
-                                 str(hour), str(minute), str(second)]],
-                               kwargs)
+	(code, output) = self._perform(
+            *(["--timebox", text, str(height), str(width),
+               str(hour), str(minute), str(second)],),
+            **kwargs)
         if code == self.DIALOG_OK:
             mo = _timebox_time_rec.match(output)
             if mo is None:
@@ -1017,6 +1015,6 @@ class Dialog:
         program.
 
 	"""
-	return apply(self._perform,
-                     [["--yesno", text, str(height), str(width)]],
-                     kwargs)[0]
+	return self._perform(
+            *(["--yesno", text, str(height), str(width)],),
+            **kwargs)[0]
