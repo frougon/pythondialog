@@ -1,0 +1,76 @@
+Overview
+--------
+
+pythondialog is a Python wrapper for the Unix "dialog" utility by Savio
+Lam and Stuart Herbert. Its purpose is to provide an easy to use,
+pythonic and as complete as possible interface to dialog from Python
+code.
+
+pythondialog is free software, licensed under the GNU LGPL.
+
+If you want to get a quick idea of what this module allows you to do,
+you should run demo.py:
+
+  python demo.py
+
+
+What is pythondialog good for? What are its limitations?
+--------------------------------------------------------
+
+As you might infer from the name, dialog is a high-level program that
+generates dialog boxes. So is pythondialog. They allow you to build nice
+interfaces quickly and easily, but you don't have full control over the
+widgets, nor can you create new widgets without modifying dialog itself.
+If you need to do low-level stuff, you should have a look at ncurses or
+slang instead.
+
+
+Documentation
+-------------
+
+pythondialog is fully documented through Python docstrings. Handy ways
+to access to this documentation are to use the pydoc standalone program
+or Python module.
+
+You can type "pydoc dialog" at the command prompt in pythondialog base
+directory. Alternatively, you can type:
+  - "import pydoc, dialog; pydoc.help(dialog)" at a Python 2.1 command
+    prompt (and probably any earlier version with pydoc installed)
+  - "import dialog; help(dialog)" at at a Python 2.2 command prompt (and
+    probably any later version)
+
+To browse it in HTML format, you can launch an HTTP server listening on
+port 1234 with "pydoc -p 1234 &" (yes, it is damn easy!) and simply
+browse on http://localhost:1234/ afterwards.
+
+Alternatively, you can dump the current dialog.py documentation (as
+found by Python if you did "import dialog") as an html file with
+"pydoc -w dialog". This will generate dialog.html in the current
+directory.
+
+See the pydoc module's documentation for more information.
+
+
+Troubleshooting
+---------------
+
+* pythondialog seems not to work very well with whiptail. Well, whiptail
+  is not very compatible with dialog any more. Currently, although you
+  can tell pythondialog the program you want it to invoke, only
+  dialog-compatible programs are supported. Note that the above
+  "Currently" does not mean I plan to work on the subject.
+
+* It is said that there is a bug in (at least) the Mandrake 7.0 Russian
+  Edition running on AMD K6-2 3D that causes core dump when `dialog' is run
+  with the --gauge option; in this case you'll have to recompile the `dialog'
+  program.
+
+
+History
+-------
+
+pythondialog was originally written by Robb Shecter. Sultanbek Tezadov
+added some features to it (mainly the first gauge implementation, I
+guess). Then I (Florent Rougon) rewrote most parts of the program to
+make it more robust and flexible so that it can give access to all
+features of the dialog program.

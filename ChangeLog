@@ -1,0 +1,146 @@
+2002-09-05  Florent Rougon  <flo@via.ecp.fr>
+
+	* Released 2.03.
+
+	* dialog.py: reorganized the documentation between the module's
+	docstring and that of the Dialog class.
+
+	* README: Added the "history" section and other improvements.
+
+2002-09-04  Florent Rougon  <flo@via.ecp.fr>
+
+	* dialog.py: Prefixed global variables with an underscore and
+	made some cosmetic fixes.
+
+	* dialog.py: Removed the set_background_title alias to
+	setBackgroundTitle since nobody uses it yet and setBackgroundTitle
+	is obsolete. Even though I prefer set_background_title to
+	setBackgroundTitle for consistency with other methods, there is no
+	point in adding an obsolete method.
+
+2002-09-03  Florent Rougon  <flo@via.ecp.fr>
+
+	* Packaged pythondialog with Distutils.
+
+	* Improved the README.
+
+2002-09-02  Florent Rougon  <flo@via.ecp.fr>
+
+	* dialog.py: Improved the common_args_syntax initialization so
+	that simple dialog Common Options can be passed as foo=1 keyword
+	arguments with 1 having a real boolean meaning (was not the case
+	before).
+
+	* Handled the licensing stuff : GNU LGPL license for dialog.py and
+	public domain for demo.py. Added the COPYING file.
+
+	* dialog.py: Wrote a proper module docstring.
+
+	* demo.py: Added the last widgets to the demo.
+	
+2002-08-30  Florent Rougon  <flo@via.ecp.fr>
+
+	* dialog.py: Added the calendar, fselect, passwordbox, tailbox and
+	timebox widgets.
+
+2002-08-29  Florent Rougon  <flo@via.ecp.fr>
+
+	* dialog.py (_wait_for_program_termination): Raises a DialogError
+	exception when dialog returns self.DIALOG_ERROR. Exceptions are so
+	handy.
+
+	* demo.py: Cleaned up the demo code making it easier (I hope) to
+	focus on a given widget, added error handling.
+	* dialog.py: Took the demo to put it in a new, separate file:
+	demo.py.
+	
+
+2002-08-21  Florent Rougon  <flo@via.ecp.fr>
+
+	* dialog.py: Documented the widgets properly.
+	* dialog.py: Generalized the widgets that didn't offer all the
+	capabilities available from dialog.
+	* dialog.py: Went through the various widgets so that the
+	associated methods return the dialog exit status (with additional
+	information, if relevant).
+
+	* dialog.py: Finally cleaned up the method used to collect the
+	arguments given to dialog. They are now stored as elements of a
+	list and properly quoted to protect them from shell expansion just
+	before the call to popen3. Now, you should be safe with any
+	character in the strings passed to dialog (labels, texts, etc.).
+
+2002-08-09  Florent Rougon  <flo@via.ecp.fr>
+
+	* dialog.py: All boxes should now support the common arguments
+	scheme (well, I still have to look at the gauge closer).
+
+	* dialog.py: Added support for "common arguments"; now, you can
+	use any combination of the _common options_ for the dialog program
+	when creating a box. Example:
+	
+	   d.checklist(<usual args for a checklist box>,
+	               title="...", backtitle="...", <other common args>)
+
+	One thing is still broken: we must shell-escape the strings so
+	that apostrophes (') used to delimit shell arguments don't clash
+	with apostrophes used these arguments themselves.
+
+	* dialog.py: Added support for "persistent arguments" arguments
+	(--backtitle is a good candidate for this).
+
+	* dialog.py: Removed a leftover debugging print in _perform.
+
+	* dialog.py: Simplified the DIALOG* arguments handling.
+
+2002-08-08  Florent Rougon  <flo@via.ecp.fr>
+
+	* dialog.py: Added a short docstring for the module.
+
+	* dialog.py: Rewrote checklist to get all the features from the
+	corresponding option in dialog.
+
+	* dialog.py: Rewrote _perform; now, we can use the DIALOG*
+	environment variables set in the constructor, which allows us
+	distinguish between ESC pressed and a dialog error, among others;
+	also, we use no temporary file anymore to store dialog's stderr.
+
+	* dialog.py: Added some exceptions.
+
+	* dialog.py: Rewrote __init__; now, we can set choose in the
+	constructor the DIALOG* environment variables to pass the dialog
+	program as well as this program (could be whiptail for instance)
+	from the constructor (and the environment variables can be
+	different for two Dialog instances used in the same python
+	process...).
+
+	* dialog.py: Renamed __foo methods to _foo.
+
+2002-08-07  Florent Rougon  <flo@via.ecp.fr>
+
+	* dialog.py: Cosmetic fixes.
+
+	* dialog.py: Added a proper GPL header (dialog.py only had a short
+	mention about its license being the GNU GPL).
+
+	* Split dialog.py, creating a Changelog file in the format
+	described in the GNU Coding Standards, as well as README, AUTHORS,
+	COPYING and TODO.
+
+2000-07-30  Sultanbek Tezadov (http://sultan.da.ru/)
+
+	* dialog.py: Added the gauge widget.
+
+	* dialog.py: Added a 'title' option to some widgets.
+
+	* dialog.py: Added a 'checked' option to the checklist dialog;
+	clicking "Cancel" is now recognizable.
+
+	* dialog.py: Added a 'selected' option to the radiolist dialog;
+	clicking "Cancel" is now recognizable.
+
+	* dialog.py: Some other cosmetic changes and improvements.
+
+2000-??-??  Robb Shecter <robb@acm.org>
+
+	* Initial release.

@@ -1,0 +1,57 @@
+INSTALLATION
+------------
+
+pythondialog is packaged with Distutils (the current standard way to
+package Python extensions), so its installation should be as simple as:
+  - make this file's directory your shell's current directory
+  - optionally edit setup.cfg to make sure that it fits your needs
+    (particularly the installation prefix); in the case of the prefix,
+    you could alternatively specify it later with the --prefix,
+    --exec-prefix, etc. arguments of setup.py---these are described in
+    detail in the "Installing Python Modules" chapter of the Python
+    documentation.
+
+  - a) 1) type:
+
+            python ./setup.py build
+
+       2) then, as root:
+
+            python ./setup.py install --record /path/to/foo
+
+          where foo is a file of your choice which will contain the list
+          of all files installed on your system by the preceding
+          command. This will make uninstallation easy (you could ommit
+          the "--record /path/to/foo", but uninstallation could not be
+          automated, then).
+
+    OR
+
+    b) type, as root:
+
+            python ./setup.py install --record /path/to/foo
+
+       This will automatically build the package before installing it.
+       The observations made in a) also apply here.
+
+
+If this default installation is not what you wish, please read the
+Distutils documentation. In Python 2.1 and above, it is included in the
+base Python documentation and the chapter you'll need is most probably
+"Installing Python Modules".
+
+
+UNINSTALLATION
+--------------
+
+Provided you have followed the instructions given in the installation
+section, you have a /path/to/foo file that contains all the files the
+installation process put on your system. Great! All you have to do is:
+
+   while read file; do rm -f "$file"; done < /path/to/foo
+
+under a Bourne-compatible shell and with the appropriate privileges
+(maybe root, depending on where you installed pythondialog).
+
+Note: this will handle file names with spaces correctly, unlike the
+simpler "rm -f $(cat /path/to/foo)".
