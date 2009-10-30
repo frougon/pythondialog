@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 # setup.py --- Setup script for pythondialog
-# Copyright (c) 2002, 2003, 2004 Florent Rougon
+# Copyright (c) 2002, 2003, 2004, 2009 Florent Rougon
 #
 # This file is part of pythondialog.
 #
@@ -17,7 +17,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+# MA  02110-1301 USA.
 
 import os, string, sys
 from distutils.core import setup
@@ -30,23 +31,23 @@ from distutils.core import setup
 #  Python 2.2.
 
 PACKAGE = "pythondialog"
-VERSION = "2.7"
+VERSION = "2.08"
 
 def main():
     setup(name=PACKAGE,
           version=VERSION,
-          description="A Python interface to the UNIX dialog utility and "
+          description="A Python interface to the Unix dialog utility and "
           "mostly-compatible programs",
 #         Doesn't work great with several authors...
-          author="Robb Shecter, Sultanbek Tezadov, Florent Rougon, Peter Astrand",
+          author="Robb Shecter, Sultanbek Tezadov, Florent Rougon",
           author_email="robb@acm.org, http://sultan.da.ru/, flo@via.ecp.fr",
-          maintainer="Peter Astrand",
-          maintainer_email="peter@cendio.se",
-          url="http://pythondialog.sourceforge.net/",
+          maintainer="Florent Rougon",
+          maintainer_email="flo@via.ecp.fr",
+          url="http://people.via.ecp.fr/~flo/",
           license="LGPL",
-          platforms="UNIX",
+          platforms="Unix",
           long_description="""\
-A Python interface to the UNIX dialog utility, designed to provide
+A Python interface to the Unix dialog utility, designed to provide
 an easy, pythonic and as complete as possible way to use the dialog
 features from Python code.
 Back-end programs that are almost compatible with dialog are also

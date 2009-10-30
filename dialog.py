@@ -1,6 +1,6 @@
 # dialog.py --- A python interface to the Linux "dialog" utility
+# Copyright (C) 2002, 2003, 2004, 2009  Florent Rougon
 # Copyright (C) 2000  Robb Shecter, Sultanbek Tezadov
-# Copyright (C) 2002, 2003, 2004  Florent Rougon
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -14,7 +14,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+# MA  02110-1301 USA.
 
 """Python interface to dialog-like programs.
 
@@ -64,7 +65,7 @@ program) and you should be safe.
 """
 
 from __future__ import nested_scopes
-import sys, os, tempfile, random, string, re, types
+import sys, os, tempfile, random, string, re
 
 
 # Python < 2.3 compatibility
@@ -320,7 +321,7 @@ def _path_to_executable(f):
 
 
 def _to_onoff(val):
-    """Convert boolean expressions to "on" or "off"
+    """Convert boolean expressions to "on" or "off".
 
     This function converts every non-zero integer as well as "on",
     "ON", "On" and "oN" to "on" and converts 0, "off", "OFF", etc. to
@@ -332,12 +333,12 @@ def _to_onoff(val):
         BadPythonDialogUsage
 
     """
-    if type(val) == types.IntType:
+    if type(val) == type(True) or type(val) == type(1):
         if val:
             return "on"
         else:
             return "off"
-    elif type(val) == types.StringType:
+    elif type(val) == type(""):
         try:
             if _on_rec.match(val):
                 return "on"
@@ -524,8 +525,7 @@ class Dialog:
 
     """
 
-    def __init__(self, dialog="dialog", DIALOGRC=None, compat="dialog",
-                 use_stdout=None):
+    def __init__(self, dialog="dialog", DIALOGRC=None, compat="dialog"):
         """Constructor for Dialog instances.
 
         dialog   -- name of (or path to) the dialog-like program to
@@ -586,21 +586,9 @@ class Dialog:
             varname = "DIALOG_" + var
             setattr(self, varname, _dialog_exit_status_vars[var])
 
-        self._dialog_prg = _path_to_executable(dialog)
+        self.__dialog_prg = _path_to_executable(dialog)
         self.compat = compat
         self.dialog_persistent_arglist = []
-
-        # Use stderr or stdout?
-        if self.compat == "Xdialog":
-            # Default to stdout if Xdialog
-            self.use_stdout = True
-        else:
-            self.use_stdout = False
-        if use_stdout != None:
-            # Allow explicit setting
-            self.use_stdout = use_stdout
-        if self.use_stdout:
-            self.add_persistent_args(["--stdout"])
 
     def add_persistent_args(self, arglist):
         self.dialog_persistent_arglist.extend(arglist)
@@ -615,7 +603,7 @@ class Dialog:
 	"""
 	self.add_persistent_args(("--backtitle", text))
 
-    def _call_program(self, redirect_child_stdin, cmdargs, **kwargs):
+    def __call_program(self, redirect_child_stdin, cmdargs, **kwargs):
 	"""Do the actual work of invoking the dialog-like program.
 
         Communication with the dialog-like program is performed
@@ -647,16 +635,25 @@ class Dialog:
         if hasattr(self, "DIALOGRC"):
             new_environ["DIALOGRC"] = self.DIALOGRC
 
+        arglist = [self.__dialog_prg] + \
+                  self.dialog_persistent_arglist + \
+                  _compute_common_args(kwargs) + \
+                  cmdargs
+
+        # Insert here the contents of the DEBUGGING file if you want to obtain
+        # a handy string of the complete command line with arguments quoted
+        # for the shell and environment variables set.
+
         # Create:
         #   - a pipe so that the parent process can read dialog's output on
-        #     stdout/stderr
+        #     stderr
         #   - a pipe so that the parent process can feed data to dialog's
         #     stdin (this is needed for the gauge widget) if
         #     redirect_child_stdin is True
         try:
             # rfd = File Descriptor for Reading
             # wfd = File Descriptor for Writing
-            (child_rfd, child_wfd) = os.pipe()
+            (child_stderr_rfd, child_stderr_wfd) = os.pipe()
             if redirect_child_stdin:
                 (child_stdin_rfd,  child_stdin_wfd)  = os.pipe()
         except os.error, v:
@@ -667,29 +664,18 @@ class Dialog:
             # We are in the child process. We MUST NOT raise any exception.
             try:
                 # The child process doesn't need these file descriptors
-                os.close(child_rfd)
+                os.close(child_stderr_rfd)
                 if redirect_child_stdin:
                     os.close(child_stdin_wfd)
                 # We want:
-                #   - dialog's output on stderr/stdout to go to child_wfd
+                #   - dialog's output on stderr to go to child_stderr_wfd
                 #   - data written to child_stdin_wfd to go to dialog's stdin
                 #     if redirect_child_stdin is True
-                if self.use_stdout:
-                    os.dup2(child_wfd, 1)
-                else:
-                    os.dup2(child_wfd, 2)
+                os.dup2(child_stderr_wfd, 2)
                 if redirect_child_stdin:
                     os.dup2(child_stdin_rfd, 0)
 
-                arglist = [self._dialog_prg] + \
-                          self.dialog_persistent_arglist + \
-                          _compute_common_args(kwargs) + \
-                          cmdargs
-                # Insert here the contents of the DEBUGGING file if you want
-                # to obtain a handy string of the complete command line with
-                # arguments quoted for the shell and environment variables
-                # set.
-                os.execve(self._dialog_prg, arglist, new_environ)
+                os.execve(self.__dialog_prg, arglist, new_environ)
             except:
                 os._exit(127)
 
@@ -698,25 +684,25 @@ class Dialog:
 
         # We are in the father process.
         #
-        # It is essential to close child_wfd, otherwise we will never
-        # see EOF while reading on child_rfd and the parent process
+        # It is essential to close child_stderr_wfd, otherwise we will never
+        # see EOF while reading on child_stderr_rfd and the parent process
         # will block forever on the read() call.
-        # [ after the fork(), the "reference count" of child_wfd from
+        # [ after the fork(), the "reference count" of child_stderr_wfd from
         #   the operating system's point of view is 2; after the child exits,
         #   it is 1 until the father closes it itself; then it is 0 and a read
-        #   on child_rfd encounters EOF once all the remaining data in
+        #   on child_stderr_rfd encounters EOF once all the remaining data in
         #   the pipe has been read. ]
         try:
-            os.close(child_wfd)
+            os.close(child_stderr_wfd)
             if redirect_child_stdin:
                 os.close(child_stdin_rfd)
-                return (child_pid, child_rfd, child_stdin_wfd)
+                return (child_pid, child_stderr_rfd, child_stdin_wfd)
             else:
-                return (child_pid, child_rfd)
+                return (child_pid, child_stderr_rfd)
         except os.error, v:
             raise PythonDialogOSError(v.strerror)
 
-    def _wait_for_program_termination(self, child_pid, child_rfd):
+    def __wait_for_program_termination(self, child_pid, child_stderr_rfd):
         """Wait for a dialog-like process to terminate.
 
         This function waits for the specified process to terminate,
@@ -724,13 +710,13 @@ class Dialog:
         termination and returns the exit status and standard error
         output of the process as a tuple: (exit_code, stderr_string).
 
-        `child_rfd' must be the file descriptor for the
-        reading end of the pipe created by self._call_program()
-        whose writing end was connected by self._call_program() to
+        `child_stderr_rfd' must be the file descriptor for the
+        reading end of the pipe created by self.__call_program()
+        whose writing end was connected by self.__call_program() to
         the child process's standard error.
 
         This function reads the process's output on standard error
-        from `child_rfd' and closes this file descriptor once
+        from `child_stderr_rfd' and closes this file descriptor once
         this is done.
 
         Notable exceptions:
@@ -793,7 +779,7 @@ class Dialog:
 
         # Read dialog's output on its stderr
         try:
-            child_output = os.fdopen(child_rfd, "rb").read()
+            child_stderr_output = os.fdopen(child_stderr_rfd, "rb").read()
             # Now, since the file object has no reference anymore, the
             # standard IO stream behind it will be closed, causing the
             # end of the the pipe we used to read dialog's output on its
@@ -803,9 +789,9 @@ class Dialog:
         except IOError, v:
             raise PythonDialogIOError(v)
 
-        return (exit_code, child_output)
+        return (exit_code, child_stderr_output)
 
-    def _perform(self, cmdargs, **kwargs):
+    def __perform(self, cmdargs, **kwargs):
 	"""Perform a complete dialog-like program invocation.
 
         This function invokes the dialog-like program, waits for its
@@ -814,27 +800,21 @@ class Dialog:
 
         Notable exceptions:
 
-            any exception raised by self._call_program() or
-            self._wait_for_program_termination()
+            any exception raised by self.__call_program() or
+            self.__wait_for_program_termination()
 
         """
-        (child_pid, child_rfd) = \
-                    self._call_program(False, *(cmdargs,), **kwargs)
+        (child_pid, child_stderr_rfd) = \
+                    self.__call_program(False, *(cmdargs,), **kwargs)
         (exit_code, output) = \
-                    self._wait_for_program_termination(child_pid,
-                                                        child_rfd)
+                    self.__wait_for_program_termination(child_pid,
+                                                        child_stderr_rfd)
 	return (exit_code, output)
 
-    def _strip_xdialog_newline(self, output):
-        """Remove trailing newline (if any), if using Xdialog"""
-        if self.compat == "Xdialog" and output.endswith("\n"):
-            output = output[:-1]
-        return output
-
     # This is for compatibility with the old dialog.py
-    def _perform_no_options(self, cmd):
+    def __perform_no_options(self, cmd):
 	"""Call dialog without passing any more options."""
-	return os.system(self._dialog_prg + ' ' + cmd)
+	return os.system(self.__dialog_prg + ' ' + cmd)
 
     # For compatibility with the old dialog.py
     def clear(self):
@@ -844,7 +824,7 @@ class Dialog:
         programs.
 
 	"""
-	self._perform_no_options('--clear')
+	self.__perform_no_options('--clear')
 
     def calendar(self, text, height=6, width=0, day=0, month=0, year=0,
                  **kwargs):
@@ -874,12 +854,12 @@ class Dialog:
         it was closed with the Cancel button.
 
         Notable exceptions:
-            - any exception raised by self._perform()
+            - any exception raised by self.__perform()
             - UnexpectedDialogOutput
             - PythonDialogReModuleError
 
 	"""
-	(code, output) = self._perform(
+	(code, output) = self.__perform(
             *(["--calendar", text, str(height), str(width), str(day),
                str(month), str(year)],),
             **kwargs)
@@ -922,12 +902,12 @@ class Dialog:
 
         Notable exceptions:
 
-            any exception raised by self._perform() or _to_onoff()
+            any exception raised by self.__perform() or _to_onoff()
 
         """
         cmd = ["--checklist", text, str(height), str(width), str(list_height)]
         for t in choices:
-            cmd.extend(((t[0], t[1], _to_onoff(t[2]))))
+            cmd.extend((t[0], t[1], _to_onoff(t[2])))
 
         # The dialog output cannot be parsed reliably (at least in dialog
         # 0.9b-20040301) without --separate-output (because double quotes in
@@ -937,7 +917,7 @@ class Dialog:
         # double-quote).
         kwargs["separate_output"] = True
 
-	(code, output) = self._perform(*(cmd,), **kwargs)
+	(code, output) = self.__perform(*(cmd,), **kwargs)
 
         # Since we used --separate-output, the tags are separated by a newline
         # in the output. There is also a final newline after the last tag.
@@ -946,7 +926,70 @@ class Dialog:
         else:                           # empty selection
             return (code, [])
 
-    def fselect(self, filepath, height, width, **kwargs):
+
+    def form(self, text, elements, height=0, width=0, form_height=0, **kwargs):
+        """Display a form consisting of labels and fields.
+
+        text        -- text to display in the box
+        elements    -- sequence describing the labels and fields (see
+                       below)
+        height      -- height of the box
+        width       -- width of the box
+        form_height -- number of form lines displayed at the same time
+        
+        A form box consists in a series of fields and associated
+        labels. This type of dialog is suitable for adjusting
+        configuration parameters and similar tasks.
+
+        Each element of `elements' must itself be a sequence
+        (LABEL, YL, XL, ITEM, YI, XI, FIELD_LENGTH, INPUT_LENGTH)
+        containing the various parameters concerning a given field
+        and the associated label.
+
+        LABEL is a string that will be displayed at row YL, column
+        XL. ITEM is a string giving the initial value for the field,
+        which will be displayed at row YI, column XI (row and column
+        numbers start from 1).
+
+        FIELD_LENGTH and INPUT_LENGTH are integers that respectively
+        specify the number of characters used for displaying the
+        field and the maximum number of characters that can be
+        entered for this field. These two integers also determine
+        whether the contents of the field can be modified, as
+        follows:
+
+        
+          - If FIELD_LENGTH is zero, the field cannot be altered and
+            its contents determines the displayed length.
+
+          - If FIELD_LENGTH is negative, the field cannot be altered
+            and the opposite of FIELD_LENGTH gives the displayed
+            length.
+
+          - If INPUT_LENGTH is zero, it is set to FIELD_LENGTH.
+        
+        Notable exceptions:
+
+            BadPythonDialogUsage
+            any exception raised by self.__perform()
+
+	"""
+        cmd = ["--form", text, str(height), str(width), str(form_height)]
+        for label, yl, xl, item, yi, xi, field_length, input_length in elements:
+            for name, value in (("LABEL", label), ("ITEM", item)):
+                if not isinstance(value, basestring):
+                    raise BadPythonDialogUsage(
+                        "dialog.form: %s element not a string: %s" % (name,
+                                                                      value))
+
+            cmd.extend((label, str(yl), str(xl), item, str(yi), str(xi),
+                        str(field_length), str(input_length)))
+
+        (code, output) = self.__perform(*(cmd,), **kwargs)
+
+	return (code, output.split('\n')[:-1])
+
+    def fselect(self, filepath, height=0, width=0, **kwargs):
         """Display a file selection dialog box.
 
         filepath -- initial file path
@@ -982,14 +1025,18 @@ class Dialog:
               
         Notable exceptions:
 
-            any exception raised by self._perform()
+            any exception raised by self.__perform()
 
 	"""
-        (code, output) = self._perform(
+        (code, output) = self.__perform(
             *(["--fselect", filepath, str(height), str(width)],),
             **kwargs)
 
-        output = self._strip_xdialog_newline(output)
+        # Xdialog (at least version 2.0.6) adds a trailing newline to
+        # the file name
+        if self.compat == "Xdialog" and output != "":
+            if output[-1] == '\n':
+                output = output[:-1]
         
 	return (code, output)
     
@@ -1025,19 +1072,19 @@ class Dialog:
 
 
         Notable exceptions:
-            - any exception raised by self._call_program()
+            - any exception raised by self.__call_program()
             - PythonDialogOSError
 
 	"""
-        (child_pid, child_rfd, child_stdin_wfd) = self._call_program(
+        (child_pid, child_stderr_rfd, child_stdin_wfd) = self.__call_program(
             True,
             *(["--gauge", text, str(height), str(width), str(percent)],),
             **kwargs)
         try:
-            self._gauge_process = {
+            self.__gauge_process = {
                 "pid": child_pid,
                 "stdin": os.fdopen(child_stdin_wfd, "wb"),
-                "child_rfd": child_rfd
+                "child_stderr_rfd": child_stderr_rfd
                 }
         except os.error, v:
             raise PythonDialogOSError(v.strerror)
@@ -1070,8 +1117,8 @@ class Dialog:
 	else:
 	    gauge_data = "%d\n" % percent
 	try:
-            self._gauge_process["stdin"].write(gauge_data)
-            self._gauge_process["stdin"].flush()
+            self.__gauge_process["stdin"].write(gauge_data)
+            self.__gauge_process["stdin"].flush()
         except IOError, v:
             raise PythonDialogIOError(v)
     
@@ -1091,20 +1138,20 @@ class Dialog:
 
         Notable exceptions:
             - any exception raised by
-              self._wait_for_program_termination()
+              self.__wait_for_program_termination()
             - PythonDialogIOError can be raised if closing the pipe
               used to talk to the dialog-like program fails.
 
 	"""
-        p = self._gauge_process
+        p = self.__gauge_process
         # Close the pipe that we are using to feed dialog's stdin
         try:
             p["stdin"].close()
         except IOError, v:
             raise PythonDialogIOError(v)
         exit_code = \
-                  self._wait_for_program_termination(p["pid"],
-                                                      p["child_rfd"])[0]
+                  self.__wait_for_program_termination(p["pid"],
+                                                      p["child_stderr_rfd"])[0]
         return exit_code
 
     def infobox(self, text, height=10, width=30, **kwargs):
@@ -1127,10 +1174,10 @@ class Dialog:
 
         Notable exceptions:
 
-            any exception raised by self._perform()
+            any exception raised by self.__perform()
 
 	"""
-	return self._perform(
+	return self.__perform(
             *(["--infobox", text, str(height), str(width)],),
             **kwargs)[0]
 
@@ -1155,16 +1202,12 @@ class Dialog:
 
         Notable exceptions:
 
-            any exception raised by self._perform()
+            any exception raised by self.__perform()
 
 	"""
-        (code, tag) = self._perform(
+	return self.__perform(
             *(["--inputbox", text, str(height), str(width), init],),
             **kwargs)
-
-        tag = self._strip_xdialog_newline(tag)
-        
-	return (code, tag)
 
     def menu(self, text, height=15, width=54, menu_height=7, choices=[],
              **kwargs):
@@ -1244,16 +1287,13 @@ class Dialog:
 
         Notable exceptions:
 
-            any exception raised by self._perform()
+            any exception raised by self.__perform()
 
 	"""
         cmd = ["--menu", text, str(height), str(width), str(menu_height)]
         for t in choices:
             cmd.extend(t)
-	(code, output) = self._perform(*(cmd,), **kwargs)
-
-        output = self._strip_xdialog_newline(output)
-        
+	(code, output) = self.__perform(*(cmd,), **kwargs)
         if "help_button" in kwargs.keys() and output.startswith("HELP "):
             return ("help", output[5:])
         else:
@@ -1279,10 +1319,10 @@ class Dialog:
 
         Notable exceptions:
 
-            any exception raised by self._perform()
+            any exception raised by self.__perform()
 
 	"""
-	return self._perform(
+	return self.__perform(
             *(["--msgbox", text, str(height), str(width)],),
             **kwargs)[0]
 
@@ -1309,16 +1349,12 @@ class Dialog:
 
         Notable exceptions:
 
-            any exception raised by self._perform()
+            any exception raised by self.__perform()
 
 	"""
-	(code, password) = self._perform(
+	return self.__perform(
             *(["--passwordbox", text, str(height), str(width), init],),
             **kwargs)
-
-        password = self._strip_xdialog_newline(password)
-
-        return (code, password)
 
     def radiolist(self, text, height=15, width=54, list_height=7,
                   choices=[], **kwargs):
@@ -1350,18 +1386,13 @@ class Dialog:
 
         Notable exceptions:
 
-            any exception raised by self._perform() or _to_onoff()
+            any exception raised by self.__perform() or _to_onoff()
 
 	"""
         cmd = ["--radiolist", text, str(height), str(width), str(list_height)]
         for t in choices:
-            cmd.extend(((t[0], t[1], _to_onoff(t[2]))))
-
-        (code, tag) = self._perform(*(cmd,), **kwargs)
-
-        tag = self._strip_xdialog_newline(tag)
-            
-	return (code, tag)
+            cmd.extend((t[0], t[1], _to_onoff(t[2])))
+	return self.__perform(*(cmd,), **kwargs)
 
     def scrollbox(self, text, height=20, width=78, **kwargs):
 	"""Display a string in a scrollable box.
@@ -1418,11 +1449,11 @@ class Dialog:
                 if not "title" in kwargs.keys():
                     kwargs["title"] = ""
 
-                return self._perform(
+                return self.__perform(
                     *(["--textbox", fName, str(height), str(width)],),
                     **kwargs)[0]
             finally:
-                if type(f) == types.FileType:
+                if type(f) == file:
                     f.close()           # Safe, even several times
                     os.unlink(fName)
                 os.rmdir(tmp_dir)
@@ -1448,10 +1479,10 @@ class Dialog:
 
         Notable exceptions:
 
-            any exception raised by self._perform()
+            any exception raised by self.__perform()
 
 	"""
-	return self._perform(
+	return self.__perform(
             *(["--tailbox", filename, str(height), str(width)],),
             **kwargs)[0]
     # No tailboxbg widget, at least for now.
@@ -1478,14 +1509,14 @@ class Dialog:
 
         Notable exceptions:
 
-            any exception raised by self._perform()
+            any exception raised by self.__perform()
 
 	"""
         # This is for backward compatibility... not that it is
         # stupid, but I prefer explicit programming.
         if not "title" in kwargs.keys():
 	    kwargs["title"] = filename
-	return self._perform(
+	return self.__perform(
             *(["--textbox", filename, str(height), str(width)],),
             **kwargs)[0]
 
@@ -1516,12 +1547,12 @@ class Dialog:
         or None if it was closed with the Cancel button.
 
         Notable exceptions:
-            - any exception raised by self._perform()
+            - any exception raised by self.__perform()
             - PythonDialogReModuleError
             - UnexpectedDialogOutput
 
 	"""
-	(code, output) = self._perform(
+	(code, output) = self.__perform(
             *(["--timebox", text, str(height), str(width),
                str(hour), str(minute), str(second)],),
             **kwargs)
@@ -1563,9 +1594,9 @@ class Dialog:
 
         Notable exceptions:
 
-            any exception raised by self._perform()
+            any exception raised by self.__perform()
 
 	"""
-	return self._perform(
+	return self.__perform(
             *(["--yesno", text, str(height), str(width)],),
             **kwargs)[0]

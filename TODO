@@ -5,4 +5,8 @@
   -> Unclear to me (Florent).
 
 * Try detecting the terminal window size in order to make reasonable height
-  and width defaults. Hmmm -- should also then check for terminal resizing...
+  and width defaults. Hmmm---should also then check for terminal resizing...
+
+* Support --inputmenu, --pause, --progressbox, --tailboxbg
+
+* Use height=0 and width=0 for automatic size everywhere?

@@ -1,3 +1,16 @@
+2009-10-31  Florent Rougon  <flo@via.ecp.fr>
+
+	* Released 2.08, skipping version 2.07 to avoid creating confusion
+	with the 2.7 version released by Peter Åstrand in 2004.
+
+2009-02-04  Florent Rougon  <flo@via.ecp.fr>
+
+	* Add support for --form.
+
+	* dialog.py(__call_program): compute the argument list before
+	forking, otherwise things get difficult to understand if this
+	computation raises an exception.
+
 2004-03-29  Florent Rougon  <flo@via.ecp.fr>
 
 	* Released 2.06.

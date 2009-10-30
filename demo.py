@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 
 # demo.py --- A simple demonstration program for pythondialog
+# Copyright (C) 2002, 2004, 2009  Florent Rougon
 # Copyright (C) 2000  Robb Shecter, Sultanbek Tezadov
-# Copyright (C) 2002, 2004  Florent Rougon
 #
 # This program is in the public domain.
 
@@ -21,7 +21,7 @@ policy for pythondialog calls in this demo.
 
 import sys, os, os.path, time, string, dialog
 
-FAST_DEMO = 0
+FAST_DEMO = 1
 
 
 # XXX We should handle the new DIALOG_HELP and DIALOG_EXTRA return codes here.
@@ -64,7 +64,7 @@ def handle_exit_code(d, code):
         
 
 def infobox_demo(d):
-    # Exit code thrown away to keey this demo code simple (however, real
+    # Exit code thrown away to keep this demo code simple (however, real
     # errors are propagated by an exception)
     d.infobox("One moment, please. Just wasting some time here to "
               "show you the infobox...")
@@ -123,10 +123,26 @@ def inputbox_demo(d):
     return answer
 
 
-def menu_demo(d):
+def form_demo(d):
+    while 1:
+        (code, fields) = d.form(
+            "Please fill in some personal information:",
+            [("Size (cm)", 1, 1, "175", 1, 13, 4, 3),
+             ("Weight (kg)", 2, 1, "85", 2, 13, 4, 3),
+             ("City", 3, 1, "Fouillouse", 3, 13, 15, 25),
+             ("State", 4, 1, "Some Lost Place", 4, 13, 15, 25),
+             ("Country", 5, 1, "Nowhereland", 5, 13, 15, 20)])
+             
+        if handle_exit_code(d, code):
+            break
+    return fields
+
+    
+def menu_demo(d, name, city, state, country, size, weight):
     while 1:
         (code, tag) = d.menu(
-            "What's your favorite day of the week?",
+            "Hello, %s from %s, %s, %s, %s cm, %s kg. What's your favorite "
+            "day of the week?" % (name, city, state, country, size, weight),
             width=60,
             choices=[("Monday", "Being the first day of the week..."),
                      ("Tuesday", "Comes after Monday"),
@@ -143,20 +159,20 @@ def menu_demo(d):
 def checklist_demo(d):
     while 1:
         # We could put non-empty items here (not only the tag for each entry)
-        (code, tag) = d.checklist(text="What sandwich toppings do you like?",
-                                  height=15, width=54, list_height=7, 
-                                  choices=[("Catsup", "",             0),
-                                           ("Mustard", "",            0),
-                                           ("Pesto", "",              0),
-                                           ("Mayonaise", "",          1),
-                                           ("Horse radish","",        1),
-                                           ("Sun-dried tomatoes", "", 1)],
-                                  title="Do you prefer ham or spam?",
-                                  backtitle="And now, for something "
-                                  "completely different...")
+        (code, tags) = d.checklist(text="What sandwich toppings do you like?",
+                                   height=15, width=54, list_height=7, 
+                                   choices=[("Catsup", "",             0),
+                                            ("Mustard", "",            0),
+                                            ("Pesto", "",              0),
+                                            ("Mayonaise", "",          1),
+                                            ("Horse radish","",        1),
+                                            ("Sun-dried tomatoes", "", 1)],
+                                   title="Do you prefer ham or spam?",
+                                   backtitle="And now, for something "
+                                   "completely different...")
         if handle_exit_code(d, code):
             break
-    return tag
+    return tags
 
 
 def radiolist_demo(d):    
@@ -241,9 +257,9 @@ Your root password is: ************************** (looks good!)""" \
 
 def fselect_demo(d):
     while 1:
-        root_dir = os.sep               # This is OK for UNIX systems
+        root_dir = os.sep               # This is OK for Unix systems
         dir = os.getenv("HOME", root_dir)
-        # Make sure the directory we chose ends with os.sep() so that dialog
+        # Make sure the directory we chose ends with os.sep so that dialog
         # shows its contents right away
         if dir and dir[-1] != os.sep:
             dir = dir + os.sep
@@ -279,7 +295,8 @@ def demo():
     msgbox_demo(d, answer)
     textbox_demo(d)
     name = inputbox_demo(d)
-    favorite_day = menu_demo(d)
+    size, weight, city, state, country = form_demo(d)
+    favorite_day = menu_demo(d, name, city, state, country, size, weight)
     toppings = checklist_demo(d)
     sandwich = radiolist_demo(d)
     date = calendar_demo(d)
@@ -293,8 +310,8 @@ Haha. You thought it was over. Wrong. Even More fun is to come!
 Now, please select a file you would like to see growing (or not...).""",
                 width=75)
 
-    file = fselect_demo(d)
-    tailbox_demo(d, file)
+    f = fselect_demo(d)
+    tailbox_demo(d, f)
 
     d.scrollbox("""\
 Now, you're done. No, I'm not kidding.
