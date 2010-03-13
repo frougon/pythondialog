@@ -1,7 +1,8 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # setup.py --- Setup script for pythondialog
-# Copyright (c) 2002, 2003, 2004, 2009 Florent Rougon
+# Copyright (c) 2002, 2003, 2004, 2009, 2010 Florent Rougon
 #
 # This file is part of pythondialog.
 #
@@ -20,39 +21,60 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
 # MA  02110-1301 USA.
 
-import os, string, sys
+import os, sys
 from distutils.core import setup
 
-# Note:
-#  The Distutils included in Python 2.1 don't understand the "license" keyword
-#  argument of setup correctly (they only understand licence); as I don't want
-#  to mispell it, if you run the Distutils from Python 2.1, you will get
-#  License: UNKNOWN. This problem does not appear with the version included in
-#  Python 2.2.
 
 PACKAGE = "pythondialog"
-VERSION = "2.08"
+VERSION = "2.09"
 
 def main():
     setup(name=PACKAGE,
           version=VERSION,
-          description="A Python interface to the Unix dialog utility and "
+          description="A Python interface to the UNIX dialog utility and "
           "mostly-compatible programs",
 #         Doesn't work great with several authors...
-          author="Robb Shecter, Sultanbek Tezadov, Florent Rougon",
-          author_email="robb@acm.org, http://sultan.da.ru/, flo@via.ecp.fr",
+          author="Robb Shecter, Sultanbek Tezadov, Florent Rougon, "
+                 "Peter Åstrand",
+          author_email="robb@acm.org, http://sultan.da.ru/, flo@via.ecp.fr, "
+                       "peter@cendio.se",
           maintainer="Florent Rougon",
           maintainer_email="flo@via.ecp.fr",
           url="http://people.via.ecp.fr/~flo/",
+          download_url="http://people.via.ecp.fr/~flo/projects/pythondialog/"
+          "dist/python2-%s-%s.tar.gz" % (PACKAGE, VERSION),
           license="LGPL",
-          platforms="Unix",
+          # Well, there isn't much UNIX-specific code in dialog.py, if at all.
+          # I am putting Unix here only because of the dialog dependency...
+          # Note: using the "Unix" case instead of "UNIX", because it is
+          # spelled this way in Trove classifiers.
+          platforms=["Unix"],
           long_description="""\
-A Python interface to the Unix dialog utility, designed to provide
-an easy, pythonic and as complete as possible way to use the dialog
-features from Python code.
-Back-end programs that are almost compatible with dialog are also
-supported if someone cares about them.""",
+Python interface to the UNIX dialog utility
+-------------------------------------------
+
+pythondialog provides an easy, pythonic and comprehensive way to use the
+dialog_ features from Python code. Backend programs that are almost compatible
+with dialog are also supported if someone cares about them.
+
+.. _dialog: http://invisible-island.net/dialog/dialog.html""",
           keywords=["dialog", "Xdialog", "whiptail", "text-mode interface"],
+          classifiers=[
+            "Programming Language :: Python",
+            # From http://diveintopython3.org/packaging.html, I infer that
+            # specifying "Python :: 2" would imply pythondialog is not going
+            # to support Python 3, which would be untrue (cf. the Django
+            # example).
+            # "Programming Language :: Python :: 2",
+            "Development Status :: 5 - Production/Stable",
+            "Environment :: Console :: Curses",
+            "Intended Audience :: Developers",
+            "License :: OSI Approved :: GNU Library or Lesser General Public "
+            "License (LGPL)",
+            "Operating System :: Unix",
+            "Topic :: Software Development :: Libraries :: Python Modules",
+            "Topic :: Software Development :: User Interfaces",
+            "Topic :: Software Development :: Widget Sets"],
           py_modules=["dialog"])
 
 if __name__ == "__main__": main()

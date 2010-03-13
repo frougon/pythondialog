@@ -1,3 +1,81 @@
+2010-03-14  Florent Rougon  <flo@via.ecp.fr>
+
+	* Release 2.09.
+
+	* dialog.py: new supported widgets: editbox, inputmenu, mixedform,
+	mixedgauge, pause, passwordform, progressbox.
+
+	* demo.py: general improvements, such as:
+	    - hopefully more helpful dialog when the user fails to select
+	      a file in fselect;
+	    - since actually selecting a file with this widget is already
+	      boring after the second time, the widget can be exited by
+	      pressing Esc or the Cancel button (in which case the parts
+	      of the demo that need the file path will be skipped).
+	    - replace a few calls to Dialog.scrollbox() by calls to
+	      Dialog.msgbox(), since the latter provides nice automatic
+	      line wrapping.
+
+	* demo.py: support GNU-style option passing with getopt.py; you
+	can use --help to get a list of available options
+	* demo.py: no need to change a global variable anymore to switch
+	the demo to "fast mode", just use --fast
+	* demo.py: add --test-suite mode, mainly for developers: it
+	tests *all* widgets, not only those included in the "default
+	mode", and automatically enables "fast mode".
+
+	* dialog.py(__call_program): make the function more generic. stdin
+	redirection doesn't involve automatic pipe(2) creation in
+	__call_program() anymore; instead, __call_program expects a file
+	descriptor when it is asked to redirect dialog's stdin (parameter
+	'redir_child_stdin_from_fd').
+
+	The caller may still decide to create a pipe and pass its file
+	descriptor for reading as the 'redir_child_stdin_from_fd'
+	parameter, but the new possibility of redirecting dialog's stdin
+	from an arbitrary file descriptor allows for instance to redirect
+	it from an existing file, network socket... This is used to
+	implement --progressbox cleanly.
+
+	This change has the additional benefit of simplifying the API,
+	since __call_program()'s return value is always a 2-element tuple
+	now.
+
+	* dialog.py(__call_program): new close_fds option causing the
+	child process to close the specified file descriptors before the
+	execve(2) system call. This is useful for instance to have the
+	child close an end of a pipe he isn't going to use. Without that,
+	deadlocks could happen because of the child never seeing EOF from
+	the pipe.
+
+	* dialog.py: use warnings.warn(..., DeprecationWarning) for
+	obsolete functions.
+
+	* dialog.py: remove convoluted syntax *(<list>,) that was used at
+	several places. I don't see any use for this syntax anymore, and
+	changing it to simply <list> didn't make the universe collapse (so
+	far).
+
+	* dialog.py: prefix attributes for internal use (such as
+	Dialog._call_program) with a single underscore instead of a double
+	one: we don't need the name mangling here. These underscores in
+	dialog.py are just an indication that the attribute is "internal"
+	and thus subject to API changes, etc. Thanks to Peter Åstrand for
+	pointing this out.
+
+	* setup.py:
+	  - improve the long description, use ReStructuredText
+	  - add Trove classifiers
+	  - add download_url
+
+	* Review and update README, TODO...
+
+2010-02-19  Florent Rougon  <flo@via.ecp.fr>
+
+	* dialog.py: add support for --dselect
+	* dialog.py: add support for DIALOG_ITEM_HELP
+	* demo.py: small fixes
+
 2009-10-31  Florent Rougon  <flo@via.ecp.fr>
 
 	* Released 2.08, skipping version 2.07 to avoid creating confusion
@@ -31,7 +109,7 @@
 
 	* dialog.py: fix a bug (the standard output of the process running
 	dialog used to be connected to a pipe) that rendered pythondialog
-	unusable with recent versions of dialog (thanks, Peter Astrand!).
+	unusable with recent versions of dialog (thanks, Peter Åstrand!).
 
 	* dialog.py: the generic exception is now 'error' ('dialog.error',
 	if you understand this better). The old name is still there for
@@ -71,7 +149,7 @@
 	* dialog.py: don't try any PATH components (nor any components
 	from ":/bin:/usr/bin" if PATH is undefined) if the 'dialog'
 	parameter of Dialog's constructor contains a '/'.
-	
+
 	* dialog.py: somewhere between versions 0.9a-20020309a and
 	0.9b-20040301, dialog started not to quote tags in the output of
 	--checklist if they didn't contain any space. Adapt the dialog
@@ -81,7 +159,7 @@
 	* dialog.py: the data fed to dialog in Dialog.gauge_update()
 	happened to work with dialog 0.9a-20020309a but did not conform to
 	the manual page and presumably broke Xdialog. This is fixed,
-	thanks to Peter Astrand.
+	thanks to Peter Åstrand.
 
 	* dialog.py: modifications in Dialog.scrollbox():
 	    - don't use the old insecure tempfile.mktemp() anymore
@@ -162,7 +240,7 @@
 	* dialog.py: Wrote a proper module docstring.
 
 	* demo.py: Added the last widgets to the demo.
-	
+
 2002-08-30  Florent Rougon  <flo@via.ecp.fr>
 
 	* dialog.py: Added the calendar, fselect, passwordbox, tailbox and
@@ -178,7 +256,7 @@
 	focus on a given widget, added error handling.
 	* dialog.py: Took the demo to put it in a new, separate file:
 	demo.py.
-	
+
 
 2002-08-21  Florent Rougon  <flo@via.ecp.fr>
 
@@ -203,7 +281,7 @@
 	* dialog.py: Added support for "common arguments"; now, you can
 	use any combination of the _common options_ for the dialog program
 	when creating a box. Example:
-	
+
 	   d.checklist(<usual args for a checklist box>,
 	               title="...", backtitle="...", <other common args>)
 
@@ -269,3 +347,8 @@
 2000-??-??  Robb Shecter <robb@acm.org>
 
 	* Initial release.
+
+
+# Local Variables:
+# coding: utf-8
+# End:

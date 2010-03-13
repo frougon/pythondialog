@@ -1,5 +1,5 @@
 # dialog.py --- A python interface to the Linux "dialog" utility
-# Copyright (C) 2002, 2003, 2004, 2009  Florent Rougon
+# Copyright (C) 2002, 2003, 2004, 2009, 2010  Florent Rougon
 # Copyright (C) 2000  Robb Shecter, Sultanbek Tezadov
 #
 # This library is free software; you can redistribute it and/or
@@ -20,7 +20,7 @@
 """Python interface to dialog-like programs.
 
 This module provides a Python interface to dialog-like programs such
-as `dialog', `Xdialog' and `whiptail'.
+as 'dialog', 'Xdialog' and 'whiptail'.
 
 It provides a Dialog class that retains some parameters such as the
 program name and path as well as the values to pass as DIALOG*
@@ -54,18 +54,18 @@ Here is the hierarchy of notable exceptions raised by this module:
      PythonDialogBug
      ProbablyPythonBug
 
-As you can see, every exception `exc' among them verifies:
+As you can see, every exception 'exc' among them verifies:
 
   issubclass(exc, error)
 
 so if you don't need fine-grained error handling, simply catch
-`error' (which will probably be accessible as dialog.error from your
+'error' (which will probably be accessible as dialog.error from your
 program) and you should be safe.
 
 """
 
-from __future__ import nested_scopes
-import sys, os, tempfile, random, string, re
+from __future__ import nested_scopes, division
+import sys, os, tempfile, random, string, re, warnings
 
 
 # Python < 2.3 compatibility
@@ -288,7 +288,7 @@ def _path_to_executable(f):
     Find a path to an executable, using the same rules as the POSIX
     exec*p functions (see execvp(3) for instance).
 
-    If `f' contains a '/', it is assumed to be a path and is simply
+    If 'f' contains a '/', it is assumed to be a path and is simply
     checked for read and write permissions; otherwise, it is looked
     for according to the contents of the PATH environment variable,
     which defaults to ":/bin:/usr/bin" if unset.
@@ -426,7 +426,8 @@ _dialog_exit_status_vars = { "OK": 0,
                              "ESC": 2,
                              "ERROR": 3,
                              "EXTRA": 4,
-                             "HELP": 5 }
+                             "HELP": 5,
+                             "ITEM_HELP": 6}
 
 
 # Main class of the module
@@ -444,9 +445,9 @@ class Dialog:
     parameters (such as the background title) if you have the need
     for this.
 
-    The exit code (exit status) returned by dialog is to be
-    compared with the DIALOG_OK, DIALOG_CANCEL, DIALOG_ESC,
-    DIALOG_ERROR, DIALOG_EXTRA and DIALOG_HELP attributes of the
+    The exit code (exit status) returned by dialog is to be compared
+    with the DIALOG_OK, DIALOG_CANCEL, DIALOG_ESC, DIALOG_ERROR,
+    DIALOG_EXTRA, DIALOG_HELP and DIALOG_ITEM_HELP attributes of the
     Dialog instance (they are integers).
 
     Note: although this class does all it can to allow the caller to
@@ -467,6 +468,8 @@ class Dialog:
     add_persistent_args
     calendar
     checklist
+    dselect
+    form
     fselect
 
     gauge_start
@@ -475,9 +478,15 @@ class Dialog:
 
     infobox
     inputbox
+    inputmenu
     menu
+    mixedform
+    mixedgauge
     msgbox
     passwordbox
+    passwordform
+    pause
+    progressbox
     radiolist
     scrollbox
     tailbox
@@ -485,8 +494,8 @@ class Dialog:
     timebox
     yesno
 
-    clear                 (obsolete)
-    setBackgroundTitle    (obsolete)
+    clear                 (has been OBSOLETE for many years!)
+    setBackgroundTitle    (has been OBSOLETE for many years!)
 
 
     Passing dialog "Common Options"
@@ -494,7 +503,7 @@ class Dialog:
 
     Every widget method has a **kwargs argument allowing you to pass
     dialog so-called Common Options (see the dialog(1) manual page)
-    to dialog for this widget call. For instance, if `d' is a Dialog
+    to dialog for this widget call. For instance, if 'd' is a Dialog
     instance, you can write:
 
       d.checklist(args, ..., title="A Great Title", no_shadow=1)
@@ -544,26 +553,25 @@ class Dialog:
         The officially supported dialog-like program in pythondialog
         is the well-known dialog program written in C, based on the
         ncurses library. It is also known as cdialog and its home
-        page is currently (2004-03-15) located at:
+        page is currently (2010-03-15) located at:
 
-            http://dickey.his.com/dialog/dialog.html
+            http://invisible-island.net/dialog/dialog.html
 
         If you want to use a different program such as Xdialog, you
-        should indicate the executable file name with the `dialog'
+        should indicate the executable file name with the 'dialog'
         argument *and* the compatibility type that you think it
-        conforms to with the `compat' argument. Currently, `compat'
+        conforms to with the 'compat' argument. Currently, 'compat'
         can be either "dialog" (for dialog; this is the default) or
         "Xdialog" (for, well, Xdialog).
 
-        The `compat' argument allows me to cope with minor
+        The 'compat' argument allows me to cope with minor
         differences in behaviour between the various programs
         implementing the dialog interface (not the text or graphical
         interface, I mean the "API"). However, having to support
-        various APIs simultaneously is a bit ugly and I would really
-        prefer you to report bugs to the relevant maintainers when
-        you find incompatibilities with dialog. This is for the
-        benefit of pretty much everyone that relies on the dialog
-        interface.
+        various APIs simultaneously is ugly and I would really prefer
+        you to report bugs to the relevant maintainers when you find
+        incompatibilities with dialog. This is for the benefit of
+        pretty much everyone that relies on the dialog interface.
 
         Notable exceptions:
 
@@ -586,7 +594,7 @@ class Dialog:
             varname = "DIALOG_" + var
             setattr(self, varname, _dialog_exit_status_vars[var])
 
-        self.__dialog_prg = _path_to_executable(dialog)
+        self._dialog_prg = _path_to_executable(dialog)
         self.compat = compat
         self.dialog_persistent_arglist = []
 
@@ -601,27 +609,38 @@ class Dialog:
         programs.
 
 	"""
+        warnings.warn("Dialog.setBackgroundTitle() has been obsolete for "
+                      "many years; look for 'backtitle' in demo.py for "
+                      "possible replacements", DeprecationWarning)
 	self.add_persistent_args(("--backtitle", text))
 
-    def __call_program(self, redirect_child_stdin, cmdargs, **kwargs):
+    def _call_program(self, cmdargs, redir_child_stdin_from_fd=None,
+                      close_fds=(), **kwargs):
 	"""Do the actual work of invoking the dialog-like program.
 
         Communication with the dialog-like program is performed
-        through one or two pipes, depending on
-        `redirect_child_stdin'. There is always one pipe that is
-        created to allow the parent process to read what dialog
-        writes on its standard error stream.
+        through one pipe(2) and optionally a user-specified file
+        descriptor, depending on 'redir_child_stdin_from_fd'. The
+        pipe allows the parent process to read what dialog writes on
+        its standard error stream.
         
-        If `redirect_child_stdin' is True, an additional pipe is
-        created whose reading end is connected to dialog's standard
-        input. This is used by the gauge widget to feed data to
-        dialog.
+        If 'redir_child_stdin_from_fd' is not None, it should be an
+        open file descriptor (i.e., an integer). That file descriptor
+        will be connected to dialog's standard input. This is used by
+        the gauge widget to feed data to dialog, as well as for
+        progressbox() to allow dialog to read data from a
+        possibly-growing file.
 
-        Beware when interpreting the return value: the length of the
-        returned tuple depends on `redirect_child_stdin'.
+        If 'redir_child_stdin_from_fd' is None, the standard input in
+        the child process (which runs dialog) is not redirected in
+        any way.
 
-        Notable exception: PythonDialogOSError (if pipe() or close()
-                           system calls fail...)
+        If 'close_fds' is passed, it should be a sequence of 
+        file descriptors that will be closed by the child process
+        before it exec()s the dialog-like program.
+        
+        Notable exception: PythonDialogOSError (if any of the pipe(2)
+                           or close(2) system calls fails...)
 
         """
         # We want to define DIALOG_OK, DIALOG_CANCEL, etc. in the
@@ -635,7 +654,7 @@ class Dialog:
         if hasattr(self, "DIALOGRC"):
             new_environ["DIALOGRC"] = self.DIALOGRC
 
-        arglist = [self.__dialog_prg] + \
+        arglist = [self._dialog_prg] + \
                   self.dialog_persistent_arglist + \
                   _compute_common_args(kwargs) + \
                   cmdargs
@@ -644,18 +663,12 @@ class Dialog:
         # a handy string of the complete command line with arguments quoted
         # for the shell and environment variables set.
 
-        # Create:
-        #   - a pipe so that the parent process can read dialog's output on
-        #     stderr
-        #   - a pipe so that the parent process can feed data to dialog's
-        #     stdin (this is needed for the gauge widget) if
-        #     redirect_child_stdin is True
+        # Create a pipe so that the parent process can read dialog's
+        # output on stderr
         try:
             # rfd = File Descriptor for Reading
             # wfd = File Descriptor for Writing
             (child_stderr_rfd, child_stderr_wfd) = os.pipe()
-            if redirect_child_stdin:
-                (child_stdin_rfd,  child_stdin_wfd)  = os.pipe()
         except os.error, v:
             raise PythonDialogOSError(v.strerror)
 
@@ -663,19 +676,22 @@ class Dialog:
         if child_pid == 0:
             # We are in the child process. We MUST NOT raise any exception.
             try:
-                # The child process doesn't need these file descriptors
-                os.close(child_stderr_rfd)
-                if redirect_child_stdin:
-                    os.close(child_stdin_wfd)
+                # 1) If the write end of a pipe isn't closed, the read end
+                #    will never see EOF, which can indefinitely block the
+                #    child waiting for input. To avoid this, the write end
+                #    must be closed in the father *and* child processes.
+                # 2) The child process doesn't need child_stderr_rfd.
+                for fd in close_fds + (child_stderr_rfd,):
+                    os.close(fd)
                 # We want:
-                #   - dialog's output on stderr to go to child_stderr_wfd
-                #   - data written to child_stdin_wfd to go to dialog's stdin
-                #     if redirect_child_stdin is True
+                #   - dialog's output on stderr to go to child_stderr_wfd;
+                #   - data written to fd 'redir_child_stdin_from_fd'
+                #     (if not None) to go to dialog's stdin.
                 os.dup2(child_stderr_wfd, 2)
-                if redirect_child_stdin:
-                    os.dup2(child_stdin_rfd, 0)
+                if redir_child_stdin_from_fd is not None:
+                    os.dup2(redir_child_stdin_from_fd, 0)
 
-                os.execve(self.__dialog_prg, arglist, new_environ)
+                os.execve(self._dialog_prg, arglist, new_environ)
             except:
                 os._exit(127)
 
@@ -694,15 +710,11 @@ class Dialog:
         #   the pipe has been read. ]
         try:
             os.close(child_stderr_wfd)
-            if redirect_child_stdin:
-                os.close(child_stdin_rfd)
-                return (child_pid, child_stderr_rfd, child_stdin_wfd)
-            else:
-                return (child_pid, child_stderr_rfd)
-        except os.error, v:
-            raise PythonDialogOSError(v.strerror)
+        except os.error, e:
+            raise PythonDialogOSError(e.strerror)
+        return (child_pid, child_stderr_rfd)
 
-    def __wait_for_program_termination(self, child_pid, child_stderr_rfd):
+    def _wait_for_program_termination(self, child_pid, child_stderr_rfd):
         """Wait for a dialog-like process to terminate.
 
         This function waits for the specified process to terminate,
@@ -710,13 +722,13 @@ class Dialog:
         termination and returns the exit status and standard error
         output of the process as a tuple: (exit_code, stderr_string).
 
-        `child_stderr_rfd' must be the file descriptor for the
-        reading end of the pipe created by self.__call_program()
-        whose writing end was connected by self.__call_program() to
-        the child process's standard error.
+        'child_stderr_rfd' must be the file descriptor for the
+        reading end of the pipe created by self._call_program(), the
+        writing end of which was connected by self._call_program()
+        to the child process's standard error.
 
-        This function reads the process's output on standard error
-        from `child_stderr_rfd' and closes this file descriptor once
+        This function reads the process' output on standard error
+        from 'child_stderr_rfd' and closes this file descriptor once
         this is done.
 
         Notable exceptions:
@@ -740,12 +752,15 @@ class Dialog:
                                            os.WTERMSIG(exit_info))
         else:
             raise PythonDialogBug("please report this bug to the "
-                                  "pythondialog maintainers")
+                                  "pythondialog maintainer(s)")
 
         if exit_code == self.DIALOG_ERROR:
-            raise DialogError("the dialog-like program exited with "
-                              "code %d (was passed to it as the DIALOG_ERROR "
-                              "environment variable)" % exit_code)
+            raise DialogError(
+                "the dialog-like program exited with code %d (was passed to "
+                "it as the DIALOG_ERROR environment variable). Sometimes, "
+                "the reason is simply that dialog was given a height or width "
+                "parameter that is too big for the terminal in use."
+                % exit_code)
         elif exit_code == 127:
             raise PythonDialogErrorBeforeExecInChildProcess(
                 "perhaps the dialog-like program could not be executed; "
@@ -782,7 +797,7 @@ class Dialog:
             child_stderr_output = os.fdopen(child_stderr_rfd, "rb").read()
             # Now, since the file object has no reference anymore, the
             # standard IO stream behind it will be closed, causing the
-            # end of the the pipe we used to read dialog's output on its
+            # end of the pipe we used to read dialog's output on its
             # stderr to be closed (this is important, otherwise invoking
             # dialog enough times will eventually exhaust the maximum number
             # of open file descriptors).
@@ -791,7 +806,7 @@ class Dialog:
 
         return (exit_code, child_stderr_output)
 
-    def __perform(self, cmdargs, **kwargs):
+    def _perform(self, cmdargs, **kwargs):
 	"""Perform a complete dialog-like program invocation.
 
         This function invokes the dialog-like program, waits for its
@@ -800,31 +815,39 @@ class Dialog:
 
         Notable exceptions:
 
-            any exception raised by self.__call_program() or
-            self.__wait_for_program_termination()
+            any exception raised by self._call_program() or
+            self._wait_for_program_termination()
 
         """
         (child_pid, child_stderr_rfd) = \
-                    self.__call_program(False, *(cmdargs,), **kwargs)
+                    self._call_program(cmdargs, **kwargs)
         (exit_code, output) = \
-                    self.__wait_for_program_termination(child_pid,
-                                                        child_stderr_rfd)
+                    self._wait_for_program_termination(child_pid,
+                                                       child_stderr_rfd)
 	return (exit_code, output)
 
     # This is for compatibility with the old dialog.py
-    def __perform_no_options(self, cmd):
+    def _perform_no_options(self, cmd):
 	"""Call dialog without passing any more options."""
-	return os.system(self.__dialog_prg + ' ' + cmd)
+
+        warnings.warn("Dialog._perform_no_options() has been obsolete for "
+                      "many years", DeprecationWarning)
+	return os.system(self._dialog_prg + ' ' + cmd)
 
     # For compatibility with the old dialog.py
     def clear(self):
 	"""Clear the screen. Equivalent to the dialog --clear option.
 
         This method is obsolete. Please remove calls to it from your
-        programs.
+        programs. You may use the clear(1) program to clear the screen.
+        cf. clear_screen() in demo.py for an example.
 
 	"""
-	self.__perform_no_options('--clear')
+        warnings.warn("Dialog.clear() has been obsolete for many years.\n"
+                      "You may use the clear(1) program to clear the screen.\n"
+                      "cf. clear_screen() in demo.py for an example",
+                      DeprecationWarning)
+	self._perform_no_options('--clear')
 
     def calendar(self, text, height=6, width=0, day=0, month=0, year=0,
                  **kwargs):
@@ -846,22 +869,22 @@ class Dialog:
         move between windows. If the year is given as zero, the
         current date is used as an initial value.
 
-        Return a tuple of the form (code, date) where `code' is the
+        Return a tuple of the form (code, date) where 'code' is the
         exit status (an integer) of the dialog-like program and
-        `date' is a list of the form [day, month, year] (where `day',
-        `month' and `year' are integers corresponding to the date
+        'date' is a list of the form [day, month, year] (where 'day',
+        'month' and 'year' are integers corresponding to the date
         chosen by the user) if the box was closed with OK, or None if
         it was closed with the Cancel button.
 
         Notable exceptions:
-            - any exception raised by self.__perform()
+            - any exception raised by self._perform()
             - UnexpectedDialogOutput
             - PythonDialogReModuleError
 
 	"""
-	(code, output) = self.__perform(
-            *(["--calendar", text, str(height), str(width), str(day),
-               str(month), str(year)],),
+	(code, output) = self._perform(
+            ["--calendar", text, str(height), str(width), str(day),
+               str(month), str(year)],
             **kwargs)
         if code == self.DIALOG_OK:
             try:
@@ -888,13 +911,13 @@ class Dialog:
         list_height -- number of entries displayed in the box (which
                        can be scrolled) at a given time
         choices     -- a list of tuples (tag, item, status) where
-                       `status' specifies the initial on/off state of
+                       'status' specifies the initial on/off state of
                        each entry; can be 0 or 1 (integers, 1 meaning
                        checked, i.e. "on"), or "on", "off" or any
                        uppercase variant of these two strings.
 
         Return a tuple of the form (code, [tag, ...]) with the tags
-        for the entries that were selected by the user. `code' is the
+        for the entries that were selected by the user. 'code' is the
         exit status of the dialog-like program.
 
         If the user exits with ESC or CANCEL, the returned tag list
@@ -902,7 +925,7 @@ class Dialog:
 
         Notable exceptions:
 
-            any exception raised by self.__perform() or _to_onoff()
+            any exception raised by self._perform() or _to_onoff()
 
         """
         cmd = ["--checklist", text, str(height), str(width), str(list_height)]
@@ -917,7 +940,7 @@ class Dialog:
         # double-quote).
         kwargs["separate_output"] = True
 
-	(code, output) = self.__perform(*(cmd,), **kwargs)
+	(code, output) = self._perform(cmd, **kwargs)
 
         # Since we used --separate-output, the tags are separated by a newline
         # in the output. There is also a final newline after the last tag.
@@ -926,6 +949,35 @@ class Dialog:
         else:                           # empty selection
             return (code, [])
 
+    def _generic_form(self, widget_name, method_name, text, elements, height=0,
+                      width=0, form_height=0, **kwargs):
+        cmd = ["--%s" % widget_name, text, str(height), str(width),
+               str(form_height)]
+
+        for elt in elements:
+            # Give names to make the code more readable
+            if len(elt) == 8:   # code path for --form and --passwordform
+                label, yl, xl, item, yi, xi, field_length, input_length = elt
+            else:               # code path for --mixedform
+                assert len(elt) == 9, elt
+                label, yl, xl, item, yi, xi, field_length, input_length, \
+                    attributes = elt
+
+            for name, value in (("LABEL", label), ("ITEM", item)):
+                if not isinstance(value, basestring):
+                    raise BadPythonDialogUsage(
+                        "Dialog.%s: %s element not a string: %s" % (method_name,
+                                                                    name,
+                                                                    value))
+
+            cmd.extend((label, str(yl), str(xl), item, str(yi), str(xi),
+                        str(field_length), str(input_length)))
+            if len(elt) == 9:
+                cmd.append(str(attributes))
+
+        (code, output) = self._perform(cmd, **kwargs)
+
+	return (code, output.split('\n')[:-1])
 
     def form(self, text, elements, height=0, width=0, form_height=0, **kwargs):
         """Display a form consisting of labels and fields.
@@ -941,7 +993,7 @@ class Dialog:
         labels. This type of dialog is suitable for adjusting
         configuration parameters and similar tasks.
 
-        Each element of `elements' must itself be a sequence
+        Each element of 'elements' must itself be a sequence
         (LABEL, YL, XL, ITEM, YI, XI, FIELD_LENGTH, INPUT_LENGTH)
         containing the various parameters concerning a given field
         and the associated label.
@@ -949,7 +1001,7 @@ class Dialog:
         LABEL is a string that will be displayed at row YL, column
         XL. ITEM is a string giving the initial value for the field,
         which will be displayed at row YI, column XI (row and column
-        numbers start from 1).
+        numbers starting from 1).
 
         FIELD_LENGTH and INPUT_LENGTH are integers that respectively
         specify the number of characters used for displaying the
@@ -957,37 +1009,159 @@ class Dialog:
         entered for this field. These two integers also determine
         whether the contents of the field can be modified, as
         follows:
-
         
-          - If FIELD_LENGTH is zero, the field cannot be altered and
-            its contents determines the displayed length.
+          - if FIELD_LENGTH is zero, the field cannot be altered and
+            its contents determines the displayed length;
 
-          - If FIELD_LENGTH is negative, the field cannot be altered
+          - if FIELD_LENGTH is negative, the field cannot be altered
             and the opposite of FIELD_LENGTH gives the displayed
-            length.
+            length;
 
-          - If INPUT_LENGTH is zero, it is set to FIELD_LENGTH.
+          - if INPUT_LENGTH is zero, it is set to FIELD_LENGTH.
+        
+        Return a tuple of the form (code, list) where 'code' is the
+        exit status (an integer) of the dialog-like program and
+        'list' gives the contents of every editable field on exit,
+        with the same order as in 'elements'.
+
+        Notable exceptions:
+
+            BadPythonDialogUsage
+            any exception raised by self._perform()
+
+	"""
+        return self._generic_form("form", "form", text, elements,
+                                  height, width, form_height, **kwargs)
+
+    def passwordform(self, text, elements, height=0, width=0, form_height=0,
+                     **kwargs):
+        """Display a form consisting of labels and invisible fields.
+
+        This widget is identical to the form box, except that all
+        text fields are treated as passwordbox widgets rather than
+        inputbox widgets.
+
+        Notable exceptions:
+
+            BadPythonDialogUsage
+            any exception raised by self._perform()
+
+	"""
+        return self._generic_form("passwordform", "passwordform", text,
+                                  elements, height, width, form_height,
+                                  **kwargs)
+
+    def mixedform(self, text, elements, height=0, width=0, form_height=0,
+                  **kwargs):
+        """Display a form consisting of labels and fields.
+
+        text        -- text to display in the box
+        elements    -- sequence describing the labels and fields (see
+                       below)
+        height      -- height of the box
+        width       -- width of the box
+        form_height -- number of form lines displayed at the same time
+        
+        A mixedform box is very similar to a form box, and differs
+        from the latter by allowing field attributes to be specified.
+
+        Each element of 'elements' must itself be a sequence (LABEL,
+        YL, XL, ITEM, YI, XI, FIELD_LENGTH, INPUT_LENGTH, ATTRIBUTES)
+        containing the various parameters concerning a given field
+        and the associated label.
+
+        ATTRIBUTES is a bit mask with the following meaning:
+
+          bit 0  -- the field should be hidden (e.g., a password)
+          bit 1  -- the field should be read-only (e.g., a label)
+
+        For all other parameters, please refer to the documentation
+        of the form box.
+
+        The return value is the same as would be with the form box,
+        except that field marked as read-only with bit 1 of
+        ATTRIBUTES are also included in the output list.
         
         Notable exceptions:
 
             BadPythonDialogUsage
-            any exception raised by self.__perform()
+            any exception raised by self._perform()
 
 	"""
-        cmd = ["--form", text, str(height), str(width), str(form_height)]
-        for label, yl, xl, item, yi, xi, field_length, input_length in elements:
-            for name, value in (("LABEL", label), ("ITEM", item)):
-                if not isinstance(value, basestring):
-                    raise BadPythonDialogUsage(
-                        "dialog.form: %s element not a string: %s" % (name,
-                                                                      value))
+        return self._generic_form("mixedform", "mixedform", text, elements,
+                                  height, width, form_height, **kwargs)
 
-            cmd.extend((label, str(yl), str(xl), item, str(yi), str(xi),
-                        str(field_length), str(input_length)))
+    def dselect(self, filepath, height=0, width=0, **kwargs):
+        """Display a directory selection dialog box.
 
-        (code, output) = self.__perform(*(cmd,), **kwargs)
+        filepath -- initial path
+        height   -- height of the box
+        width    -- width of the box
 
-	return (code, output.split('\n')[:-1])
+        The directory-selection dialog displays a text-entry window
+        in which you can type a directory, and above that a window
+        with directory names.
+
+        Here, filepath can be a filepath in which case the directory
+        window will display the contents of the path and the
+        text-entry window will contain the preselected directory.
+
+        Use tab or arrow keys to move between the windows. Within the
+        directory window, use the up/down arrow keys to scroll the
+        current selection. Use the space-bar to copy the current
+        selection into the text-entry window.
+
+        Typing any printable characters switches focus to the
+        text-entry window, entering that character as well as
+        scrolling the directory window to the closest match.
+
+        Use a carriage return or the "OK" button to accept the
+        current value in the text-entry window and exit.
+
+        Return a tuple of the form (code, path) where 'code' is the
+        exit status (an integer) of the dialog-like program and
+        'path' is the directory chosen by the user.
+              
+        Notable exceptions:
+
+            any exception raised by self._perform()
+
+        """
+        (code, output) = self._perform(
+            ["--dselect", filepath, str(height), str(width)],
+            **kwargs)
+
+	return (code, output)
+
+    def editbox(self, filepath, height=0, width=0, **kwargs):
+        """Display a basic text editor dialog box.
+
+        filepath -- file which determines the initial contents of
+                    the dialog box
+        height   -- height of the box
+        width    -- width of the box
+        
+        The editbox dialog displays a copy of the file contents. You
+        may edit it using the Backspace, Delete and cursor keys to
+        correct typing errors. It also recognizes Page Up and Page
+        Down. Unlike the inputbox, you must tab to the "OK" or
+        "Cancel" buttons to close the dialog. Pressing the "Enter"
+        key within the box will split the corresponding line.
+
+        Return a tuple of the form (code, text) where 'code' is the
+        exit status (an integer) of the dialog-like program and
+        'text' is the contents of the text entry window on exit.
+              
+        Notable exceptions:
+
+            any exception raised by self._perform()
+
+	"""
+        (code, output) = self._perform(
+            ["--editbox", filepath, str(height), str(width)],
+            **kwargs)
+
+	return (code, output)
 
     def fselect(self, filepath, height=0, width=0, **kwargs):
         """Display a file selection dialog box.
@@ -1018,18 +1192,18 @@ class Dialog:
         current value in the text-entry window, or the "Cancel"
         button to cancel.
 
-        Return a tuple of the form (code, path) where `code' is the
+        Return a tuple of the form (code, path) where 'code' is the
         exit status (an integer) of the dialog-like program and
-        `path' is the path chosen by the user (whose last element may
-        be a directory or a file).
+        'path' is the path chosen by the user (the last element of
+        which may be a directory or a file).
               
         Notable exceptions:
 
-            any exception raised by self.__perform()
+            any exception raised by self._perform()
 
 	"""
-        (code, output) = self.__perform(
-            *(["--fselect", filepath, str(height), str(width)],),
+        (code, output) = self._perform(
+            ["--fselect", filepath, str(height), str(width)],
             **kwargs)
 
         # Xdialog (at least version 2.0.6) adds a trailing newline to
@@ -1061,7 +1235,7 @@ class Dialog:
         Gauge typical usage
         -------------------
 
-        Gauge typical usage (assuming that `d' is an instance of the
+        Gauge typical usage (assuming that 'd' is an instance of the
 	Dialog class) looks like this:
 	    d.gauge_start()
 	    # do something
@@ -1072,22 +1246,33 @@ class Dialog:
 
 
         Notable exceptions:
-            - any exception raised by self.__call_program()
+            - any exception raised by self._call_program()
             - PythonDialogOSError
 
 	"""
-        (child_pid, child_stderr_rfd, child_stdin_wfd) = self.__call_program(
-            True,
-            *(["--gauge", text, str(height), str(width), str(percent)],),
-            **kwargs)
         try:
-            self.__gauge_process = {
+            # We need a pipe to send data to the child (dialog) process's
+            # stdin while it is running.
+            # rfd = File Descriptor for Reading
+            # wfd = File Descriptor for Writing
+            (child_stdin_rfd, child_stdin_wfd)  = os.pipe()
+
+            (child_pid, child_stderr_rfd) = self._call_program(
+                ["--gauge", text, str(height), str(width), str(percent)],
+                redir_child_stdin_from_fd=child_stdin_rfd,
+                close_fds=(child_stdin_wfd,), **kwargs)
+
+            # fork() is done. We don't need child_stdin_rfd in the father
+            # process anymore.
+            os.close(child_stdin_rfd)
+
+            self._gauge_process = {
                 "pid": child_pid,
                 "stdin": os.fdopen(child_stdin_wfd, "wb"),
                 "child_stderr_rfd": child_stderr_rfd
                 }
-        except os.error, v:
-            raise PythonDialogOSError(v.strerror)
+        except os.error, e:
+            raise PythonDialogOSError(e.strerror)
             
     def gauge_update(self, percent, text="", update_text=0):
 	"""Update a running gauge box.
@@ -1098,11 +1283,11 @@ class Dialog:
                        text in the box
 
         This function updates the percentage shown by the meter of a
-        running gauge box (meaning `gauge_start' must have been
+        running gauge box (meaning 'gauge_start' must have been
         called previously). If update_text is true (for instance, 1),
         the text displayed in the box is also updated.
 
-	See the `gauge_start' function's documentation for
+	See the 'gauge_start' function's documentation for
 	information about how to use a gauge.
 
         Return value: undefined.
@@ -1117,40 +1302,43 @@ class Dialog:
 	else:
 	    gauge_data = "%d\n" % percent
 	try:
-            self.__gauge_process["stdin"].write(gauge_data)
-            self.__gauge_process["stdin"].flush()
+            self._gauge_process["stdin"].write(gauge_data)
+            self._gauge_process["stdin"].flush()
         except IOError, v:
             raise PythonDialogIOError(v)
     
     # For "compatibility" with the old dialog.py...
-    gauge_iterate = gauge_update
+    def gauge_iterate(*args, **kwargs):
+        warnings.warn("Dialog.gauge_iterate() has been obsolete for "
+                      "many years", DeprecationWarning)
+        gauge_update(*args, **kwargs)
 
     def gauge_stop(self):
-	"""Terminate a running gauge.
+	"""Terminate a running gauge widget.
 
         This function performs the appropriate cleanup actions to
-        terminate a running gauge (started with `gauge_start').
+        terminate a running gauge (started with 'gauge_start').
 	
-	See the `gauge_start' function's documentation for
+	See the 'gauge_start' function's documentation for
 	information about how to use a gauge.
 
         Return value: undefined.
 
         Notable exceptions:
             - any exception raised by
-              self.__wait_for_program_termination()
+              self._wait_for_program_termination()
             - PythonDialogIOError can be raised if closing the pipe
               used to talk to the dialog-like program fails.
 
 	"""
-        p = self.__gauge_process
+        p = self._gauge_process
         # Close the pipe that we are using to feed dialog's stdin
         try:
             p["stdin"].close()
         except IOError, v:
             raise PythonDialogIOError(v)
         exit_code = \
-                  self.__wait_for_program_termination(p["pid"],
+                  self._wait_for_program_termination(p["pid"],
                                                       p["child_stderr_rfd"])[0]
         return exit_code
 
@@ -1174,11 +1362,11 @@ class Dialog:
 
         Notable exceptions:
 
-            any exception raised by self.__perform()
+            any exception raised by self._perform()
 
 	"""
-	return self.__perform(
-            *(["--infobox", text, str(height), str(width)],),
+	return self._perform(
+            ["--infobox", text, str(height), str(width)],
             **kwargs)[0]
 
     def inputbox(self, text, height=10, width=30, init='', **kwargs):
@@ -1196,18 +1384,111 @@ class Dialog:
         correct typing errors. If the input string is longer than
         can fit in the dialog box, the input field will be scrolled.
 
-        Return a tuple of the form (code, string) where `code' is the
-        exit status of the dialog-like program and `string' is the
+        Return a tuple of the form (code, string) where 'code' is the
+        exit status of the dialog-like program and 'string' is the
         string entered by the user.
 
         Notable exceptions:
 
-            any exception raised by self.__perform()
+            any exception raised by self._perform()
 
 	"""
-	return self.__perform(
-            *(["--inputbox", text, str(height), str(width), init],),
+	return self._perform(
+            ["--inputbox", text, str(height), str(width), init],
             **kwargs)
+
+    def inputmenu(self, text, height=0, width=60, menu_height=7, choices=[],
+             **kwargs):
+        """Display an inputmenu dialog box.
+
+        text        -- text to display in the box
+        height      -- height of the box
+        width       -- width of the box
+        menu_height -- height of the menu (scrollable part)
+        choices     -- a sequence of (tag, item) tuples, the meaning
+                       of which is explained below
+
+
+        Overview
+        --------
+
+        An inputmenu box is a dialog box that can be used to present
+        a list of choices in the form of a menu for the user to
+        choose. Choices are displayed in the order given. The main
+        differences with the menu dialog box are:
+
+          * entries are not automatically centered, but
+            left-adjusted;
+            
+          * the current entry can be renamed by pressing the Rename
+            button, which allows editing the 'item' part of the
+            current entry.
+
+        Each menu entry consists of a 'tag' string and an 'item'
+        string. The tag gives the entry a name to distinguish it from
+        the other entries in the menu and to provide quick keyboard
+        access. The item is a short description of the option that
+        the entry represents.
+
+        The user can move between the menu entries by pressing the
+        UP/DOWN keys or the first letter of the tag as a hot key.
+        There are 'menu_height' lines (not entries!) displayed in the
+        scrollable part of the menu at one time.
+
+        BEWARE!
+
+          It is strongly advised not to put any space in tags,
+          otherwise the dialog output can be ambiguous if the
+          corresponding entry is renamed, causing pythondialog to
+          return a wrong tag string and new item text.
+
+          The reason is that in this case, the dialog output is
+          "RENAMED <tag> <item>" (without angle brackets) and
+          pythondialog cannot guess whether spaces after the
+          "RENAMED " prefix belong to the <tag> or the new <item>
+          text.
+
+
+        Return value
+        ------------
+
+        Return a tuple of the form (exit_info, tag, new_item_text)
+        where:
+
+        'exit_info' is either:
+          - the string "accepted", meaning that an entry was accepted
+            without renaming;
+          - the string "renamed", meaning that an entry was accepted
+            after being renamed;
+          - an integer, being the exit status of the dialog-like
+            program.
+
+        'tag' indicates which entry was accepted (with or without
+        renaming), if any. If no entry was accepted (e.g., if the
+        dialog was exited with the Cancel button), then 'tag' is
+        None.
+        
+        'new_item_text' gives the new 'item' part of the renamed
+        entry if 'exit_info' is "renamed", otherwise it is None.
+
+        Notable exceptions:
+
+            any exception raised by self._perform()
+
+	"""
+        cmd = ["--inputmenu", text, str(height), str(width), str(menu_height)]
+        for t in choices:
+            cmd.extend(t)
+	(code, output) = self._perform(cmd, **kwargs)
+
+        if code == self.DIALOG_OK:
+            return ("accepted", output, None)
+        elif code == self.DIALOG_EXTRA:
+            assert output.startswith("RENAMED "), output
+            t = output.split(' ', 2)
+            return ("renamed", t[1], t[2])
+        else:
+            return (code, None, None)
 
     def menu(self, text, height=15, width=54, menu_height=7, choices=[],
              **kwargs):
@@ -1219,8 +1500,8 @@ class Dialog:
         menu_height -- number of entries displayed in the box (which
                        can be scrolled) at a given time
         choices     -- a sequence of (tag, item) or (tag, item, help)
-                       tuples (the meaning of each `tag', `item' and
-                       `help' is explained below)
+                       tuples (the meaning of each 'tag', 'item' and
+                       'help' is explained below)
 
 
         Overview
@@ -1230,16 +1511,17 @@ class Dialog:
         used to present a list of choices in the form of a menu for
         the user to choose. Choices are displayed in the order given.
 
-        Each menu entry consists of a `tag' string and an `item'
+        Each menu entry consists of a 'tag' string and an 'item'
         string. The tag gives the entry a name to distinguish it from
-        the other entries in the menu. The item is a short
-        description of the option that the entry represents.
+        the other entries in the menu and to provide quick keyboard
+        access. The item is a short description of the option that
+        the entry represents.
 
         The user can move between the menu entries by pressing the
-        UP/DOWN keys, the first letter of the tag as a hot-key, or
-        the number keys 1-9. There are menu-height entries displayed
-        in the menu at one time, but the menu will be scrolled if
-        there are more entries than that.
+        UP/DOWN keys, the first letter of the tag as a hot key, or
+        the number keys 1-9. There are 'menu_height' entries
+        displayed in the menu at one time, but the menu will be
+        scrolled if there are more entries than that.
 
 
         Providing on-line help facilities
@@ -1247,18 +1529,18 @@ class Dialog:
 
         If this function is called with item_help=1 (keyword
         argument), the option --item-help is passed to dialog and the
-        tuples contained in `choices' must contain 3 elements each :
+        tuples contained in 'choices' must contain 3 elements each :
         (tag, item, help). The help string for the highlighted item
         is displayed in the bottom line of the screen and updated as
         the user highlights other items.
 
         If item_help=0 or if this keyword argument is not passed to
-        this function, the tuples contained in `choices' must contain
+        this function, the tuples contained in 'choices' must contain
         2 elements each : (tag, item).
 
         If this function is called with help_button=1, it must also
         be called with item_help=1 (this is a limitation of dialog),
-        therefore the tuples contained in `choices' must contain 3
+        therefore the tuples contained in 'choices' must contain 3
         elements each as explained in the previous paragraphs. This
         will cause a Help button to be added to the right of the
         Cancel button (by passing --help-button to dialog).
@@ -1269,61 +1551,163 @@ class Dialog:
 
         Return a tuple of the form (exit_info, string).
 
-        `exit_info' is either:
-          - an integer, being the the exit status of the dialog-like
+        'exit_info' is either:
+          - an integer, being the exit status of the dialog-like
             program
           - or the string "help", meaning that help_button=1 was
             passed and that the user chose the Help button instead of
             OK or Cancel.
 
-        The meaning of `string' depends on the value of exit_info:
-          - if `exit_info' is 0, `string' is the tag chosen by the
+        The meaning of 'string' depends on the value of exit_info:
+          - if 'exit_info' is 0, 'string' is the tag chosen by the
             user
-          - if `exit_info' is "help", `string' is the `help' string
-            from the `choices' argument corresponding to the item
+          - if 'exit_info' is "help", 'string' is the 'help' string
+            from the 'choices' argument corresponding to the item
             that was highlighted when the user chose the Help button
           - otherwise (the user chose Cancel or pressed Esc, or there
-            was a dialog error), the value of `string' is undefined.
+            was a dialog error), the value of 'string' is undefined.
 
         Notable exceptions:
 
-            any exception raised by self.__perform()
+            any exception raised by self._perform()
 
 	"""
         cmd = ["--menu", text, str(height), str(width), str(menu_height)]
         for t in choices:
             cmd.extend(t)
-	(code, output) = self.__perform(*(cmd,), **kwargs)
+	(code, output) = self._perform(cmd, **kwargs)
         if "help_button" in kwargs.keys() and output.startswith("HELP "):
             return ("help", output[5:])
         else:
             return (code, output)
 
-    def msgbox(self, text, height=10, width=30, **kwargs):
-        """Display a message dialog box.
+    def mixedgauge(self, text, height=0, width=0, percent=0, elements=[],
+             **kwargs):
+        """Display a mixed gauge dialog box.
 
-        text   -- text to display in the box
-        height -- height of the box
-        width  -- width of the box
+        text        -- text to display in the middle of the box,
+                       between the elements list and the progress bar
+        height      -- height of the box
+        width       -- width of the box
+        percent     -- integer giving the percentage for the global
+                       progress bar
+        elements    -- a sequence of (tag, item) tuples, the meaning
+                       of which is explained below
 
-        A message box is very similar to a yes/no box. The only
-        difference between a message box and a yes/no box is that a
-        message box has only a single OK button. You can use this
-        dialog box to display any message you like. After reading
-        the message, the user can press the ENTER key so that dialog
-        will exit and the calling program can continue its
-        operation.
+        A mixedgauge box displays a list of "elements" with status
+        indication for each of them, followed by a text and finally a
+        (global) progress bar along the bottom of the box.
+
+        The top part ('elements') is suitable for displaying a task
+        list. One element is displayed per line, with its 'tag' part
+        on the left and its 'item' part on the right. The 'item' part
+        is a string that is displayed on the right of the same line.
+
+        The 'item' of an element can be an arbitrary string, but
+        special values listed in the dialog(3) manual page translate
+        into a status indication for the corresponding task ('tag'),
+        such as: "Succeeded", "Failed", "Passed", "Completed", "Done",
+        "Skipped", "In Progress", "Checked", "N/A" or a progress
+        bar.
+
+        A progress bar for an element is obtained by supplying a
+        negative number for the 'item'. For instance, "-75" will
+        cause a progress bar indicating 75 %% to be displayed on the
+        corresponding line.
+
+        For your convenience, if an 'item' appears to be an integer
+        or a float, it will be converted to a string before being
+        passed to the dialog-like program.        
+
+        'text' is shown as a sort of caption between the list and the
+        global progress bar. The latter displays 'percent' as the
+        percentage of completion.
+
+        Contrary to the gauge widget, mixedgauge is completely
+        static. You have to call mixedgauge() several times in order
+        to display different percentages in the global progress bar,
+        or status indicators for a given task.
 
         Return the exit status (an integer) of the dialog-like
         program.
 
         Notable exceptions:
 
-            any exception raised by self.__perform()
+            any exception raised by self._perform()
 
 	"""
-	return self.__perform(
-            *(["--msgbox", text, str(height), str(width)],),
+        cmd = ["--mixedgauge", text, str(height), str(width), str(percent)]
+        for t in elements:
+            new_tuple = (t[0],
+                         t[1] if isinstance(t[1], basestring) else str(t[1]))
+            cmd.extend(new_tuple)
+	return self._perform(cmd, **kwargs)[0]
+
+    def msgbox(self, text, height=10, width=30, **kwargs):
+        """Display a message dialog box, with scrolling and line wrapping.
+
+        text   -- text to display in the box
+        height -- height of the box
+        width  -- width of the box
+
+        Display a text in a message box, with a scrollbar and
+        percentage indication if the text is too long to fit in a
+        single "screen".
+        
+        A message box is very similar to a yes/no box. The only
+        difference between a message box and a yes/no box is that a
+        message box has only a single OK button. You can use this
+        dialog box to display any message you like. After reading
+        the message, the user can press the Enter key so that dialog
+        will exit and the calling program can continue its
+        operation.
+
+        msgbox() performs automatic line wrapping. If you want to
+        force a newline at some point, simply insert it in 'text'. In
+        other words (with the default settings), newline characters
+        in 'text' *are* respected; the line wrapping process
+        performed by dialog only inserts *additional* newlines when
+        needed. If you want no automatic line wrapping, consider
+        using scrollbox().
+
+        Return the exit status (an integer) of the dialog-like
+        program.
+
+        Notable exceptions:
+
+            any exception raised by self._perform()
+
+	"""
+	return self._perform(
+            ["--msgbox", text, str(height), str(width)],
+            **kwargs)[0]
+
+    def pause(self, text, height=15, width=60, seconds=5, **kwargs):
+        """Display a pause dialog box.
+
+        text       -- text to display in the box
+        height     -- height of the box
+        width      -- width of the box
+        seconds    -- number of seconds to pause for (integer)
+
+        A pause box displays a text and a meter along the bottom of
+        the box, during a specified amount of time ('seconds'). The
+        meter indicates how many seconds remain until the end of the
+        pause. The widget exits when the specified number of seconds
+        is elapsed, or immediately if the user presses the OK button,
+        the Cancel button or the Esc key.
+        
+        Return the exit status (an integer) of the dialog-like
+        program, which is DIALOG_OK if the pause ended automatically
+        after 'seconds' seconds, or if the user pressed the OK button.
+
+        Notable exceptions:
+
+            any exception raised by self._perform()
+
+	"""
+	return self._perform(
+            ["--pause", text, str(height), str(width), str(seconds)],
             **kwargs)[0]
 
     def passwordbox(self, text, height=10, width=60, init='', **kwargs):
@@ -1343,18 +1727,90 @@ class Dialog:
         default password they cannot see. For these reasons, using
         "init" is highly discouraged.
 
-        Return a tuple of the form (code, password) where `code' is
-        the exit status of the dialog-like program and `password' is
+        Return a tuple of the form (code, password) where 'code' is
+        the exit status of the dialog-like program and 'password' is
         the password entered by the user.
 
         Notable exceptions:
 
-            any exception raised by self.__perform()
+            any exception raised by self._perform()
 
 	"""
-	return self.__perform(
-            *(["--passwordbox", text, str(height), str(width), init],),
+	return self._perform(
+            ["--passwordbox", text, str(height), str(width), init],
             **kwargs)
+
+    def progressbox(self, file_path=None, file_flags=os.O_RDONLY,
+                    fd=None, text=None, height=20, width=78, **kwargs):
+        """Display a possibly growing stream in a dialog box, as with "tail -f".
+
+          file_path  -- path to the file that is going to be displayed
+          file_flags -- flags used when opening 'file_path'; those
+                        are passed to os.open() function (not the
+                        built-in open function!). By default, only
+                        one flag is used: os.O_RDONLY.
+
+        OR, ALTERNATIVELY:
+ 
+          fd       -- file descriptor for the stream to be displayed
+        
+        text     -- caption continuously displayed at the top, above the
+                    stream text
+        height   -- height of the box
+        width    -- width of the box
+
+        Display the contents of the specified file, updating the
+        dialog box whenever the file grows, as with the "tail -f"
+        command.
+
+        The file can be specified in two ways:
+          - either by giving its path (and optionally os.open()
+            flags) with parameters 'file_path' and 'file_flags';
+          - or by passing its file descriptor with parameter 'fd' (in
+            which case it may not even be a file; for instance, it
+            could be an anonymous pipe created with os.pipe()).
+
+        Return the exit status (an integer) of the dialog-like
+        program.
+
+        Notable exceptions:
+
+            any exception raised by self._perform()
+
+	"""
+        my_name = "progressbox"
+
+        if (file_path is None and fd is None) or \
+                (file_path is not None and fd is not None):
+            raise BadPythonDialogUsage(
+                "Dialog.%s: either 'file_path' or 'fd' must be provided, and "
+                "not both at the same time" % my_name)
+
+        try:
+            if file_path is not None:
+                assert fd is None, fd
+                # No need to pass 'mode', as the file is not going to be
+                # created here.
+                fd = os.open(file_path, file_flags)
+
+            args = [ "--progressbox" ]
+            if text is not None:
+                args.append(text)
+            args.extend([str(height), str(width)])
+
+            code = self._perform(args, redir_child_stdin_from_fd=fd,
+                                 **kwargs)[0]
+
+            if file_path is not None:
+                # We open()ed file_path ourselves, let's close it now.
+                os.close(fd)
+
+        except os.error, v:
+            raise PythonDialogOSError(v.strerror)
+        except IOError, v:
+            raise PythonDialogIOError(v)
+
+        return code
 
     def radiolist(self, text, height=15, width=54, list_height=7,
                   choices=[], **kwargs):
@@ -1366,7 +1822,7 @@ class Dialog:
         list_height -- number of entries displayed in the box (which
                        can be scrolled) at a given time
         choices     -- a list of tuples (tag, item, status) where
-                       `status' specifies the initial on/off state
+                       'status' specifies the initial on/off state
                        each entry; can be 0 or 1 (integers, 1 meaning
                        checked, i.e. "on"), or "on", "off" or any
                        uppercase variant of these two strings.
@@ -1377,7 +1833,7 @@ class Dialog:
         by setting its status to on.
 
         Return a tuple of the form (code, tag) with the tag for the
-        entry that was chosen by the user. `code' is the exit status
+        entry that was chosen by the user. 'code' is the exit status
         of the dialog-like program.
 
         If the user exits with ESC or CANCEL, or if all entries were
@@ -1386,26 +1842,31 @@ class Dialog:
 
         Notable exceptions:
 
-            any exception raised by self.__perform() or _to_onoff()
+            any exception raised by self._perform() or _to_onoff()
 
 	"""
         cmd = ["--radiolist", text, str(height), str(width), str(list_height)]
         for t in choices:
             cmd.extend((t[0], t[1], _to_onoff(t[2])))
-	return self.__perform(*(cmd,), **kwargs)
+	return self._perform(cmd, **kwargs)
 
     def scrollbox(self, text, height=20, width=78, **kwargs):
-	"""Display a string in a scrollable box.
+	"""Display a string in a scrollable box, with no line wrapping.
 
         text   -- text to display in the box
         height -- height of the box
         width  -- width of the box
 
-        This method is a layer on top of textbox. The textbox option
+        This method is a layer on top of textbox. The textbox widget
         in dialog allows to display file contents only. This method
         allows you to display any text in a scrollable box. This is
-        simply done by creating a temporary file, calling textbox and
+        simply done by creating a temporary file, calling textbox() and
         deleting the temporary file afterwards.
+
+        The text is not automatically wrapped. New lines in the
+        scrollable box will be placed exactly as in 'text'. If you
+        want automatic line wrapping, you should use the msgbox
+        widget instead.
 
         Return the dialog-like program's exit status.
 
@@ -1449,8 +1910,8 @@ class Dialog:
                 if not "title" in kwargs.keys():
                     kwargs["title"] = ""
 
-                return self.__perform(
-                    *(["--textbox", fName, str(height), str(width)],),
+                return self._perform(
+                    ["--textbox", fName, str(height), str(width)],
                     **kwargs)[0]
             finally:
                 if type(f) == file:
@@ -1463,9 +1924,9 @@ class Dialog:
             raise PythonDialogIOError(v)
 
     def tailbox(self, filename, height=20, width=60, **kwargs):
-        """Display the contents of a file in a dialog box, as in "tail -f".
+        """Display the contents of a file in a dialog box, as with "tail -f".
 
-        filename -- name of the file whose contents is to be
+        filename -- name of the file, the contents of which is to be
                     displayed in the box
         height   -- height of the box
         width    -- width of the box
@@ -1479,11 +1940,11 @@ class Dialog:
 
         Notable exceptions:
 
-            any exception raised by self.__perform()
+            any exception raised by self._perform()
 
 	"""
-	return self.__perform(
-            *(["--tailbox", filename, str(height), str(width)],),
+	return self._perform(
+            ["--tailbox", filename, str(height), str(width)],
             **kwargs)[0]
     # No tailboxbg widget, at least for now.
 
@@ -1509,15 +1970,15 @@ class Dialog:
 
         Notable exceptions:
 
-            any exception raised by self.__perform()
+            any exception raised by self._perform()
 
 	"""
         # This is for backward compatibility... not that it is
         # stupid, but I prefer explicit programming.
         if not "title" in kwargs.keys():
 	    kwargs["title"] = filename
-	return self.__perform(
-            *(["--textbox", filename, str(height), str(width)],),
+	return self._perform(
+            ["--textbox", filename, str(height), str(width)],
             **kwargs)[0]
 
     def timebox(self, text, height=3, width=30, hour=-1, minute=-1,
@@ -1539,22 +2000,22 @@ class Dialog:
         right- and down-arrows. Use tab or backtab to move between
         windows.
 
-        Return a tuple of the form (code, time) where `code' is the
+        Return a tuple of the form (code, time) where 'code' is the
         exit status (an integer) of the dialog-like program and
-        `time' is a list of the form [hour, minute, second] (where
-        `hour', `minute' and `second' are integers corresponding to
+        'time' is a list of the form [hour, minute, second] (where
+        'hour', 'minute' and 'second' are integers corresponding to
         the time chosen by the user) if the box was closed with OK,
         or None if it was closed with the Cancel button.
 
         Notable exceptions:
-            - any exception raised by self.__perform()
+            - any exception raised by self._perform()
             - PythonDialogReModuleError
             - UnexpectedDialogOutput
 
 	"""
-	(code, output) = self.__perform(
-            *(["--timebox", text, str(height), str(width),
-               str(hour), str(minute), str(second)],),
+	(code, output) = self._perform(
+            ["--timebox", text, str(height), str(width),
+               str(hour), str(minute), str(second)],
             **kwargs)
         if code == self.DIALOG_OK:
             try:
@@ -1577,8 +2038,8 @@ class Dialog:
         height -- height of the box
         width  -- width of the box
 
-        A yes/no dialog box of size `height' rows by `width' columns
-        will be displayed. The string specified by `text' is
+        A yes/no dialog box of size 'height' rows by 'width' columns
+        will be displayed. The string specified by 'text' is
         displayed inside the dialog box. If this string is too long
         to fit in one line, it will be automatically divided into
         multiple lines at appropriate places. The text string can
@@ -1594,9 +2055,9 @@ class Dialog:
 
         Notable exceptions:
 
-            any exception raised by self.__perform()
+            any exception raised by self._perform()
 
 	"""
-	return self.__perform(
-            *(["--yesno", text, str(height), str(width)],),
+	return self._perform(
+            ["--yesno", text, str(height), str(width)],
             **kwargs)[0]

@@ -1,12 +1,6 @@
-* Add code so that the input buffer is flushed before a dialog box is shown.
-  This would make the UI more predictable for users. This feature could be
-  turned on and off through an instance method.
-
-  -> Unclear to me (Florent).
-
 * Try detecting the terminal window size in order to make reasonable height
   and width defaults. Hmmm---should also then check for terminal resizing...
 
-* Support --inputmenu, --pause, --progressbox, --tailboxbg
+* Support --tailboxbg
 
 * Use height=0 and width=0 for automatic size everywhere?

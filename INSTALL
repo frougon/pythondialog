@@ -55,3 +55,9 @@ under a Bourne-compatible shell and with the appropriate privileges
 
 Note: this will handle file names with spaces correctly, unlike the
 simpler "rm -f $(cat /path/to/foo)".
+
+
+# Local Variables:
+# coding: utf-8
+# fill-column: 72
+# End:
