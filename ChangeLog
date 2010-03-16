@@ -1,5 +1,7 @@
 2010-03-16  Florent Rougon  <flo@via.ecp.fr>
 
+	* Release 2.10.
+
 	* dialog.py: add Peter Åstrand's modifications to deal with
 	Xdialog's incompatibilities with respect to dialog:
 	  - new "use_stdout" keyword argument for Dialog.__init__()

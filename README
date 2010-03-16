@@ -84,12 +84,10 @@ a drop-in replacement for dialog (in particular, Xdialog seemed to want
 to talk to the caller through stdout instead of stderr, grrrrr!).
 
 All this to say that, even though I didn't remove the options to use
-another backend than dialog, nor did I remove (yet) the handful of
-little, non-invasive modifications that helped pythondialog work better
-with Xdialog, I don't really support the latter. If it is really a
-drop-in replacement, that is fine with me; otherwise, I am not very much
-inclined to make the code ugly or more difficult to understand in order
-to cater for Xdialog's incompatibilities with dialog.
+another backend than dialog, nor did I remove the handful of little,
+non-invasive modifications that help pythondialog work better with
+Xdialog, I don't really support the latter. I test everything with
+dialog, and nothing with Xdialog.
 
 That being said, here is the old text of this section (from 2004), in
 case you are still interested:
