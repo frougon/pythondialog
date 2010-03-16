@@ -94,14 +94,12 @@ def infobox_demo(d):
     d.infobox("One moment, please. Just wasting some time here to "
               "show you the infobox...")
     
-    if params["fast_mode"]:
-        time.sleep(0.5)
-    else:
-        time.sleep(4)
+    time.sleep(0.5 if params["fast_mode"] else 4.0)
 
 
 def gauge_demo(d):
     d.gauge_start("Progress: 0%", title="Still testing your patience...")
+
     for i in range(1, 101):
 	if i < 50:
 	    d.gauge_update(i, "Progress: %d%%" % i, update_text=1)
@@ -113,10 +111,8 @@ def gauge_demo(d):
 	else:
             d.gauge_update(i)
 
-        if params["fast_mode"]:
-            time.sleep(0.01)
-        else:
-            time.sleep(0.1)
+        time.sleep(0.01 if params["fast_mode"] else 0.1)
+
     d.gauge_stop()
     
 

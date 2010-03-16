@@ -1,3 +1,8 @@
+2010-03-16  Florent Rougon  <f.rougon@free.fr>
+
+	* demo.py: use "if <test> <expr1> else <expr2>" expressions more
+	often, since they are allowed in Python >= 2.5...
+
 2010-03-16  Florent Rougon  <flo@via.ecp.fr>
 
 	* Release 2.10.
