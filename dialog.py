@@ -219,12 +219,14 @@ _common_args_syntax = {
     "help_button": lambda enable: _simple_option("--help-button", enable),
     "help_label": lambda string: ("--help-label", string),
     "ignore": lambda enable: _simple_option("--ignore", enable),
+    "insecure": lambda enable: _simple_option("--insecure", enable),
     "item_help": lambda enable: _simple_option("--item-help", enable),
     "max_input": lambda size: ("--max-input", str(size)),
-    "no_kill": lambda enable: _simple_option("--no-kill", enable),
     "no_cancel": lambda enable: _simple_option("--no-cancel", enable),
-    "nocancel": lambda enable: _simple_option("--nocancel", enable),
+    "no_kill": lambda enable: _simple_option("--no-kill", enable),
+    "no_label": lambda string: ("--no-label", string),
     "no_shadow": lambda enable: _simple_option("--no-shadow", enable),
+    "nocancel": lambda enable: _simple_option("--nocancel", enable),
     "ok_label": lambda string: ("--ok-label", string),
     "print_maxsize": lambda enable: _simple_option("--print-maxsize",
                                                    enable),
@@ -244,7 +246,8 @@ _common_args_syntax = {
     "timeout": lambda secs: ("--timeout", str(secs)),
     "title": lambda title: ("--title", title),
     "trim": lambda enable: _simple_option("--trim", enable),
-    "version": lambda enable: _simple_option("--version", enable)}
+    "version": lambda enable: _simple_option("--version", enable),
+    "yes_label": lambda string: ("--yes-label", string) }
     
 
 def _simple_option(option, enable):
@@ -1041,6 +1044,12 @@ class Dialog:
         text fields are treated as passwordbox widgets rather than
         inputbox widgets.
 
+        By default (as in dialog), nothing is echoed to the terminal
+        as the user types in the invisible fields. This can be
+        confusing to users. Use the 'insecure' keyword argument if
+        you want an asterisk to be echoed for each character entered
+        by the user.
+
         Notable exceptions:
 
             BadPythonDialogUsage
@@ -1726,6 +1735,11 @@ class Dialog:
         Also, it is very confusing to the user to provide them with a
         default password they cannot see. For these reasons, using
         "init" is highly discouraged.
+
+        By default (as in dialog), nothing is echoed to the terminal
+        as the user enters the sensitive text. This can be confusing
+        to users. Use the 'insecure' keyword argument if you want an
+        asterisk to be echoed for each character entered by the user.
 
         Return a tuple of the form (code, password) where 'code' is
         the exit status of the dialog-like program and 'password' is

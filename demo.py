@@ -24,7 +24,7 @@ from __future__ import nested_scopes, division
 import sys, os, stat, time, getopt, subprocess, dialog
 
 progname = os.path.basename(sys.argv[0])
-progversion = "0.2"
+progversion = "0.3"
 version_blurb = """Demonstration program and cheap test suite for pythondialog.
 
 Copyright (C) 2002-2010  Florent Rougon
@@ -146,8 +146,9 @@ def mixedgauge_demo(d):
 def yesno_demo(d):
     # Return the answer given to the question (also specifies if ESC was
     # pressed)
-    return d.yesno("Do you like this demo?")
-    
+    return d.yesno("Do you like this demo?", yes_label="Yes, I do",
+                   no_label="No, I do not", width=40)
+
 
 def msgbox_demo(d, answer):
     if answer == d.DIALOG_OK:
@@ -223,8 +224,11 @@ def passwordform_demo(d):
              3, 20, 30, 160)]
 
         (code, fields) = d.passwordform(
-            "Please enter all your secret passwords:", elements, width=77,
-            title="Passwordform demo")
+            "Please enter all your secret passwords.\n\nOn purpose here, "
+            "nothing is echoed when you type in the passwords. If you want "
+            "asterisks, use the 'insecure' keyword argument as in the "
+            "passwordbox demo.",
+            elements, width=77, height=15, title="Passwordform demo")
              
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
@@ -352,9 +356,11 @@ def calendar_demo(d):
 
 def passwordbox_demo(d):
     while True:
+        # 'insecure' keyword argument only asks dialog to echo asterisks when
+        # the user types characters. Not *that* bad.
         (code, password) = d.passwordbox("What is your root password, "
                                          "so that I can crack your system "
-                                         "right now?")
+                                         "right now?", insecure=True)
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
     return password

@@ -1,3 +1,12 @@
+2010-03-16  Florent Rougon  <flo@via.ecp.fr>
+
+	* dialog.py: add support for dialog options --no-label,
+	--yes-label and --insecure (the last one not being so dangerous as
+	the name seems to imply: "Makes the password widget friendlier but
+	less secure, by echoing asterisks for each character"; BTW, kdm
+	has a very nice way of handling this issue IMO: an option that
+	echoes each character with x asterisks, where x = 3 IIRC).
+
 2010-03-14  Florent Rougon  <flo@via.ecp.fr>
 
 	* Release 2.09.
