@@ -10,7 +10,8 @@ whose home page you should find at:
 Its purpose is to provide an easy to use, pythonic and as complete as
 possible interface to dialog from Python code.
 
-pythondialog is free software, licensed under the GNU LGPL version 2.1.
+pythondialog is free software, licensed under the GNU LGPL (GNU Lesser
+General Public License).
 
 If you want to get a quick idea of what this module allows you to do,
 you should run demo.py:

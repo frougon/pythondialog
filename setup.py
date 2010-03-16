@@ -26,7 +26,7 @@ from distutils.core import setup
 
 
 PACKAGE = "pythondialog"
-VERSION = "2.10"
+VERSION = "2.11"
 
 def main():
     setup(name=PACKAGE,

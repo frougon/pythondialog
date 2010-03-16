@@ -1,5 +1,13 @@
 2010-03-16  Florent Rougon  <f.rougon@free.fr>
 
+	* Release 2.11.
+
+	* README: I thought I was adding a valuable precision in version 2.09
+	when I changed "LGPL" to "LGPL version 2.1" in the README file (after
+	looking at COPYING), but actually, the terms at the beginning of
+	dialog.py are "either version 2.1 of the License, or (at your option)
+	any later version". Sorry about that, fixed.
+
 	* demo.py: use "if <test> <expr1> else <expr2>" expressions more
 	often, since they are allowed in Python >= 2.5...
 
