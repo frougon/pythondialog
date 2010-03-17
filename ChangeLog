@@ -1,3 +1,10 @@
+2010-03-17  Florent Rougon  <f.rougon@free.fr>
+
+	* dialog.py: Remove the "True = 0 == 0" and "False = 0 == 1"
+	compatibility measures that were still in place for Python
+	versions < 2.3. Such old versions are not supported anymore; besides,
+	True and False are becoming reserved words in Python 3.
+
 2010-03-16  Florent Rougon  <f.rougon@free.fr>
 
 	* Release 2.11.

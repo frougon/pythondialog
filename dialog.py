@@ -68,14 +68,6 @@ from __future__ import nested_scopes, division
 import sys, os, tempfile, random, string, re, warnings
 
 
-# Python < 2.3 compatibility
-if sys.hexversion < 0x02030000:
-    # The assignments would work with Python >= 2.3 but then, pydoc
-    # shows them in the DATA section of the module...
-    True = 0 == 0
-    False = 0 == 1
-
-
 # Exceptions raised by this module
 #
 # When adding, suppressing, renaming exceptions or changing their
@@ -198,7 +190,7 @@ except re.error, v:
 
 
 # This dictionary allows us to write the dialog common options in a Pythonic
-# way (e.g. dialog_instance.checklist(args, ..., title="Foo", no_shadow=1)).
+# way (e.g. dialog_instance.checklist(args, ..., title="Foo", no_shadow=True)).
 #
 # Options such as --separate-output should obviously not be set by the user
 # since they affect the parsing of dialog's output:
