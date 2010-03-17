@@ -1,5 +1,10 @@
 2010-03-17  Florent Rougon  <f.rougon@free.fr>
 
+	* dialog.py: Move the definition of _simple_option() before its uses,
+	which according to
+	http://sourceforge.net/tracker/index.php?func=detail&aid=1679190&group_id=58155&atid=486715
+	"makes pydev happy when browsing the code".
+
 	* dialog.py: Remove the "True = 0 == 0" and "False = 0 == 1"
 	compatibility measures that were still in place for Python
 	versions < 2.3. Such old versions are not supported anymore; besides,

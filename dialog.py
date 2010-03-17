@@ -189,6 +189,15 @@ except re.error, v:
     raise PythonDialogReModuleError(v)
 
 
+def _simple_option(option, enable):
+    """Turn on or off the simplest dialog Common Options."""
+    if enable:
+        return (option,)
+    else:
+        # This will not add any argument to the command line
+        return ()
+
+
 # This dictionary allows us to write the dialog common options in a Pythonic
 # way (e.g. dialog_instance.checklist(args, ..., title="Foo", no_shadow=True)).
 #
@@ -241,15 +250,6 @@ _common_args_syntax = {
     "version": lambda enable: _simple_option("--version", enable),
     "yes_label": lambda string: ("--yes-label", string) }
     
-
-def _simple_option(option, enable):
-    """Turn on or off the simplest dialog Common Options."""
-    if enable:
-        return (option,)
-    else:
-        # This will not add any argument to the command line
-        return ()
-
 
 def _find_in_path(prog_name):
     """Search an executable in the PATH.
