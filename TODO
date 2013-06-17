@@ -1,3 +1,6 @@
+* Maybe get rid of _create_temporary_directory() in favor of what Python has
+  in its stdlib now?
+
 * Try detecting the terminal window size in order to make reasonable height
   and width defaults. Hmmm---should also then check for terminal resizing...
 

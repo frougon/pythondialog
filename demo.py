@@ -1,8 +1,8 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 # demo.py --- A simple demonstration program and cheap test suite for
 #             pythondialog
-# Copyright (C) 2002-2010  Florent Rougon
+# Copyright (C) 2002-2010, 2013  Florent Rougon
 # Copyright (C) 2000  Robb Shecter, Sultanbek Tezadov
 #
 # This program is in the public domain.
@@ -20,11 +20,11 @@ policy for pythondialog calls in this demo.
 
 """
 
-from __future__ import nested_scopes, division
+
 import sys, os, stat, time, getopt, subprocess, dialog
 
 progname = os.path.basename(sys.argv[0])
-progversion = "0.3"
+progversion = "0.4"
 version_blurb = """Demonstration program and cheap test suite for pythondialog.
 
 Copyright (C) 2002-2010  Florent Rougon
@@ -101,14 +101,14 @@ def gauge_demo(d):
     d.gauge_start("Progress: 0%", title="Still testing your patience...")
 
     for i in range(1, 101):
-	if i < 50:
-	    d.gauge_update(i, "Progress: %d%%" % i, update_text=1)
-	elif i == 50:
-	    d.gauge_update(i, "Over %d%%. Good." % i, update_text=1)
-	elif i == 80:
-	    d.gauge_update(i, "Yeah, this boring crap will be over Really "
+        if i < 50:
+            d.gauge_update(i, "Progress: %d%%" % i, update_text=1)
+        elif i == 50:
+            d.gauge_update(i, "Over %d%%. Good." % i, update_text=1)
+        elif i == 80:
+            d.gauge_update(i, "Yeah, this boring crap will be over Really "
                            "Soon Now.", update_text=1)
-	else:
+        else:
             d.gauge_update(i)
 
         time.sleep(0.01 if params["fast_mode"] else 0.1)
@@ -136,7 +136,7 @@ def mixedgauge_demo(d):
                                # why I made the range() above start at 1.
                                ("Task 9", -max(1, 100-i)),
                                ("Task 10", -i)])
-        time.sleep(0.5)
+        time.sleep(2)
         
 
 def yesno_demo(d):
@@ -477,7 +477,7 @@ def fselect_demo(d, widget, init_dir=None, allow_FIFOs=False, **kwargs):
             # os.stat.
             try:
                 mode = os.stat(path)[stat.ST_MODE]
-            except os.error, e:
+            except os.error as e:
                 d.msgbox("Error: %s" % e.strerror)
                 continue
 
@@ -646,13 +646,11 @@ following years...""" + 15*'\n'
             # a start, you don't have to check the number of bytes actually
             # written every time...
             # "bufsize = 1" means wfile is going to be line-buffered
-            wfile = os.fdopen(write_fd, "wb", 1)
+            with os.fdopen(write_fd, "w", 1) as wfile:
+                for line in text.split('\n'):
+                        wfile.write(line + '\n')
+                        time.sleep(0.02 if params["fast_mode"] else 1.2)
 
-            for line in text.split('\n'):
-                    wfile.write(line + '\n')
-                    time.sleep(0.1 if params["fast_mode"] else 1.2)
-
-            wfile.close()
             os._exit(0)
         except:
             os._exit(127)
@@ -697,7 +695,7 @@ def clear_screen(d):
         p = subprocess.Popen([program], shell=False, stdout=None, stderr=None,
                              close_fds=True)
         retcode = p.wait()
-    except os.error, e:
+    except os.error as e:
         d.msgbox("Unable to execute program '%s': %s." % (program,
                                                           e.strerror),
                  title="Error")
@@ -761,6 +759,10 @@ Now, please select a file you would like to see growing (or not...).""",
 
 def additional_widgets(d):
     progressbox_demo_with_filepath(d)
+    # This can be confusing without any pause if the user specified a regular
+    # file.
+    time.sleep(1 if params["fast_mode"] else 2)
+
     mixedgauge_demo(d)
     editbox_demo(d, "/etc/passwd")
     inputmenu_demo(d)
@@ -778,7 +780,7 @@ def process_command_line():
                                     "fast",
                                     "help",
                                     "version"])
-    except getopt.GetoptError, message:
+    except getopt.GetoptError as message:
         sys.stderr.write(usage + "\n")
         return ("exit", 1)
 
@@ -786,10 +788,10 @@ def process_command_line():
     # to be present
     for option, value in opts:
         if option == "--help":
-            print usage
+            print(usage)
             return ("exit", 0)
         elif option == "--version":
-            print "%s %s\n%s" % (progname, progversion, version_blurb)
+            print("%s %s\n%s" % (progname, progversion, version_blurb))
             return ("exit", 0)
 
     # Now, require a correct invocation.
@@ -847,7 +849,7 @@ def main():
 
         # "Normal" demo
         demo(d)
-    except dialog.error, exc_instance:
+    except dialog.error as exc_instance:
         sys.stderr.write("Error:\n\n%s\n" % exc_instance.complete_message())
         sys.exit(1)
         
