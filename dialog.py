@@ -65,8 +65,8 @@ program) and you should be safe.
 
 """
 
-import sys, os, tempfile, random, re, warnings
-
+import sys, os, tempfile, random, re, warnings, traceback
+from textwrap import dedent
 
 # Exceptions raised by this module
 #
@@ -142,14 +142,16 @@ class PythonDialogErrorBeforeExecInChildProcess(PythonDialogSystemError):
     """Exception raised when an exception is caught in a child process \
 before the exec sytem call (included).
 
-    This can happen in uncomfortable situations like when the system is out
-    of memory or when the maximum number of open file descriptors has been
-    reached. This can also happen if the dialog-like program was removed
-    (or if it is has been made non-executable) between the time we found it
-    with _find_in_path and the time the exec system call attempted to
-    execute it...
-
-    """
+    This can happen in uncomfortable situations such as:
+      - the system being out of memory;
+      - the maximum number of open file descriptors being reached;
+      - the dialog-like program being removed (or made
+        non-executable) between the time we found it with
+        _find_in_path and the time the exec system call attempted to
+        execute it;
+      - the Python program trying to call the dialog-like program
+        with arguments that cannot be represented in the user's
+        locale (LC_CTYPE)."""
     ExceptionShortDescription = "Error in a child process before the exec " \
                                 "system call"
 
@@ -697,17 +699,22 @@ class Dialog:
                 for fd in close_fds + (child_output_rfd,):
                     os.close(fd)
                 # We want:
+                #   - to keep a reference to the father's stderr for error
+                #     reporting (and use line-buffering for this stream);
                 #   - dialog's output on stderr[*] to go to child_output_wfd;
                 #   - data written to fd 'redir_child_stdin_from_fd'
                 #     (if not None) to go to dialog's stdin.
                 #
                 #       [*] stdout with 'use_stdout'
+                father_stderr = os.fdopen(os.dup(2), mode="w", buffering=1)
                 os.dup2(child_output_wfd, 1 if self.use_stdout else 2)
                 if redir_child_stdin_from_fd is not None:
                     os.dup2(redir_child_stdin_from_fd, 0)
 
                 os.execve(self._dialog_prg, arglist, new_environ)
             except:
+                traceback.print_exc(file=father_stderr)
+                father_stderr.close()
                 os._exit(127)
 
             # Should not happen unless there is a bug in Python
@@ -779,10 +786,17 @@ class Dialog:
                 "parameter that is too big for the terminal in use."
                 % exit_code)
         elif exit_code == 127:
-            raise PythonDialogErrorBeforeExecInChildProcess(
-                "perhaps the dialog-like program could not be executed; "
-                "perhaps the system is out of memory; perhaps the maximum "
-                "number of open file descriptors has been reached")
+            raise PythonDialogErrorBeforeExecInChildProcess(dedent("""\
+            possible reasons include:
+              - the dialog-like program could not be executed (this can happen
+                for instance if the Python program is trying to call the
+                dialog-like program with arguments that cannot be represented
+                in the user's locale [LC_CTYPE]);
+              - the system is out of memory;
+              - the maximum number of open file descriptors has been reached;
+              - a cosmic ray hit the system memory and flipped nasty bits.
+            There may be a Traceback right above this message that describes
+            more precisely what happened."""))
         elif exit_code == 126:
             raise ProbablyPythonBug(
                 "a child process returned with exit status 126; this might "
