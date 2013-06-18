@@ -998,8 +998,11 @@ class Dialog:
             # Give names to make the code more readable
             if len(elt) == 8:   # code path for --form and --passwordform
                 label, yl, xl, item, yi, xi, field_length, input_length = elt
+            elif len(elt) != 9:
+                raise PythonDialogBug(
+                    "unexpected length for 'elt': {0} (expected 9); elt = {1!r}"
+                    .format(len(elt), elt))
             else:               # code path for --mixedform
-                assert len(elt) == 9, elt
                 label, yl, xl, item, yi, xi, field_length, input_length, \
                     attributes = elt
 
@@ -1529,7 +1532,10 @@ class Dialog:
         if code == self.DIALOG_OK:
             return ("accepted", output, None)
         elif code == self.DIALOG_EXTRA:
-            assert output.startswith("RENAMED "), output
+            if not output.startswith("RENAMED "):
+                raise PythonDialogBug(
+                    "'output' does not start with 'RENAMED ': {0!r}".format(
+                        output))
             t = output.split(' ', 2)
             return ("renamed", t[1], t[2])
         else:
@@ -1843,7 +1849,9 @@ class Dialog:
 
         try:
             if file_path is not None:
-                assert fd is None, fd
+                if fd is not None:
+                    raise PythonDialogBug(
+                        "unexpected non-None value for 'fd': {0!r}".format(fd))
                 # No need to pass 'mode', as the file is not going to be
                 # created here.
                 fd = os.open(file_path, file_flags)
