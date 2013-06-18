@@ -86,14 +86,14 @@ def handle_exit_code(d, code):
         # particular dialog box, d.DIALOG_EXTRA, d.DIALOG_HELP,
         # d.DIALOG_ITEM_HELP... (cf. _dialog_exit_status_vars in dialog.py)
         return code
-        
+
 
 def infobox_demo(d):
     # Exit code thrown away to keep this demo code simple (however, real
     # errors are propagated by an exception)
     d.infobox("One moment, please. Just wasting some time here to "
               "show you the infobox...")
-    
+
     time.sleep(0.5 if params["fast_mode"] else 4.0)
 
 
@@ -114,7 +114,7 @@ def gauge_demo(d):
         time.sleep(0.01 if params["fast_mode"] else 0.1)
 
     d.gauge_stop()
-    
+
 
 def mixedgauge_demo(d):
     for i in range(1, 101, 20):
@@ -137,7 +137,7 @@ def mixedgauge_demo(d):
                                ("Task 9", -max(1, 100-i)),
                                ("Task 10", -i)])
         time.sleep(2)
-        
+
 
 def yesno_demo(d):
     # Return the answer given to the question (also specifies if ESC was
@@ -203,7 +203,7 @@ def form_demo(d):
 
         (code, fields) = d.form(
             "Please fill in some personal information:", elements, width=77)
-             
+
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
 
@@ -225,7 +225,7 @@ def passwordform_demo(d):
             "asterisks, use the 'insecure' keyword argument as in the "
             "passwordbox demo.",
             elements, width=77, height=15, title="Passwordform demo")
-             
+
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
 
@@ -262,13 +262,13 @@ def mixedform_demo(d):
 
         (code, fields) = d.mixedform(
             "Please fill in some personal information:", elements, width=77)
-             
+
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
 
     return fields
 
-    
+
 def menu_demo(d, name, city, state, country, size, weight, secret_code,
               last_will1, last_will2, last_will3, last_will4):
     while True:
@@ -284,7 +284,7 @@ still need to know your favorite day of the week. Please indicate your \
 preference below.""" \
             % (name, city, state, country, size, weight, secret_code,
                ' '.join([last_will1, last_will2, last_will3, last_will4]))
-    
+
         (code, tag) = d.menu(text, height=23, width=76,
             choices=[("Monday", "Being the first day of the week..."),
                      ("Tuesday", "Comes after Monday"),
@@ -304,7 +304,7 @@ def checklist_demo(d):
     while True:
         # We could put non-empty items here (not only the tag for each entry)
         (code, tags) = d.checklist(text="What sandwich toppings do you like?",
-                                   height=15, width=54, list_height=7, 
+                                   height=15, width=54, list_height=7,
                                    choices=[("Catsup", "",             0),
                                             ("Mustard", "",            0),
                                             ("Pesto", "",              0),
@@ -319,10 +319,10 @@ def checklist_demo(d):
     return tags
 
 
-def radiolist_demo(d):    
+def radiolist_demo(d):
     while True:
         (code, tag) = d.radiolist(
-            "What's your favorite kind of sandwich?", 
+            "What's your favorite kind of sandwich?",
             width=65,
             choices=[("Hamburger", "2 slices of bread, a steak...", 0),
                      ("Hotdog", "doesn't bite any more", 0),
@@ -339,7 +339,7 @@ def radiolist_demo(d):
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
     return tag
-    
+
 
 def calendar_demo(d):
     while True:
@@ -517,7 +517,7 @@ def inputmenu_demo(d):
                 ("3rd_tag", "Item 3 text") ]
 
     for i in range(4, 21):
-        choices.append(("%uth_tag" % i, "Item %u text" % i))
+        choices.append(("%dth_tag" % i, "Item %d text" % i))
 
     exit_info, tag, new_item_text = d.inputmenu(
         "Demonstration of inputmenu. Any item can be either accepted as is, "
@@ -530,7 +530,7 @@ def inputmenu_demo(d):
         text = "The item corresponding to tag '%s' was renamed to '%s'." \
             % (tag, new_item_text)
     else:
-        text = "The dialog-like program returned exit status %u." % exit_info
+        text = "The dialog-like program returned exit status %d." % exit_info
 
     d.msgbox(text, width=60, title="Outcome of the 'inputmenu' demo")
 
@@ -641,15 +641,15 @@ following years...""" + 15*'\n'
             # We are in the child process. We MUST NOT raise any exception.
             # No need for this one in the child process
             os.close(read_fd)
-            
+
             # Python file objects are easier to use than file descriptors. For
             # a start, you don't have to check the number of bytes actually
             # written every time...
-            # "bufsize = 1" means wfile is going to be line-buffered
-            with os.fdopen(write_fd, "w", 1) as wfile:
+            # "buffering = 1" means wfile is going to be line-buffered
+            with os.fdopen(write_fd, mode="w", buffering=1) as wfile:
                 for line in text.split('\n'):
-                        wfile.write(line + '\n')
-                        time.sleep(0.02 if params["fast_mode"] else 1.2)
+                    wfile.write(line + '\n')
+                    time.sleep(0.02 if params["fast_mode"] else 1.2)
 
             os._exit(0)
         except:
@@ -667,13 +667,13 @@ following years...""" + 15*'\n'
     if os.WIFEXITED(exit_info):
         exit_code = os.WEXITSTATUS(exit_info)
     elif os.WIFSIGNALED(exit_info):
-        d.msgbox("%s(): first child process terminated by signal %u" %
+        d.msgbox("%s(): first child process terminated by signal %d" %
                  (func_name, os.WTERMSIG(exit_info)))
     else:
         assert False, "How the hell did we manage to get here?"
 
     if exit_code != 0:
-        d.msgbox("%s(): first child process ended with exit status %u"
+        d.msgbox("%s(): first child process ended with exit status %d"
                  % (func_name, exit_code))
 
 
@@ -683,7 +683,7 @@ Ugh, sorry. pythondialog is still in development, and its advanced circuitry \
 detected internal error number 0x666. That's a pretty nasty one, you know.
 
 I am embarrassed. I don't know how to tell you, but we are going to have to \
-reboot. In %u seconds.
+reboot. In %d seconds.
 
 Fasten your seatbelt...""" % seconds, height=18, seconds=seconds)
 
@@ -702,9 +702,9 @@ def clear_screen(d):
         return -1
 
     if retcode > 0:
-        msg = "Program %s returned exit code %u." % (program, retcode)
+        msg = "Program %s returned exit code %d." % (program, retcode)
     elif retcode < 0:
-        msg = "Program %s was terminated by signal %u." % (program, -retcode)
+        msg = "Program %s was terminated by signal %d." % (program, -retcode)
     else:
         return 0
 
@@ -748,7 +748,7 @@ Now, please select a file you would like to see growing (or not...).""",
 
     timeout = 2 if params["fast_mode"] else 20
     pause_demo(d, timeout)
-    
+
     clear_screen(d)
     if not params["fast_mode"]:
         # Rest assured, this is not necessary in any way: it is only a
@@ -852,7 +852,7 @@ def main():
     except dialog.error as exc_instance:
         sys.stderr.write("Error:\n\n%s\n" % exc_instance.complete_message())
         sys.exit(1)
-        
+
     sys.exit(0)
 
 

@@ -76,14 +76,18 @@ class error(Exception):
     """Base class for exceptions in pythondialog."""
     def __init__(self, message=None):
         self.message = message
+
     def __str__(self):
-        return "<%s: %s>" % (self.__class__.__name__, self.message)
+        return "<{0}: {1}>".format(self.__class__.__name__, self.message)
+
     def complete_message(self):
         if self.message:
-            return "%s: %s" % (self.ExceptionShortDescription, self.message)
+            return "{0}: {1}".format(self.ExceptionShortDescription,
+                                     self.message)
         else:
-            return "%s" % self.ExceptionShortDescription
-    ExceptionShortDescription = "pythondialog generic exception"
+            return self.ExceptionShortDescription
+
+    ExceptionShortDescription = "{0} generic exception".format("pythondialog")
 
 # For backward-compatibility
 #
@@ -127,7 +131,7 @@ operation" (e.g., a system call) that should work in "normal" situations.
 
     """
     ExceptionShortDescription = "System error"
-    
+
 class PythonDialogIOError(PythonDialogSystemError):
     """Exception raised when pythondialog catches an IOError exception that \
 should be passed to the calling program."""
@@ -251,7 +255,7 @@ _common_args_syntax = {
     "trim": lambda enable: _simple_option("--trim", enable),
     "version": lambda enable: _simple_option("--version", enable),
     "yes_label": lambda string: ("--yes-label", string) }
-    
+
 
 def _find_in_path(prog_name):
     """Search an executable in the PATH.
@@ -296,7 +300,7 @@ def _path_to_executable(f):
 
         ExecutableNotFound
         PythonDialogOSError
-        
+
     """
     try:
         if '/' in f:
@@ -578,7 +582,7 @@ class Dialog:
             ExecutableNotFound
             PythonDialogOSError
 
-        """        
+        """
         # DIALOGRC differs from the other DIALOG* variables in that:
         #   1. It should be a string if not None
         #   2. We may very well want it to be unset
@@ -635,7 +639,7 @@ class Dialog:
         descriptor, depending on 'redir_child_stdin_from_fd'. The
         pipe allows the parent process to read what dialog writes on
         its standard error[*] stream.
-        
+
         If 'redir_child_stdin_from_fd' is not None, it should be an
         open file descriptor (i.e., an integer). That file descriptor
         will be connected to dialog's standard input. This is used by
@@ -647,10 +651,10 @@ class Dialog:
         the child process (which runs dialog) is not redirected in
         any way.
 
-        If 'close_fds' is passed, it should be a sequence of 
+        If 'close_fds' is passed, it should be a sequence of
         file descriptors that will be closed by the child process
         before it exec()s the dialog-like program.
-        
+
           [*] standard ouput stream with 'use_stdout'
 
         Notable exception: PythonDialogOSError (if any of the pipe(2)
@@ -772,7 +776,7 @@ class Dialog:
         # need to call os.WIFSTOPPED()
         elif os.WIFSIGNALED(exit_info):
             raise DialogTerminatedBySignal("the dialog-like program was "
-                                           "terminated by signal %u" %
+                                           "terminated by signal %d" %
                                            os.WTERMSIG(exit_info))
         else:
             raise PythonDialogBug("please report this bug to the "
@@ -803,7 +807,7 @@ class Dialog:
                 "be the exit status of the dialog-like program, for some "
                 "unknown reason (-> probably a bug in the dialog-like "
                 "program); otherwise, we have probably found a python bug")
-        
+
         # We might want to check here whether exit_code is really one of
         # DIALOG_OK, DIALOG_CANCEL, etc. However, I prefer not doing it
         # because it would break pythondialog for no strong reason when new
@@ -896,7 +900,7 @@ class Dialog:
         month  -- inititial month displayed
         year   -- inititial year selected (0 causes the current date
                   to be used as the initial date)
-        
+
         A calendar box displays month, day and year in separately
         adjustable windows. If the values for day, month or year are
         missing or negative, the current date's corresponding values
@@ -927,7 +931,7 @@ class Dialog:
                 mo = _calendar_date_rec.match(output)
             except re.error as v:
                 raise PythonDialogReModuleError(v)
-            
+
             if mo is None:
                 raise UnexpectedDialogOutput(
                     "the dialog-like program returned the following "
@@ -1023,7 +1027,7 @@ class Dialog:
         height      -- height of the box
         width       -- width of the box
         form_height -- number of form lines displayed at the same time
-        
+
         A form box consists in a series of fields and associated
         labels. This type of dialog is suitable for adjusting
         configuration parameters and similar tasks.
@@ -1044,7 +1048,7 @@ class Dialog:
         entered for this field. These two integers also determine
         whether the contents of the field can be modified, as
         follows:
-        
+
           - if FIELD_LENGTH is zero, the field cannot be altered and
             its contents determines the displayed length;
 
@@ -1053,7 +1057,7 @@ class Dialog:
             length;
 
           - if INPUT_LENGTH is zero, it is set to FIELD_LENGTH.
-        
+
         Return a tuple of the form (code, list) where 'code' is the
         exit status (an integer) of the dialog-like program and
         'list' gives the contents of every editable field on exit,
@@ -1102,7 +1106,7 @@ class Dialog:
         height      -- height of the box
         width       -- width of the box
         form_height -- number of form lines displayed at the same time
-        
+
         A mixedform box is very similar to a form box, and differs
         from the latter by allowing field attributes to be specified.
 
@@ -1122,7 +1126,7 @@ class Dialog:
         The return value is the same as would be with the form box,
         except that field marked as read-only with bit 1 of
         ATTRIBUTES are also included in the output list.
-        
+
         Notable exceptions:
 
             BadPythonDialogUsage
@@ -1162,7 +1166,7 @@ class Dialog:
         Return a tuple of the form (code, path) where 'code' is the
         exit status (an integer) of the dialog-like program and
         'path' is the directory chosen by the user.
-              
+
         Notable exceptions:
 
             any exception raised by self._perform()
@@ -1181,7 +1185,7 @@ class Dialog:
                     the dialog box
         height   -- height of the box
         width    -- width of the box
-        
+
         The editbox dialog displays a copy of the file contents. You
         may edit it using the Backspace, Delete and cursor keys to
         correct typing errors. It also recognizes Page Up and Page
@@ -1192,7 +1196,7 @@ class Dialog:
         Return a tuple of the form (code, text) where 'code' is the
         exit status (an integer) of the dialog-like program and
         'text' is the contents of the text entry window on exit.
-              
+
         Notable exceptions:
 
             any exception raised by self._perform()
@@ -1210,7 +1214,7 @@ class Dialog:
         filepath -- initial file path
         height   -- height of the box
         width    -- width of the box
-        
+
         The file-selection dialog displays a text-entry window in
         which you can type a filename (or directory), and above that
         two windows with directory names and filenames.
@@ -1237,7 +1241,7 @@ class Dialog:
         exit status (an integer) of the dialog-like program and
         'path' is the path chosen by the user (the last element of
         which may be a directory or a file).
-              
+
         Notable exceptions:
 
             any exception raised by self._perform()
@@ -1248,9 +1252,9 @@ class Dialog:
             **kwargs)
 
         output = self._strip_xdialog_newline(output)
-        
+
         return (code, output)
-    
+
     def gauge_start(self, text="", height=8, width=54, percent=0, **kwargs):
         """Display gauge box.
 
@@ -1310,10 +1314,10 @@ class Dialog:
                 }
         except os.error as e:
             raise PythonDialogOSError(e.strerror)
-            
+
     def gauge_update(self, percent, text="", update_text=False):
         """Update a running gauge box.
-        
+
         percent     -- new percentage to show in the gauge meter
         text        -- new text to optionally display in the box
         update_text -- boolean indicating whether to update the
@@ -1343,7 +1347,7 @@ class Dialog:
             self._gauge_process["stdin"].flush()
         except IOError as v:
             raise PythonDialogIOError(v)
-    
+
     # For "compatibility" with the old dialog.py...
     def gauge_iterate(*args, **kwargs):
         warnings.warn("Dialog.gauge_iterate() has been obsolete for "
@@ -1355,7 +1359,7 @@ class Dialog:
 
         This function performs the appropriate cleanup actions to
         terminate a running gauge (started with 'gauge_start').
-        
+
         See the 'gauge_start' function's documentation for
         information about how to use a gauge.
 
@@ -1435,7 +1439,7 @@ class Dialog:
             **kwargs)
 
         string_ = self._strip_xdialog_newline(string_)
-        
+
         return (code, string_)
 
     def inputmenu(self, text, height=0, width=60, menu_height=7, choices=[],
@@ -1460,7 +1464,7 @@ class Dialog:
 
           * entries are not automatically centered, but
             left-adjusted;
-            
+
           * the current entry can be renamed by pressing the Rename
             button, which allows editing the 'item' part of the
             current entry.
@@ -1508,7 +1512,7 @@ class Dialog:
         renaming), if any. If no entry was accepted (e.g., if the
         dialog was exited with the Cancel button), then 'tag' is
         None.
-        
+
         'new_item_text' gives the new 'item' part of the renamed
         entry if 'exit_info' is "renamed", otherwise it is None.
 
@@ -1661,7 +1665,7 @@ class Dialog:
 
         For your convenience, if an 'item' appears to be an integer
         or a float, it will be converted to a string before being
-        passed to the dialog-like program.        
+        passed to the dialog-like program.
 
         'text' is shown as a sort of caption between the list and the
         global progress bar. The latter displays 'percent' as the
@@ -1695,7 +1699,7 @@ class Dialog:
         Display a text in a message box, with a scrollbar and
         percentage indication if the text is too long to fit in a
         single "screen".
-        
+
         A message box is very similar to a yes/no box. The only
         difference between a message box and a yes/no box is that a
         message box has only a single OK button. You can use this
@@ -1738,7 +1742,7 @@ class Dialog:
         pause. The widget exits when the specified number of seconds
         is elapsed, or immediately if the user presses the OK button,
         the Cancel button or the Esc key.
-        
+
         Return the exit status (an integer) of the dialog-like
         program, which is DIALOG_OK if the pause ended automatically
         after 'seconds' seconds, or if the user pressed the OK button.
@@ -1802,9 +1806,9 @@ class Dialog:
                         one flag is used: os.O_RDONLY.
 
         OR, ALTERNATIVELY:
- 
+
           fd       -- file descriptor for the stream to be displayed
-        
+
         text     -- caption continuously displayed at the top, above the
                     stream text
         height   -- height of the box
@@ -2042,7 +2046,7 @@ class Dialog:
         hour   -- inititial hour selected
         minute -- inititial minute selected
         second -- inititial second selected
-        
+
         A dialog is displayed which allows you to select hour, minute
         and second. If the values for hour, minute or second are
         negative (or not explicitely provided, as they default to
