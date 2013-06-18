@@ -344,8 +344,8 @@ def _to_onoff(val):
                 return "off"
         except re.error as v:
             raise PythonDialogReModuleError(v)
-    else:
-        raise BadPythonDialogUsage("invalid boolean value: %s" % val)
+
+    raise BadPythonDialogUsage("invalid boolean value: {0!r}".format(val))
 
 
 def _compute_common_args(mapping):
@@ -717,7 +717,7 @@ class Dialog:
 
                 os.execve(self._dialog_prg, arglist, new_environ)
             except:
-                traceback.print_exc(file=father_stderr)
+                print(traceback.format_exc(), file=father_stderr)
                 father_stderr.close()
                 os._exit(127)
 
@@ -799,7 +799,7 @@ class Dialog:
               - the system is out of memory;
               - the maximum number of open file descriptors has been reached;
               - a cosmic ray hit the system memory and flipped nasty bits.
-            There may be a Traceback right above this message that describes
+            There ought to be a traceback above this message that describes
             more precisely what happened."""))
         elif exit_code == 126:
             raise ProbablyPythonBug(

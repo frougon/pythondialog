@@ -21,7 +21,7 @@ policy for pythondialog calls in this demo.
 """
 
 
-import sys, os, stat, time, getopt, subprocess, dialog
+import sys, os, stat, time, getopt, subprocess, traceback, dialog
 
 progname = os.path.basename(sys.argv[0])
 progversion = "0.4"
@@ -850,7 +850,17 @@ def main():
         # "Normal" demo
         demo(d)
     except dialog.error as exc_instance:
-        sys.stderr.write("Error:\n\n%s\n" % exc_instance.complete_message())
+        # The error that causes a PythonDialogErrorBeforeExecInChildProcess to
+        # be raised happens in the child process used to run the dialog-like
+        # program, and the corresponding traceback is printed right away from
+        # that child process when the error is encountered. Therefore, don't
+        # print a second, not very useful traceback for this kind of exception.
+        if not isinstance(exc_instance,
+                          dialog.PythonDialogErrorBeforeExecInChildProcess):
+            print(traceback.format_exc(), file=sys.stderr)
+
+        print("Error (see above for a traceback):\n\n",
+              exc_instance.complete_message(), sep='', file=sys.stderr)
         sys.exit(1)
 
     sys.exit(0)
