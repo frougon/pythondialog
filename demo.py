@@ -21,7 +21,8 @@ policy for pythondialog calls in this demo.
 """
 
 
-import sys, os, locale, stat, time, getopt, subprocess, traceback, dialog
+import sys, os, locale, stat, time, getopt, subprocess, traceback, textwrap
+import dialog
 
 progname = os.path.basename(sys.argv[0])
 progversion = "0.4"
@@ -343,8 +344,8 @@ def radiolist_demo(d):
 
 def calendar_demo(d):
     while True:
-        (code, date) = d.calendar("When do you think Debian squeeze will be "
-                                  "released?", year=0)
+        (code, date) = d.calendar("When do you think Georg Cantor was born?",
+                                  year=0)
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
     return date
@@ -362,25 +363,26 @@ def passwordbox_demo(d):
     return password
 
 
-def comment_on_squeeze_release_date(day, month, year):
-    if year < 2010:
-        return "Mmm... what about a little tour on http://www.debian.org/?"
-    elif year == 2010 and month <= 3:
-        return """\
-Damn, how optimistic! You don't know much about Debian, do you?"""
-    elif year == 2010 and month <= 8:
-        return """\
-Well, good guess. But who knows what the future reserves to us? ;-)"""
-    elif year == 2010:
-        return """\
-Oh, well. That's plausible. But please, please don't depress
-other people with your pronostics... ;-)"""
+def comment_on_Cantor_date_of_birth(day, month, year):
+    complement = "For your information, Georg Ferdinand Ludwig Philip Cantor, " \
+        "a great mathematician, was born on March 3, 1845 in Saint " \
+        "Petersburg, and died on January 6, 1918."
+
+    if (year, month, day) == (1845, 3, 3):
+        return "Spot-on! I'm impressed."
+    elif year == 1845:
+        return "You guessed the year right. {0}".format(complement)
+    elif abs(year-1845) < 30:
+        return "Not too far. {0}".format(complement)
     else:
-        return "Hey, you're a troll! (or do you know Debian *so* well? ;-)"
+        return "Well, not quite. {0}".format(complement)
 
 
 def scrollbox_demo(d, name, favorite_day, toppings, sandwich, date,
                    password):
+    tw = textwrap.TextWrapper(width=71, break_long_words=False,
+                              break_on_hyphens=True)
+
     day, month, year = date
     msg = """\
 Here are some vital statistics about you:
@@ -390,14 +392,14 @@ Favorite day of the week: %s
 Favorite sandwich toppings:%s
 Favorite sandwich: %s
 
-You estimate Debian squeeze's release to happen around %04u-%02u-%02u.
+Your answer about Georg Cantor's date of birth: %04d-%02d-%02d.
 %s
 
 Your root password is: ************************** (looks good!)""" \
      % (name, favorite_day,
         "\n    ".join([''] + toppings),
         sandwich, year, month, day,
-        comment_on_squeeze_release_date(day, month, year))
+        tw.fill(comment_on_Cantor_date_of_birth(day, month, year)))
     d.scrollbox(msg, height=20, width=75, title="Great Report of the Year")
 
 
