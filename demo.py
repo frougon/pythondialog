@@ -21,7 +21,7 @@ policy for pythondialog calls in this demo.
 """
 
 
-import sys, os, stat, time, getopt, subprocess, traceback, dialog
+import sys, os, locale, stat, time, getopt, subprocess, traceback, dialog
 
 progname = os.path.basename(sys.argv[0])
 progversion = "0.4"
@@ -689,6 +689,7 @@ Fasten your seatbelt...""" % seconds, height=18, seconds=seconds)
 
 
 def clear_screen(d):
+    # This program comes with ncurses
     program = "clear"
 
     try:
@@ -830,6 +831,8 @@ def main():
     """This demo shows the main features of the pythondialog Dialog class.
 
     """
+    locale.setlocale(locale.LC_ALL, '')
+
     what_to_do, code = process_command_line()
     if what_to_do == "exit":
         sys.exit(code)

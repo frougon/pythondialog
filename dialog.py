@@ -1000,13 +1000,13 @@ class Dialog:
             # Give names to make the code more readable
             if len(elt) == 8:   # code path for --form and --passwordform
                 label, yl, xl, item, yi, xi, field_length, input_length = elt
-            elif len(elt) != 9:
-                raise PythonDialogBug(
-                    "unexpected length for 'elt': {0} (expected 9); elt = {1!r}"
-                    .format(len(elt), elt))
-            else:               # code path for --mixedform
+            elif len(elt) == 9: # code path for --mixedform
                 label, yl, xl, item, yi, xi, field_length, input_length, \
                     attributes = elt
+            else:
+                raise PythonDialogBug(
+                    "unexpected length for 'elt': {0} (expected 8 or 9); "
+                    "elt = {1!r}".format(len(elt), elt))
 
             for name, value in (("LABEL", label), ("ITEM", item)):
                 if not isinstance(value, str):
