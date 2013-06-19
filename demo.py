@@ -102,12 +102,12 @@ def gauge_demo(d):
 
     for i in range(1, 101):
         if i < 50:
-            d.gauge_update(i, "Progress: %d%%" % i, update_text=1)
+            d.gauge_update(i, "Progress: %d%%" % i, update_text=True)
         elif i == 50:
-            d.gauge_update(i, "Over %d%%. Good." % i, update_text=1)
+            d.gauge_update(i, "Over %d%%. Good." % i, update_text=True)
         elif i == 80:
             d.gauge_update(i, "Yeah, this boring crap will be over Really "
-                           "Soon Now.", update_text=1)
+                           "Soon Now.", update_text=True)
         else:
             d.gauge_update(i)
 
@@ -305,12 +305,12 @@ def checklist_demo(d):
         # We could put non-empty items here (not only the tag for each entry)
         (code, tags) = d.checklist(text="What sandwich toppings do you like?",
                                    height=15, width=54, list_height=7,
-                                   choices=[("Catsup", "",             0),
-                                            ("Mustard", "",            0),
-                                            ("Pesto", "",              0),
-                                            ("Mayonaise", "",          1),
-                                            ("Horse radish","",        1),
-                                            ("Sun-dried tomatoes", "", 1)],
+                                   choices=[("Catsup", "",             False),
+                                            ("Mustard", "",            False),
+                                            ("Pesto", "",              False),
+                                            ("Mayonaise", "",          True),
+                                            ("Horse radish","",        True),
+                                            ("Sun-dried tomatoes", "", True)],
                                    title="Do you prefer ham or spam?",
                                    backtitle="And now, for something "
                                    "completely different...")
@@ -324,18 +324,18 @@ def radiolist_demo(d):
         (code, tag) = d.radiolist(
             "What's your favorite kind of sandwich?",
             width=65,
-            choices=[("Hamburger", "2 slices of bread, a steak...", 0),
-                     ("Hotdog", "doesn't bite any more", 0),
-                     ("Burrito", "no se lo que es", 0),
-                     ("Doener", "Huh?", 0),
-                     ("Falafel", "Erm...", 0),
-                     ("Bagel", "Of course!", 0),
-                     ("Big Mac", "Ah, that's easy!", 1),
-                     ("Whopper", "Erm, sorry", 0),
-                     ("Quarter Pounder", 'called "le Big Mac" in France', 0),
+            choices=[("Hamburger", "2 slices of bread, a steak...", False),
+                     ("Hotdog", "doesn't bite any more", False),
+                     ("Burrito", "no se lo que es", False),
+                     ("Doener", "Huh?", False),
+                     ("Falafel", "Erm...", False),
+                     ("Bagel", "Of course!", False),
+                     ("Big Mac", "Ah, that's easy!", True),
+                     ("Whopper", "Erm, sorry", False),
+                     ("Quarter Pounder", 'called "le Big Mac" in France', False),
                      ("Peanut Butter and Jelly", "Well, that's your own "
-                      "business...", 0),
-                     ("Grilled cheese", "And nothing more?", 0)])
+                      "business...", False),
+                     ("Grilled cheese", "And nothing more?", False)])
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
     return tag

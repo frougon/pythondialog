@@ -324,9 +324,10 @@ def _path_to_executable(f):
 def _to_onoff(val):
     """Convert boolean expressions to "on" or "off".
 
-    This function converts every non-zero integer as well as "on",
-    "ON", "On" and "oN" to "on" and converts 0, "off", "OFF", etc. to
-    "off".
+    Return:
+      - "on" if 'val' is True, a non-zero integer, "on" or any case
+        variation thereof;
+      - "off" if 'val' is False, 0, "off" or any case variation thereof.
 
     Notable exceptions:
 
@@ -501,7 +502,7 @@ class Dialog:
     to dialog for this widget call. For instance, if 'd' is a Dialog
     instance, you can write:
 
-      d.checklist(args, ..., title="A Great Title", no_shadow=1)
+      d.checklist(args, ..., title="A Great Title", no_shadow=True)
 
     The no_shadow option is worth looking at:
 
@@ -509,14 +510,15 @@ class Dialog:
          concerned (unlike the "--title" option, for instance). When
          you list it as a keyword argument, the option is really
          passed to dialog only if the value you gave it evaluates to
-         true, e.g. "no_shadow=1" will cause "--no-shadow" to be
-         passed to dialog whereas "no_shadow=0" will cause this
-         option not to be passed to dialog at all.
+         True in a boolean context. For instance, "no_shadow=True"
+         will cause "--no-shadow" to be passed to dialog whereas
+         "no_shadow=False" will cause this option not to be passed to
+         dialog at all.
 
       2. It is an option that has a hyphen (-) in its name, which you
          must change into an underscore (_) to pass it as a Python
          keyword argument. Therefore, "--no-shadow" is passed by
-         giving a "no_shadow=1" keyword argument to a Dialog method
+         giving a "no_shadow=True" keyword argument to a Dialog method
          (the leading two dashes are also consistently removed).
 
 
@@ -952,9 +954,9 @@ class Dialog:
                        can be scrolled) at a given time
         choices     -- a list of tuples (tag, item, status) where
                        'status' specifies the initial on/off state of
-                       each entry; can be 0 or 1 (integers, 1 meaning
-                       checked, i.e. "on"), or "on", "off" or any
-                       uppercase variant of these two strings.
+                       each entry; can be True or False, 1 or 0, "on"
+                       or "off" (True, 1 and "on" meaning checked),
+                       or any case variation of these two strings.
 
         Return a tuple of the form (code, [tag, ...]) with the tags
         for the entries that were selected by the user. 'code' is the
@@ -1578,19 +1580,19 @@ class Dialog:
         Providing on-line help facilities
         ---------------------------------
 
-        If this function is called with item_help=1 (keyword
+        If this function is called with item_help=True (keyword
         argument), the option --item-help is passed to dialog and the
         tuples contained in 'choices' must contain 3 elements each :
         (tag, item, help). The help string for the highlighted item
         is displayed in the bottom line of the screen and updated as
         the user highlights other items.
 
-        If item_help=0 or if this keyword argument is not passed to
-        this function, the tuples contained in 'choices' must contain
-        2 elements each : (tag, item).
+        If item_help=False or if this keyword argument is not passed
+        to this function, the tuples contained in 'choices' must
+        contain 2 elements each: (tag, item).
 
-        If this function is called with help_button=1, it must also
-        be called with item_help=1 (this is a limitation of dialog),
+        If this function is called with help_button=True, it must also
+        be called with item_help=True (this is a limitation of dialog),
         therefore the tuples contained in 'choices' must contain 3
         elements each as explained in the previous paragraphs. This
         will cause a Help button to be added to the right of the
@@ -1605,7 +1607,7 @@ class Dialog:
         'exit_info' is either:
           - an integer, being the exit status of the dialog-like
             program
-          - or the string "help", meaning that help_button=1 was
+          - or the string "help", meaning that help_button=True was
             passed and that the user chose the Help button instead of
             OK or Cancel.
 
@@ -1885,22 +1887,22 @@ class Dialog:
         list_height -- number of entries displayed in the box (which
                        can be scrolled) at a given time
         choices     -- a list of tuples (tag, item, status) where
-                       'status' specifies the initial on/off state
-                       each entry; can be 0 or 1 (integers, 1 meaning
-                       checked, i.e. "on"), or "on", "off" or any
-                       uppercase variant of these two strings.
-                       No more than one entry should  be set to on.
+                       'status' specifies the initial on/off state of
+                       each entry; can be True or False, 1 or 0, "on"
+                       or "off" (True and 1 meaning "on"), or any case
+                       variation of these two strings. No more than
+                       one entry should be set to True.
 
         A radiolist box is similar to a menu box. The main difference
         is that you can indicate which entry is initially selected,
-        by setting its status to on.
+        by setting its status to True.
 
         Return a tuple of the form (code, tag) with the tag for the
         entry that was chosen by the user. 'code' is the exit status
         of the dialog-like program.
 
         If the user exits with ESC or CANCEL, or if all entries were
-        initially set to off and not altered before the user chose
+        initially set to False and not altered before the user chose
         OK, the returned tag is the empty string.
 
         Notable exceptions:
