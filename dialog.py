@@ -184,8 +184,8 @@ class UnableToCreateTemporaryDirectory(error):
 
 # Values accepted for checklists
 try:
-    _on_rec = re.compile(r"on", re.IGNORECASE)
-    _off_rec = re.compile(r"off", re.IGNORECASE)
+    _on_rec = re.compile(r"on$", re.IGNORECASE)
+    _off_rec = re.compile(r"off$", re.IGNORECASE)
 
     _calendar_date_rec = re.compile(
         r"(?P<day>\d\d)/(?P<month>\d\d)/(?P<year>\d\d\d\d)$")
@@ -1632,7 +1632,7 @@ class Dialog:
 
         output = self._strip_xdialog_newline(output)
 
-        if "help_button" in kwargs and output.startswith("HELP "):
+        if kwargs.get("help_button", False) and output.startswith("HELP "):
             return ("help", output[5:])
         else:
             return (code, output)
@@ -1973,7 +1973,7 @@ class Dialog:
                     f.write(text)
 
                 # Ask for an empty title unless otherwise specified
-                if "title" not in kwargs:
+                if kwargs.get("title", None) is None:
                     kwargs["title"] = ""
 
                 return self._perform(
@@ -2040,7 +2040,7 @@ class Dialog:
         """
         # This is for backward compatibility... not that it is
         # stupid, but I prefer explicit programming.
-        if "title" not in kwargs:
+        if kwargs.get("title", None) is None:
             kwargs["title"] = filename
         return self._perform(
             ["--textbox", filename, str(height), str(width)],
