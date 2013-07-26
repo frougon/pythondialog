@@ -1,3 +1,81 @@
+2013-06-19  Florent Rougon  <f.rougon@free.fr>
+
+	Replace the question for the calendar demo with a non-perishable one
+
+	* demo.py: the question about an estimate of Debian *** release is
+	bound to become out-of-date. Replace it with a question that will
+	not need a change every couple of years.
+
+2013-06-19  Florent Rougon  <f.rougon@free.fr>
+
+	Minor improvements
+
+	* demo.py: use locale.setlocale(locale.LC_ALL, '') to properly
+	initialize the locales
+
+	* dialog.py: code readability improvement
+
+2013-06-19  Florent Rougon  <f.rougon@free.fr>
+
+	Minor bug fixes
+
+	* dialog.py(_to_onoff): regexp match against "on$"/"off$" instead
+	of "on"/"off".
+
+	* dialog.py: more rigorous handling of "title" and "help_button"
+	keyword arguments. For instance, passing 'title=None' to a
+	function that gets this argument through its **kwargs results in a
+	kwargs dictionary that does contain a "title" key (with None as
+	the corresponding value); therefore '"title" not in kwargs' is not
+	a great test to determine if the title should be set to a default
+	value.
+
+2013-06-19  Florent Rougon  <f.rougon@free.fr>
+
+	* Favor usage of True/False over 1/0 and on/off in dialog.py and
+	demo.py, docstrings included.
+
+2013-06-19  Florent Rougon  <f.rougon@free.fr>
+
+	Improve error handling
+
+	* dialog.py(_to_onoff): actually raise an exception when the given
+	parameter is a string that doesn't represent a boolean according
+	to the regexps.
+
+	* demo.py: when handling exceptions at top level, start by
+	printing a traceback, which is always very practical to find the
+	origin of problems.
+
+2013-06-18  Florent Rougon  <f.rougon@free.fr>
+
+	* Replace assert statements with PythonDialogBug exceptions.
+
+	This is less practical for coding in dialog.py but makes it easier
+	for dialog.py users to catch all (most) exceptions that come from
+	pythondialog.
+
+2013-06-18  Florent Rougon  <f.rougon@free.fr>
+
+	Cosmetic changes
+
+	* Change deprecated %u into %d.
+
+	* Remove trailing whitespace.
+
+	* Coding-style update for the generic exception.
+
+2013-06-18  Florent Rougon  <f.rougon@free.fr>
+
+	Improve error reporting between fork() and execve()
+
+	* Print a traceback if an error happens between fork() and
+	execve() when calling dialog.
+
+2013-06-18  Florent Rougon  <f.rougon@free.fr>
+
+	* Basic porting to Python 3.
+
 2010-03-17  Florent Rougon  <f.rougon@free.fr>
 
 	* dialog.py: Move the definition of _simple_option() before its uses,
