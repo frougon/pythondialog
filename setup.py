@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # setup.py --- Setup script for pythondialog
-# Copyright (c) 2002, 2003, 2004, 2009, 2010 Florent Rougon
+# Copyright (c) 2002, 2003, 2004, 2009, 2010, 2013 Florent Rougon
 #
 # This file is part of pythondialog.
 #
@@ -36,36 +36,22 @@ def main():
 #         Doesn't work great with several authors...
           author="Robb Shecter, Sultanbek Tezadov, Florent Rougon, "
                  "Peter Åstrand",
-          author_email="robb@acm.org, http://sultan.da.ru/, flo@via.ecp.fr, "
+          author_email="robb@acm.org, http://sultan.da.ru/, f.rougon@free.fr, "
                        "peter@cendio.se",
           maintainer="Florent Rougon",
-          maintainer_email="flo@via.ecp.fr",
+          maintainer_email="f.rougon@free.fr",
           url="http://people.via.ecp.fr/~flo/",
           download_url="http://people.via.ecp.fr/~flo/projects/pythondialog/"
-          "dist/python2-%s-%s.tar.gz" % (PACKAGE, VERSION),
-          license="LGPL",
+          "dist/python3-%s-%s.tar.gz" % (PACKAGE, VERSION),
           # Well, there isn't much UNIX-specific code in dialog.py, if at all.
           # I am putting Unix here only because of the dialog dependency...
           # Note: using the "Unix" case instead of "UNIX", because it is
           # spelled this way in Trove classifiers.
           platforms=["Unix"],
-          long_description="""\
-Python interface to the UNIX dialog utility
--------------------------------------------
-
-pythondialog provides an easy, pythonic and comprehensive way to use the
-dialog_ features from Python code. Backend programs that are almost compatible
-with dialog are also supported if someone cares about them.
-
-.. _dialog: http://invisible-island.net/dialog/dialog.html""",
-          keywords=["dialog", "Xdialog", "whiptail", "text-mode interface"],
+          long_description=open("README.rst", "r", encoding="utf-8").read(),
+          keywords=["dialog", "Xdialog", "text-mode interface"],
           classifiers=[
-            "Programming Language :: Python",
-            # From http://diveintopython3.org/packaging.html, I infer that
-            # specifying "Python :: 2" would imply pythondialog is not going
-            # to support Python 3, which would be untrue (cf. the Django
-            # example).
-            # "Programming Language :: Python :: 2",
+            "Programming Language :: Python :: 3",
             "Development Status :: 5 - Production/Stable",
             "Environment :: Console :: Curses",
             "Intended Audience :: Developers",

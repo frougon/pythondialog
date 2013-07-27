@@ -1,3 +1,12 @@
+2013-07-27  Florent Rougon  <f.rougon@free.fr>
+
+	* README: rename to README.rst, convert to reStructuredText and
+	update for Python 3
+	* INSTALL: update for Python 3
+	* MANIFEST.in: include README.rst
+	* setup.py: update for Python 3 and the README -> README.rst
+	change, email address update
+
 2013-06-19  Florent Rougon  <f.rougon@free.fr>
 
 	Replace the question for the calendar demo with a non-perishable one

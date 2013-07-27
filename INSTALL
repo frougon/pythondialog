@@ -13,11 +13,11 @@ package Python extensions), so its installation should be as simple as:
 
   - a) 1) type:
 
-            python ./setup.py build
+            python3 ./setup.py build
 
        2) then, as root:
 
-            python ./setup.py install --record /path/to/foo
+            python3 ./setup.py install --record /path/to/foo
 
           where foo is a file of your choice which will contain the list
           of all files installed on your system by the preceding
@@ -29,7 +29,7 @@ package Python extensions), so its installation should be as simple as:
 
     b) type, as root:
 
-            python ./setup.py install --record /path/to/foo
+            python3 ./setup.py install --record /path/to/foo
 
        This will automatically build the package before installing it.
        The observations made in a) also apply here.
