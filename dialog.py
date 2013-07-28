@@ -78,7 +78,11 @@ class error(Exception):
         self.message = message
 
     def __str__(self):
-        return "<{0}: {1}>".format(self.__class__.__name__, self.message)
+        return self.complete_message()
+
+    def __repr__(self):
+        return "{0}.{1}({2!r})".format(__name__, self.__class__.__name__,
+                                       self.message)
 
     def complete_message(self):
         if self.message:
@@ -180,7 +184,7 @@ code indicating an error."""
 
 class UnableToCreateTemporaryDirectory(error):
     """Exception raised when we cannot create a temporary directory."""
-    ExceptionShortDescription = "unable to create a temporary directory"
+    ExceptionShortDescription = "Unable to create a temporary directory"
 
 # Values accepted for checklists
 try:

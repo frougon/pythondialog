@@ -854,8 +854,8 @@ def main():
                           dialog.PythonDialogErrorBeforeExecInChildProcess):
             print(traceback.format_exc(), file=sys.stderr)
 
-        print("Error (see above for a traceback):\n\n",
-              exc_instance.complete_message(), sep='', file=sys.stderr)
+        print("Error (see above for a traceback):\n\n{0}".format(
+                exc_instance), file=sys.stderr)
         sys.exit(1)
 
     sys.exit(0)
