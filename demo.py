@@ -159,18 +159,8 @@ def msgbox_demo(d, answer):
 
 
 def textbox_demo(d):
-    # It may be that demo.py is not in the current directory...
-    files_to_try = ("demo.py", "/etc/fstab", "/etc/passwd", "/etc/motd")
-
-    for f in files_to_try:
-        if os.path.isfile(f):
-            filepath = f
-            break
-    else:
-        d.msgbox("Not showing the textbox widget because none of the "
-                 "following files is present: %s." % ', '.join(files_to_try))
-        return
-
+    # Better use the absolute path for displaying in the dialog title
+    filepath = os.path.abspath(__file__)
     d.textbox(filepath, width=76, title="Contents of %s" % filepath)
 
 
