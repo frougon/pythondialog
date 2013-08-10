@@ -199,6 +199,50 @@ except re.error as v:
     raise PythonDialogReModuleError(v)
 
 
+# From dialog(1):
+#
+#   All options begin with "--" (two ASCII hyphens, for the benefit of those
+#   using systems with deranged locale support).
+#
+#   A "--" by itself is used as an escape, i.e., the next token on the
+#   command-line is not treated as an option, as in:
+#        dialog --title -- --Not an option
+def _dash_escape(args):
+    """Escape all elements of 'args' that need escaping.
+
+    'args' may be any sequence and is not modified by this function.
+    Return a new list where every element that needs escaping has
+    been escaped.
+
+    An element needs escaping when it starts with two ASCII hyphens
+    ('--'). Escaping consists in prepending an element composed of
+    two ASCII hyphens, i.e., the string '--'.
+
+    """
+    res = []
+
+    for arg in args:
+        if arg.startswith("--"):
+            res.extend(("--", arg))
+        else:
+            res.append(arg)
+
+    return res
+
+# We need this function in the global namespace for the lambda
+# expressions in _common_args_syntax to see it when they are called.
+def _dash_escape_nf(args):      # nf: non-first
+    """Escape all elements of 'args' that need escaping, except the first one.
+
+    See _dash_escape() for details. Return a new list.
+
+    """
+    if not args:
+        raise PythonDialogBug("not a non-empty sequence: {0!r}".format(args))
+    l = _dash_escape(args[1:])
+    l.insert(0, args[0])
+    return l
+
 def _simple_option(option, enable):
     """Turn on or off the simplest dialog Common Options."""
     if enable:
@@ -214,31 +258,32 @@ def _simple_option(option, enable):
 # Options such as --separate-output should obviously not be set by the user
 # since they affect the parsing of dialog's output:
 _common_args_syntax = {
-    "aspect": lambda ratio: ("--aspect", str(ratio)),
-    "backtitle": lambda backtitle: ("--backtitle", backtitle),
+    "aspect": lambda ratio: _dash_escape_nf(("--aspect", str(ratio))),
+    "backtitle": lambda backtitle: _dash_escape_nf(("--backtitle", backtitle)),
     "beep": lambda enable: _simple_option("--beep", enable),
     "beep_after": lambda enable: _simple_option("--beep-after", enable),
     # Warning: order = y, x!
-    "begin": lambda coords: ("--begin", str(coords[0]), str(coords[1])),
-    "cancel": lambda string: ("--cancel-label", string),
+    "begin": lambda coords: _dash_escape_nf(
+        ("--begin", str(coords[0]), str(coords[1]))),
+    "cancel": lambda s: _dash_escape_nf(("--cancel-label", s)),
     "clear": lambda enable: _simple_option("--clear", enable),
     "cr_wrap": lambda enable: _simple_option("--cr-wrap", enable),
-    "create_rc": lambda file: ("--create-rc", file),
+    "create_rc": lambda file_: _dash_escape_nf(("--create-rc", file_)),
     "defaultno": lambda enable: _simple_option("--defaultno", enable),
-    "default_item": lambda string: ("--default-item", string),
+    "default_item": lambda s: _dash_escape_nf(("--default-item", s)),
     "help": lambda enable: _simple_option("--help", enable),
     "help_button": lambda enable: _simple_option("--help-button", enable),
-    "help_label": lambda string: ("--help-label", string),
+    "help_label": lambda s: _dash_escape_nf(("--help-label", s)),
     "ignore": lambda enable: _simple_option("--ignore", enable),
     "insecure": lambda enable: _simple_option("--insecure", enable),
     "item_help": lambda enable: _simple_option("--item-help", enable),
-    "max_input": lambda size: ("--max-input", str(size)),
+    "max_input": lambda size: _dash_escape_nf(("--max-input", str(size))),
     "no_cancel": lambda enable: _simple_option("--no-cancel", enable),
     "no_kill": lambda enable: _simple_option("--no-kill", enable),
-    "no_label": lambda string: ("--no-label", string),
+    "no_label": lambda s: _dash_escape_nf(("--no-label", s)),
     "no_shadow": lambda enable: _simple_option("--no-shadow", enable),
     "nocancel": lambda enable: _simple_option("--nocancel", enable),
-    "ok_label": lambda string: ("--ok-label", string),
+    "ok_label": lambda s: _dash_escape_nf(("--ok-label", s)),
     "print_maxsize": lambda enable: _simple_option("--print-maxsize",
                                                    enable),
     "print_size": lambda enable: _simple_option("--print-size", enable),
@@ -246,19 +291,19 @@ _common_args_syntax = {
                                                    enable),
     "separate_output": lambda enable: _simple_option("--separate-output",
                                                      enable),
-    "separate_widget": lambda string: ("--separate-widget", string),
+    "separate_widget": lambda s: _dash_escape_nf(("--separate-widget", s)),
     "shadow": lambda enable: _simple_option("--shadow", enable),
     "size_err": lambda enable: _simple_option("--size-err", enable),
-    "sleep": lambda secs: ("--sleep", str(secs)),
+    "sleep": lambda secs: _dash_escape_nf(("--sleep", str(secs))),
     "stderr": lambda enable: _simple_option("--stderr", enable),
     "stdout": lambda enable: _simple_option("--stdout", enable),
     "tab_correct": lambda enable: _simple_option("--tab-correct", enable),
-    "tab_len": lambda n: ("--tab-len", str(n)),
-    "timeout": lambda secs: ("--timeout", str(secs)),
-    "title": lambda title: ("--title", title),
+    "tab_len": lambda n: _dash_escape_nf(("--tab-len", str(n))),
+    "timeout": lambda secs: _dash_escape_nf(("--timeout", str(secs))),
+    "title": lambda title: _dash_escape_nf(("--title", title)),
     "trim": lambda enable: _simple_option("--trim", enable),
     "version": lambda enable: _simple_option("--version", enable),
-    "yes_label": lambda string: ("--yes-label", string) }
+    "yes_label": lambda s: _dash_escape_nf(("--yes-label", s)) }
 
 
 def _find_in_path(prog_name):
@@ -620,8 +665,55 @@ class Dialog:
         if self.use_stdout:
             self.add_persistent_args(["--stdout"])
 
-    def add_persistent_args(self, arglist):
-        self.dialog_persistent_arglist.extend(arglist)
+    @classmethod
+    def dash_escape(cls, args):
+        """Escape all elements of 'args' that need escaping.
+
+        'args' may be any sequence and is not modified by this method.
+        Return a new list where every element that needs escaping has
+        been escaped.
+
+        An element needs escaping when it starts with two ASCII hyphens
+        ('--'). Escaping consists in prepending an element composed of
+        two ASCII hyphens, i.e., the string '--'.
+
+        All high-level Dialog methods automatically perform dash
+        escaping where appropriate. In particular, this is the case
+        for every method that provides a widget: yesno(), msgbox(),
+        etc. You only need to do it yourself when calling a low-level
+        method such as add_persistent_args().
+
+        """
+        return _dash_escape(args)
+
+    @classmethod
+    def dash_escape_nf(cls, args):
+        """Escape all elements of 'args' that need escaping, except the first one.
+
+        See dash_escape() for details. Return a new list.
+
+        All high-level Dialog methods automatically perform dash
+        escaping where appropriate. In particular, this is the case
+        for every method that provides a widget: yesno(), msgbox(),
+        etc. You only need to do it yourself when calling a low-level
+        method such as add_persistent_args().
+
+        """
+        return _dash_escape_nf(args)
+
+    def add_persistent_args(self, args):
+        """Add arguments to use for every subsequent dialog call.
+
+        This method cannot guess which elements of 'args' are dialog
+        options (such as '--title') and which are not (for instance,
+        you might want to use '--title' or even '--' as an argument
+        to a dialog option). Therefore, this method does not perform
+        any kind of dash escaping; you have to do it yourself.
+        dash_escape() and dash_escape_nf() may be useful for this
+        purpose.
+
+        """
+        self.dialog_persistent_arglist.extend(args)
 
     # For compatibility with the old dialog...
     def setBackgroundTitle(self, text):
@@ -634,10 +726,10 @@ class Dialog:
         warnings.warn("Dialog.setBackgroundTitle() has been obsolete for "
                       "many years; look for 'backtitle' in demo.py for "
                       "possible replacements", DeprecationWarning)
-        self.add_persistent_args(("--backtitle", text))
+        self.add_persistent_args(self.dash_escape_nf(("--backtitle", text)))
 
-    def _call_program(self, cmdargs, redir_child_stdin_from_fd=None,
-                      close_fds=(), **kwargs):
+    def _call_program(self, cmdargs, dash_escape="non-first",
+                      redir_child_stdin_from_fd=None, close_fds=(), **kwargs):
         """Do the actual work of invoking the dialog-like program.
 
         Communication with the dialog-like program is performed
@@ -645,6 +737,13 @@ class Dialog:
         descriptor, depending on 'redir_child_stdin_from_fd'. The
         pipe allows the parent process to read what dialog writes on
         its standard error[*] stream.
+
+        If 'dash_escape' is the string "non-first", then every
+        element of 'cmdargs' that starts with '--' is escaped by
+        prepending an element consisting of '--', except the first
+        one (which is usually a dialog option such as '--yesno').
+        In order to disable this escaping mechanism, pass the string
+        "none" as 'dash_escape'.
 
         If 'redir_child_stdin_from_fd' is not None, it should be an
         open file descriptor (i.e., an integer). That file descriptor
@@ -677,6 +776,14 @@ class Dialog:
             new_environ[varname] = str(getattr(self, varname))
         if hasattr(self, "DIALOGRC"):
             new_environ["DIALOGRC"] = self.DIALOGRC
+
+        if dash_escape == "non-first":
+            # Escape all elements of 'cmdargs' that start with '--', except the
+            # first one.
+            cmdargs = self.dash_escape_nf(cmdargs)
+        elif dash_escape != "none":
+            raise PythonDialogBug("invalid value for 'dash_escape' parameter: "
+                                  "{0!r}".format(dash_escape))
 
         arglist = [self._dialog_prg] + \
                   self.dialog_persistent_arglist + \
@@ -846,7 +953,7 @@ class Dialog:
 
         return (exit_code, child_output)
 
-    def _perform(self, cmdargs, **kwargs):
+    def _perform(self, cmdargs, dash_escape="non-first", **kwargs):
         """Perform a complete dialog-like program invocation.
 
         This function invokes the dialog-like program, waits for its
@@ -860,7 +967,8 @@ class Dialog:
 
         """
         (child_pid, child_output_rfd) = \
-                    self._call_program(cmdargs, **kwargs)
+                    self._call_program(cmdargs, dash_escape=dash_escape,
+                                       **kwargs)
         (exit_code, output) = \
                     self._wait_for_program_termination(child_pid,
                                                        child_output_rfd)
