@@ -1435,7 +1435,8 @@ class Dialog:
     def gauge_update(self, percent, text="", update_text=False):
         """Update a running gauge box.
 
-        percent     -- new percentage to show in the gauge meter
+        percent     -- new percentage (integer) to show in the gauge
+                       meter
         text        -- new text to optionally display in the box
         update_text -- boolean indicating whether to update the
                        text in the box
@@ -1455,10 +1456,15 @@ class Dialog:
                            used to talk to the dialog-like program.
 
         """
+        if not isinstance(percent, int):
+            raise BadPythonDialogUsage(
+                "the 'percent' argument of gauge_update() must be an integer, "
+                "but {0!r} is not".format(percent))
+
         if update_text:
-            gauge_data = "%d\nXXX\n%s\nXXX\n" % (percent, text)
+            gauge_data = "XXX\n{0}\n{1}\nXXX\n".format(percent, text)
         else:
-            gauge_data = "%d\n" % percent
+            gauge_data = "{0}\n".format(percent)
         try:
             self._gauge_process["stdin"].write(gauge_data)
             self._gauge_process["stdin"].flush()
