@@ -44,8 +44,10 @@ Here is the hierarchy of notable exceptions raised by this module:
      ExecutableNotFound
      BadPythonDialogUsage
      PythonDialogSystemError
-        PythonDialogIOError
         PythonDialogOSError
+           PythonDialogIOError  (should not be raised starting from
+                                Python 3.3, as IOError becomes an
+                                alias of OSError)
         PythonDialogErrorBeforeExecInChildProcess
         PythonDialogReModuleError
      UnexpectedDialogOutput
@@ -62,6 +64,12 @@ As you can see, every exception 'exc' among them verifies:
 so if you don't need fine-grained error handling, simply catch
 'error' (which will probably be accessible as dialog.error from your
 program) and you should be safe.
+
+Changed in version 2.12: PythonDialogIOError is now a subclass of
+PythonDialogOSError in order to help with the transition from IOError
+to OSError in the Python language. With this change, you can safely
+replace "except PythonDialogIOError" clauses with
+"except PythonDialogOSError" even if running under Python < 3.3.
 
 """
 
@@ -136,15 +144,20 @@ operation" (e.g., a system call) that should work in "normal" situations.
     """
     ExceptionShortDescription = "System error"
 
-class PythonDialogIOError(PythonDialogSystemError):
-    """Exception raised when pythondialog catches an IOError exception that \
-should be passed to the calling program."""
-    ExceptionShortDescription = "IO error"
-
 class PythonDialogOSError(PythonDialogSystemError):
     """Exception raised when pythondialog catches an OSError exception that \
 should be passed to the calling program."""
     ExceptionShortDescription = "OS error"
+
+class PythonDialogIOError(PythonDialogOSError):
+    """Exception raised when pythondialog catches an IOError exception that \
+should be passed to the calling program.
+
+    This exception should not be raised starting from Python 3.3, as
+    the built-in exception IOError becomes an alias of OSError.
+
+    """
+    ExceptionShortDescription = "IO error"
 
 class PythonDialogErrorBeforeExecInChildProcess(PythonDialogSystemError):
     """Exception raised when an exception is caught in a child process \
@@ -195,8 +208,8 @@ try:
         r"(?P<day>\d\d)/(?P<month>\d\d)/(?P<year>\d\d\d\d)$")
     _timebox_time_rec = re.compile(
         r"(?P<hour>\d\d):(?P<minute>\d\d):(?P<second>\d\d)$")
-except re.error as v:
-    raise PythonDialogReModuleError(v)
+except re.error as e:
+    raise PythonDialogReModuleError(str(e)) from e
 
 
 # From dialog(1):
@@ -328,8 +341,8 @@ def _find_in_path(prog_name):
                and os.access(file_path, os.R_OK | os.X_OK):
                 return file_path
         return None
-    except os.error as v:
-        raise PythonDialogOSError(v.strerror)
+    except os.error as e:
+        raise PythonDialogOSError(str(e)) from e
 
 
 def _path_to_executable(f):
@@ -364,8 +377,8 @@ def _path_to_executable(f):
                 raise ExecutableNotFound(
                     "can't find the executable for the dialog-like "
                     "program")
-    except os.error as v:
-        raise PythonDialogOSError(v.strerror)
+    except os.error as e:
+        raise PythonDialogOSError(str(e)) from e
 
     return res
 
@@ -392,8 +405,8 @@ def _to_onoff(val):
                 return "on"
             elif _off_rec.match(val):
                 return "off"
-        except re.error as v:
-            raise PythonDialogReModuleError(v)
+        except re.error as e:
+            raise PythonDialogReModuleError(str(e)) from e
 
     raise BadPythonDialogUsage("invalid boolean value: {0!r}".format(val))
 
@@ -442,8 +455,8 @@ def _create_temporary_directory():
                                    "%s-%d" \
                                    % ("pythondialog",
                                       random.randint(0, sys.maxsize)))
-        except os.error as v:
-            raise PythonDialogOSError(v.strerror)
+        except os.error as e:
+            raise PythonDialogOSError(str(e)) from e
 
         try:
             os.mkdir(tmp_dir, 0o700)
@@ -801,8 +814,8 @@ class Dialog:
             # rfd = File Descriptor for Reading
             # wfd = File Descriptor for Writing
             (child_output_rfd, child_output_wfd) = os.pipe()
-        except os.error as v:
-            raise PythonDialogOSError(v.strerror)
+        except os.error as e:
+            raise PythonDialogOSError(str(e)) from e
 
         child_pid = os.fork()
         if child_pid == 0:
@@ -850,7 +863,7 @@ class Dialog:
         try:
             os.close(child_output_wfd)
         except os.error as e:
-            raise PythonDialogOSError(e.strerror)
+            raise PythonDialogOSError(str(e)) from e
         return (child_pid, child_output_rfd)
 
     def _wait_for_program_termination(self, child_pid, child_output_rfd):
@@ -877,7 +890,8 @@ class Dialog:
             DialogTerminatedBySignal
             DialogError
             PythonDialogErrorBeforeExecInChildProcess
-            PythonDialogIOError
+            PythonDialogIOError    if the Python version is < 3.3
+            PythonDialogOSError
             PythonDialogBug
             ProbablyPythonBug
 
@@ -948,8 +962,10 @@ class Dialog:
             # to read dialog's output on its stderr to be closed too. This is
             # important, otherwise invoking dialog enough times would
             # eventually exhaust the maximum number of open file descriptors.
-        except IOError as v:
-            raise PythonDialogIOError(v)
+        except OSError as e:
+            raise PythonDialogOSError(str(e)) from e
+        except IOError as e:
+            raise PythonDialogIOError(str(e)) from e
 
         return (exit_code, child_output)
 
@@ -1043,8 +1059,8 @@ class Dialog:
         if code == self.DIALOG_OK:
             try:
                 mo = _calendar_date_rec.match(output)
-            except re.error as v:
-                raise PythonDialogReModuleError(v)
+            except re.error as e:
+                raise PythonDialogReModuleError(str(e)) from e
 
             if mo is None:
                 raise UnexpectedDialogOutput(
@@ -1430,7 +1446,7 @@ class Dialog:
                 "child_output_rfd": child_output_rfd
                 }
         except os.error as e:
-            raise PythonDialogOSError(e.strerror)
+            raise PythonDialogOSError(str(e)) from e
 
     def gauge_update(self, percent, text="", update_text=False):
         """Update a running gauge box.
@@ -1451,9 +1467,11 @@ class Dialog:
 
         Return value: undefined.
 
-        Notable exception: PythonDialogIOError can be raised if there
-                           is an I/O error while writing to the pipe
-                           used to talk to the dialog-like program.
+        Notable exception: PythonDialogIOError (PythonDialogOSError
+                           from Python 3.3 onwards) can be raised if
+                           there is an I/O error while writing to the
+                           pipe used to talk to the dialog-like
+                           program.
 
         """
         if not isinstance(percent, int):
@@ -1468,8 +1486,10 @@ class Dialog:
         try:
             self._gauge_process["stdin"].write(gauge_data)
             self._gauge_process["stdin"].flush()
-        except IOError as v:
-            raise PythonDialogIOError(v)
+        except OSError as e:
+            raise PythonDialogOSError(str(e)) from e
+        except IOError as e:
+            raise PythonDialogIOError(str(e)) from e
 
     # For "compatibility" with the old dialog.py...
     def gauge_iterate(*args, **kwargs):
@@ -1491,7 +1511,8 @@ class Dialog:
         Notable exceptions:
             - any exception raised by
               self._wait_for_program_termination()
-            - PythonDialogIOError can be raised if closing the pipe
+            - PythonDialogIOError (PythonDialogOSError from
+              Python 3.3 onwards) can be raised if closing the pipe
               used to talk to the dialog-like program fails.
 
         """
@@ -1499,8 +1520,10 @@ class Dialog:
         # Close the pipe that we are using to feed dialog's stdin
         try:
             p["stdin"].close()
-        except IOError as v:
-            raise PythonDialogIOError(v)
+        except OSError as e:
+            raise PythonDialogOSError(str(e)) from e
+        except IOError as e:
+            raise PythonDialogIOError(str(e)) from e
         exit_code = \
                   self._wait_for_program_termination(p["pid"],
                                                      p["child_output_rfd"])[0]
@@ -1956,6 +1979,8 @@ class Dialog:
 
         Notable exceptions:
 
+            PythonDialogIOError    if the Python version is < 3.3
+            PythonDialogOSError
             any exception raised by self._perform()
 
         """
@@ -1987,11 +2012,10 @@ class Dialog:
             if file_path is not None:
                 # We open()ed file_path ourselves, let's close it now.
                 os.close(fd)
-
-        except os.error as v:
-            raise PythonDialogOSError(v.strerror)
-        except IOError as v:
-            raise PythonDialogIOError(v)
+        except OSError as e:
+            raise PythonDialogOSError(str(e)) from e
+        except IOError as e:
+            raise PythonDialogIOError(str(e)) from e
 
         return code
 
@@ -2060,7 +2084,7 @@ class Dialog:
 
         Notable exceptions:
             - UnableToCreateTemporaryDirectory
-            - PythonDialogIOError
+            - PythonDialogIOError    if the Python version is < 3.3
             - PythonDialogOSError
             - exceptions raised by the tempfile module (which are
               unfortunately not mentioned in its documentation, at
@@ -2101,10 +2125,10 @@ class Dialog:
                 if os.path.exists(fName):
                     os.unlink(fName)
                 os.rmdir(tmp_dir)
-        except os.error as v:
-            raise PythonDialogOSError(v.strerror)
-        except IOError as v:
-            raise PythonDialogIOError(v)
+        except OSError as e:
+            raise PythonDialogOSError(str(e)) from e
+        except IOError as e:
+            raise PythonDialogIOError(str(e)) from e
 
     def tailbox(self, filename, height=20, width=60, **kwargs):
         """Display the contents of a file in a dialog box, as with "tail -f".
@@ -2208,8 +2232,8 @@ class Dialog:
                         "the dialog-like program returned the following "
                         "unexpected time with the --timebox option: %s" % output)
                 time = [ int(s) for s in mo.group("hour", "minute", "second") ]
-            except re.error as v:
-                raise PythonDialogReModuleError(v)
+            except re.error as e:
+                raise PythonDialogReModuleError(str(e)) from e
         else:
             time = None
         return (code, time)
