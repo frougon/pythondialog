@@ -46,7 +46,9 @@ Options:
 
 # Global parameters
 params = {}
-
+tw = textwrap.TextWrapper(width=78, break_long_words=False,
+                          break_on_hyphens=True)
+from textwrap import indent, dedent
 
 def handle_exit_code(d, code):
     """Sample function showing how to interpret the dialog exit codes.
@@ -370,9 +372,8 @@ def comment_on_Cantor_date_of_birth(day, month, year):
 
 def scrollbox_demo(d, name, favorite_day, toppings, sandwich, date,
                    password):
-    tw = textwrap.TextWrapper(width=71, break_long_words=False,
-                              break_on_hyphens=True)
-
+    tw71 = textwrap.TextWrapper(width=71, break_long_words=False,
+                                break_on_hyphens=True)
     day, month, year = date
     msg = """\
 Here are some vital statistics about you:
@@ -389,7 +390,7 @@ Your root password is: ************************** (looks good!)""" \
      % (name, favorite_day,
         "\n    ".join([''] + toppings),
         sandwich, year, month, day,
-        tw.fill(comment_on_Cantor_date_of_birth(day, month, year)))
+        tw71.fill(comment_on_Cantor_date_of_birth(day, month, year)))
     d.scrollbox(msg, height=20, width=75, title="Great Report of the Year")
 
 
@@ -705,13 +706,52 @@ def clear_screen(d):
     return -1
 
 
+def get_term_size_and_backend_version(d, min_rows, min_cols):
+    backend_version = d.backend_version()
+    if not backend_version:
+        print(tw.fill(
+                "Unable to retrieve the version of the dialog-like backend. "
+                "Not running cdialog?") + "\nPress Enter to continue.",
+              file=sys.stderr)
+        input()
+
+    term_rows, term_cols = d.maxsize(use_persistent_args=False)
+    if term_rows < min_rows or term_cols < min_cols:
+        print(tw.fill(dedent("""\
+          Your terminal has less than {0} rows or less than {1} columns;
+          you may experience problems with the demo. You have been warned."""
+                             .format(min_rows, min_cols)))
+              + "\nPress Enter to continue.")
+        input()
+
+    return (term_rows, term_cols, backend_version)
+
+
 def demo(d):
+    min_rows, min_cols = 24, 80
+    term_rows, term_cols, backend_version = get_term_size_and_backend_version(
+        d, min_rows, min_cols)
+
     d.msgbox("""\
 Hello, and welcome to the pythondialog demonstration program.
 
+You can scroll through this dialog box with the Up and Down arrow keys. \
 Please note that some of the dialogs will not work, and cause the demo to \
-stop, if your terminal is too small. Recommended size is (at least) 25 rows \
-by 80 columns.""", width=60, height=10)
+stop, if your terminal is too small. The recommended size is (at least) \
+{min_rows} rows by {min_cols} columns.
+
+This script is being run by a Python interpreter identified as follows:
+
+{py_version}
+
+The dialog-like program displaying this message box reports version \
+{backend_version} and a terminal size of {rows} rows by {cols} columns."""
+             .format(
+            backend_version=backend_version,
+            py_version=indent(sys.version, "  "),
+            rows=term_rows, cols=term_cols,
+            min_rows=min_rows, min_cols=min_cols),
+             width=60, height=17)
 
     progressbox_demo_with_file_descriptor(d)
     infobox_demo(d)

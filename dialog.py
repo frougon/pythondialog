@@ -317,10 +317,11 @@ _common_args_syntax = {
     "no_ok": lambda enable: _simple_option("--no-ok", enable),
     "no_shadow": lambda enable: _simple_option("--no-shadow", enable),
     "ok_label": lambda s: _dash_escape_nf(("--ok-label", s)),
-    # Not very useful without some method that parses the result
+    # cf. Dialog.maxsize()
     "print_maxsize": lambda enable: _simple_option("--print-maxsize",
                                                    enable),
     "print_size": lambda enable: _simple_option("--print-size", enable),
+    # cf. Dialog.backend_version()
     "print_version": lambda enable: _simple_option("--print-version",
                                                    enable),
     "scrollbar": lambda enable: _simple_option("--scrollbar", enable),
@@ -618,6 +619,15 @@ class Dialog:
     raised by this class' methods.
 
     """
+    try:
+        _print_maxsize_cre = re.compile(r"""^MaxSize:[ \t]+
+                                            (?P<rows>\d+),[ \t]*
+                                            (?P<columns>\d+)[ \t]*$""",
+                                        re.VERBOSE)
+        _print_version_cre = re.compile(
+            r"^Version:[ \t]+(?P<version>.+?)[ \t]*$", re.MULTILINE)
+    except re.error as e:
+        raise PythonDialogReModuleError(str(e)) from e
 
     def __init__(self, dialog="dialog", DIALOGRC=None,
                  compat="dialog", use_stdout=None):
@@ -1058,6 +1068,71 @@ class Dialog:
                       "cf. clear_screen() in demo.py for an example",
                       DeprecationWarning)
         self._perform_no_options('--clear')
+
+    def backend_version(self):
+        """Get the version of the dialog-like program (backend).
+
+        If the exit status of the dialog-like program is
+        self.DIALOG_OK, return its version as a string; otherwise,
+        return None.
+
+        This version is not to be confused with the pythondialog
+        version.
+
+        Notable exceptions:
+
+            PythonDialogReModuleError
+            any exception raised by self._perform()
+
+        """
+        code, output = self._perform(["--print-version"],
+                                     use_persistent_args=False)
+        if code == self.DIALOG_OK:
+            try:
+                mo = self._print_version_cre.match(output)
+                if mo:
+                    return mo.group("version")
+                else:
+                    raise PythonDialogBug(
+                        "Unable to parse the output of '{0} --print-version': "
+                        "{1!r}".format(self._dialog_prg, output))
+            except re.error as e:
+                raise PythonDialogReModuleError(str(e)) from e
+        else:
+            return None
+
+    def maxsize(self, **kwargs):
+        """Get the maximum size of dialog boxes.
+
+        If the exit status of the dialog-like program is
+        self.DIALOG_OK, return a (lines, cols) tuple of integers;
+        otherwise, return None.
+
+        If you want to obtain the number of lines and columns of the
+        terminal, you should call this method with
+        use_persistent_args=False, because arguments such as
+        --backtitle modify the values returned.
+
+        Notable exceptions:
+
+            PythonDialogReModuleError
+            any exception raised by self._perform()
+
+        """
+        code, output = self._perform(["--print-maxsize"], **kwargs)
+        if code == self.DIALOG_OK:
+            try:
+                mo = self._print_maxsize_cre.match(output)
+                if mo:
+                    return tuple(map(int, mo.group("rows", "columns")))
+                else:
+                    raise PythonDialogBug(
+                        "Unable to parse the output of '{0} --print-maxsize': "
+                        "{1!r}".format(self._dialog_prg, output))
+            except re.error as e:
+                raise PythonDialogReModuleError(str(e)) from e
+        else:
+            return None
 
     def calendar(self, text, height=6, width=0, day=0, month=0, year=0,
                  **kwargs):
