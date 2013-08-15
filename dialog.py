@@ -767,7 +767,8 @@ class Dialog:
                       "possible replacements", DeprecationWarning)
         self.add_persistent_args(self.dash_escape_nf(("--backtitle", text)))
 
-    def _call_program(self, cmdargs, dash_escape="non-first",
+    def _call_program(self, cmdargs, *, dash_escape="non-first",
+                      use_persistent_args=True,
                       redir_child_stdin_from_fd=None, close_fds=(), **kwargs):
         """Do the actual work of invoking the dialog-like program.
 
@@ -776,6 +777,13 @@ class Dialog:
         descriptor, depending on 'redir_child_stdin_from_fd'. The
         pipe allows the parent process to read what dialog writes on
         its standard error[*] stream.
+
+        If 'use_persistent_args' is True (the default), the elements
+        of self.dialog_persistent_arglist are passed as the first
+        arguments to self._dialog_prg; otherwise,
+        self.dialog_persistent_arglist is not used at all. The
+        remaining arguments are those computed from kwargs followed
+        by the elements of 'cmdargs'.
 
         If 'dash_escape' is the string "non-first", then every
         element of 'cmdargs' that starts with '--' is escaped by
@@ -824,10 +832,12 @@ class Dialog:
             raise PythonDialogBug("invalid value for 'dash_escape' parameter: "
                                   "{0!r}".format(dash_escape))
 
-        arglist = [self._dialog_prg] + \
-                  self.dialog_persistent_arglist + \
-                  _compute_common_args(kwargs) + \
-                  cmdargs
+        arglist = [ self._dialog_prg ]
+
+        if use_persistent_args:
+            arglist.extend(self.dialog_persistent_arglist)
+
+        arglist.extend(_compute_common_args(kwargs) + cmdargs)
 
         # Insert here the contents of the DEBUGGING file if you want to obtain
         # a handy string of the complete command line with arguments quoted
@@ -995,12 +1005,15 @@ class Dialog:
 
         return (exit_code, child_output)
 
-    def _perform(self, cmdargs, dash_escape="non-first", **kwargs):
+    def _perform(self, cmdargs, *, dash_escape="non-first",
+                 use_persistent_args=True, **kwargs):
         """Perform a complete dialog-like program invocation.
 
         This function invokes the dialog-like program, waits for its
         termination and returns its exit status and whatever it wrote
         on its standard error stream.
+
+        See _call_program() for a description of the parameters.
 
         Notable exceptions:
 
@@ -1010,6 +1023,7 @@ class Dialog:
         """
         (child_pid, child_output_rfd) = \
                     self._call_program(cmdargs, dash_escape=dash_escape,
+                                       use_persistent_args=use_persistent_args,
                                        **kwargs)
         (exit_code, output) = \
                     self._wait_for_program_termination(child_pid,
