@@ -26,7 +26,8 @@ from distutils.core import setup
 
 
 PACKAGE = "pythondialog"
-VERSION = "2.11"
+# This is OK because dialog.py has no dependency outside the standard library.
+from dialog import __version__ as VERSION
 
 def main():
     setup(name=PACKAGE,

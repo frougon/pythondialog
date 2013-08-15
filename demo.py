@@ -25,7 +25,7 @@ import sys, os, locale, stat, time, getopt, subprocess, traceback, textwrap
 import dialog
 
 progname = os.path.basename(sys.argv[0])
-progversion = "0.4"
+progversion = "0.5"
 version_blurb = """Demonstration program and cheap test suite for pythondialog.
 
 Copyright (C) 2002-2010  Florent Rougon
@@ -733,7 +733,7 @@ def demo(d):
         d, min_rows, min_cols)
 
     d.msgbox("""\
-Hello, and welcome to the pythondialog demonstration program.
+Hello, and welcome to the pythondialog {pydlg_version} demonstration program.
 
 You can scroll through this dialog box with the Up and Down arrow keys. \
 Please note that some of the dialogs will not work, and cause the demo to \
@@ -747,7 +747,7 @@ This script is being run by a Python interpreter identified as follows:
 The dialog-like program displaying this message box reports version \
 {backend_version} and a terminal size of {rows} rows by {cols} columns."""
              .format(
-            backend_version=backend_version,
+            pydlg_version=dialog.__version__, backend_version=backend_version,
             py_version=indent(sys.version, "  "),
             rows=term_rows, cols=term_cols,
             min_rows=min_rows, min_cols=min_cols),
