@@ -52,9 +52,26 @@ Options:
 
 # Global parameters
 params = {}
+
 tw = textwrap.TextWrapper(width=78, break_long_words=False,
                           break_on_hyphens=True)
-from textwrap import indent, dedent
+from textwrap import dedent
+
+try:
+    from textwrap import indent
+except ImportError:
+    def indent(text, prefix, predicate=None):
+        l = []
+
+        for line in text.splitlines(True):
+            if (callable(predicate) and predicate(line)) \
+                    or (not callable(predicate) and predicate) \
+                    or (predicate is None and line.strip()):
+                line = prefix + line
+            l.append(line)
+
+        return ''.join(l)
+
 
 def handle_exit_code(d, code):
     """Sample function showing how to interpret the dialog exit codes.
