@@ -78,6 +78,14 @@ __version__ = "2.11+git"
 import sys, os, tempfile, random, re, warnings, traceback
 from textwrap import dedent
 
+# This is not for calling programs, only to prepare the shell commands that are
+# written to the debug log when debugging is enabled.
+try:
+    from shlex import quote as _shell_quote
+except ImportError:
+    def _shell_quote(s):
+        return "'%s'" % s.replace("'", "'\"'\"'")
+
 # Exceptions raised by this module
 #
 # When adding, suppressing, renaming exceptions or changing their
@@ -716,6 +724,8 @@ class Dialog:
         if self.use_stdout:
             self.add_persistent_args(["--stdout"])
 
+        self.setup_debug(False)
+
     @classmethod
     def dash_escape(cls, args):
         """Escape all elements of 'args' that need escaping.
@@ -778,6 +788,60 @@ class Dialog:
                       "many years; look for 'backtitle' in demo.py for "
                       "possible replacements", DeprecationWarning)
         self.add_persistent_args(self.dash_escape_nf(("--backtitle", text)))
+
+    def setup_debug(self, enable, file=None, always_flush=False):
+        """Setup the debugging parameters.
+
+        When enabled, all dialog commands are written to 'file' using
+        Bourne shell syntax.
+
+        enable         -- boolean indicating whether to enable or
+                          disable debugging
+        file           -- file object where to write debugging
+                          information
+        always_flush   -- boolean indicating whether to call
+                          file.flush() after each command written
+
+        """
+        self._debug_enabled = enable
+
+        if not hasattr(self, "_debug_logfile"):
+            self._debug_logfile = None
+        # Allows to switch debugging on and off without having to pass the file
+        # object again and again.
+        if file is not None:
+            self._debug_logfile = file
+
+        if enable and self._debug_logfile is None:
+            raise BadPythonDialogUsage(
+                "you must specify a file object when turning debugging on")
+
+        self._debug_always_flush = always_flush
+        self._debug_first_output = True
+
+    def _write_command_to_file(self, env, arglist):
+        envvar_settings_list = []
+
+        if "DIALOGRC" in env:
+            envvar_settings_list.append(
+                "DIALOGRC={0}".format(_shell_quote(env["DIALOGRC"])))
+
+        for var in _dialog_exit_status_vars.keys():
+            varname = "DIALOG_" + var
+            envvar_settings_list.append(
+                "{0}={1}".format(varname, _shell_quote(env[varname])))
+
+        command_str = ' '.join(envvar_settings_list +
+                               list(map(_shell_quote, arglist)))
+        s = "{separator}{cmd}\n\nArgs: {args!r}\n".format(
+            separator="" if self._debug_first_output else ("-" * 79) + "\n",
+            cmd=command_str, args=arglist)
+
+        self._debug_logfile.write(s)
+        if self._debug_always_flush:
+            self._debug_logfile.flush()
+
+        self._debug_first_output = False
 
     def _call_program(self, cmdargs, *, dash_escape="non-first",
                       use_persistent_args=True,
@@ -851,9 +915,11 @@ class Dialog:
 
         arglist.extend(_compute_common_args(kwargs) + cmdargs)
 
-        # Insert here the contents of the DEBUGGING file if you want to obtain
-        # a handy string of the complete command line with arguments quoted
-        # for the shell and environment variables set.
+        if self._debug_enabled:
+            # Write the complete command line with environment variables
+            # setting to the debug log file (Bourne shell syntax for easy
+            # copy-pasting into a terminal, followed by repr(arglist)).
+            self._write_command_to_file(new_environ, arglist)
 
         # Create a pipe so that the parent process can read dialog's
         # output on stderr (stdout with 'use_stdout')

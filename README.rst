@@ -119,6 +119,20 @@ tell pythondialog the program you want it to invoke, only programs that
 are mostly dialog-compatible are supported.
 
 
+Troubleshooting
+---------------
+
+If you have a problem with a pythondialog call, you should read its
+documentation and the dialog(1) manual page. If this is not enough, you
+can enable logging of shell command-line equivalents of all dialog calls
+made by your program with a simple call to Dialog.setup_debug(), first
+available in pythondialog 2.12. An example of this can be found in
+demo.py.
+
+As of version 2.12, you can also enable this debugging facility for
+demo.py by calling it with the --debug flag (cf. 'demo.py --help').
+
+
 History
 -------
 

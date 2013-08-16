@@ -22,6 +22,7 @@ policy for pythondialog calls in this demo.
 
 
 import sys, os, locale, stat, time, getopt, subprocess, traceback, textwrap
+import contextlib               # Not really indispensable here
 import dialog
 
 progname = os.path.basename(sys.argv[0])
@@ -34,15 +35,20 @@ Copyright (C) 2000  Robb Shecter, Sultanbek Tezadov
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
 
-usage = """Usage: %(progname)s [option ...]
+default_debug_filename = "pythondialog.debug"
+
+usage = """Usage: {progname} [option ...]
 Demonstration program and cheap test suite for pythondialog.
 
 Options:
   -t, --test-suite             test all widgets; implies --fast
   -f, --fast                   fast mode (e.g., makes the gauge demo run faster)
+      --debug                  enable logging of all dialog command lines
+      --debug-file=FILE        where to write debug information (default:
+                               {debug_file} in the current directory)
       --help                   display this message and exit
-      --version                output version information and exit""" \
-  % { "progname": progname }
+      --version                output version information and exit""".format(
+    progname=progname, debug_file=default_debug_filename)
 
 # Global parameters
 params = {}
@@ -811,6 +817,8 @@ def process_command_line():
         opts, args = getopt.getopt(sys.argv[1:], "ft",
                                    ["test-suite",
                                     "fast",
+                                    "debug",
+                                    "debug-file=",
                                     "help",
                                     "version"])
     except getopt.GetoptError as message:
@@ -833,8 +841,10 @@ def process_command_line():
         return ("exit", 1)
 
     # Default values for parameters
-    params = {"fast_mode": False,
-              "testsuite_mode": False}
+    params = { "fast_mode": False,
+               "testsuite_mode": False,
+               "debug": False,
+               "debug_filename": default_debug_filename }
 
     # Get the home directory, if any, and store it in params (often useful).
     root_dir = os.sep           # This is OK for Unix-like systems
@@ -848,6 +858,10 @@ def process_command_line():
             params["fast_mode"] = True
         elif option in ("-f", "--fast"):
             params["fast_mode"] = True
+        elif option == "--debug":
+            params["debug"] = True
+        elif option == "--debug-file":
+            params["debug_filename"] = value
         else:
             # The options (such as --help) that cause immediate exit
             # were already checked, and caused the function to return.
@@ -857,6 +871,17 @@ def process_command_line():
                 "getopt module: '%s'" % option
 
     return ("continue", None)
+
+
+# Dummy context manager to make sure the debug file is closed on exit, be it
+# normal or abnormal, and to avoid having two code paths, one for normal mode
+# and one for debug mode.
+class DummyContextManager(contextlib.ContextDecorator):
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
 
 
 def main():
@@ -876,14 +901,22 @@ def main():
         d = dialog.Dialog(dialog="dialog")
         d.add_persistent_args(["--backtitle", "pythondialog demo"])
 
-        # Show the additional widgets before the "normal demo", so that I can
-        # test new widgets quickly and simply hit Ctrl-C once they've been
-        # shown.
-        if params["testsuite_mode"]:
-            additional_widgets(d)
+        if params["debug"]:
+            debug_file = open(params["debug_filename"], "w")
+            d.setup_debug(True, file=debug_file)
+            demo_context = debug_file
+        else:
+            demo_context = DummyContextManager()
 
-        # "Normal" demo
-        demo(d)
+        with demo_context:
+            if params["testsuite_mode"]:
+                # Show the additional widgets before the "normal demo", so that
+                # I can test new widgets quickly and simply hit Ctrl-C once
+                # they've been shown.
+                additional_widgets(d)
+
+            # "Normal" demo
+            demo(d)
     except dialog.error as exc_instance:
         # The error that causes a PythonDialogErrorBeforeExecInChildProcess to
         # be raised happens in the child process used to run the dialog-like
