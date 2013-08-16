@@ -6,7 +6,7 @@ package Python extensions), so its installation should be as simple as:
   - make this file's directory your shell's current directory
   - optionally edit setup.cfg to make sure that it fits your needs
     (particularly the installation prefix); in the case of the prefix,
-    you could alternatively specify it later with the --prefix,
+    you can alternatively specify it later with the --prefix,
     --exec-prefix, etc. arguments of setup.py---these are described in
     detail in the "Installing Python Modules" chapter of the Python
     documentation.

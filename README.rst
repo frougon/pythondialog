@@ -37,11 +37,12 @@ library`_ looks rather interesting, too.
 
 .. _Urwid Python library: http://excess.org/urwid/
 
+
 Requirements
 ------------
 
 * As of version 2.12, pythondialog requires Python 3.0 or later in the
-  3.x series.
+  3.x series. This release has been tested with Python 3.2 and 3.3.
 
 * Apart from that, pythondialog requires the dialog_ program (or a
   drop-in replacement for dialog). You can download dialog from:
@@ -64,13 +65,15 @@ type::
 
 at a Python 3 command prompt.
 
-To browse the documentation in HTML format, you can launch an HTTP
-server listening on port 1234 with "pydoc3 -p 1234 &" (yes, it is that
-easy) and simply browse on http://localhost:1234/ afterwards.
+You can extract the documentation from dialog.py to an HTML file with
+"pydoc3 -w dialog" or "pydoc3 -w /path/to/dialog.py". This will generate
+dialog.html in the current directory.
 
-Alternatively, you can dump the dialog.py documentation to an HTML file
-with "pydoc3 -w dialog" or "pydoc3 -w /path/to/dialog.py". This will
-generate dialog.html in the current directory.
+Alternatively, if pythondialog is already installed, pydoc3 can act as
+an HTTP server and provide the documentation to web browsers. For
+instance, launching "pydoc3 -p 1234" will make it listen on TCP
+port 1234. You can then point your browser to http://localhost:1234/ and
+read the documentation.
 
 See the pydoc module documentation for more information.
 
@@ -141,7 +144,8 @@ added some features to it (mainly the first gauge implementation, I
 guess). Florent Rougon rewrote most parts of the program to make it more
 robust and flexible so that it can give access to most features of the
 dialog program. Peter Åstrand took over maintainership between 2004 and
-2009. Florent Rougon took maintainership again starting from 2009...
+2009, with particular care for the Xdialog support. Florent Rougon took
+over maintainership again starting from 2009...
 
 .. 
   # Local Variables:

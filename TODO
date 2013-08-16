@@ -1,3 +1,5 @@
+* Support --help-status; --item-help for more widgets; --output-separator
+
 * Maybe get rid of _create_temporary_directory() in favor of what Python has
   in its stdlib now?
 

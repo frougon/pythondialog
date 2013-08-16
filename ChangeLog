@@ -1,3 +1,173 @@
+2013-08-16  Florent Rougon  <f.rougon@free.fr>
+
+	Prepare for the 2.12 release
+
+	* dialog.py: add a copyright notice for Peter Åstrand because of commit
+	v2.09-2-ga3429a4.
+
+	* setup.py: put python3 in the shebang line; change 'url' and
+	'download_url' to point to SourceForge.
+
+	* Minor documentation updates and editorial changes for the release.
+
+2013-08-16  Florent Rougon  <f.rougon@free.fr>
+
+	Provide an implementation of textwrap.indent() in demo.py
+
+	This is for Python versions < 3.3, where this function is not in the
+	standard library.
+
+2013-08-16  Florent Rougon  <f.rougon@free.fr>
+
+	Make debugging easier
+
+	* dialog.py: there is no need to copy/paste Python code from the
+	DEBUGGING file into dialog.py anymore in order to see the command lines
+	corresponding to the dialog calls. Just call
+	d.setup_debug(True, file=<file object>) to turn debugging on and
+	d.setup_debug(False) to turn it off, where d is obviously a Dialog
+	instance.
+
+	* demo.py: new options --debug and --debug-file to activate debugging
+	and specify where the debug log is written to.
+
+	* DEBUGGING: not useful anymore.
+	* MANIFEST.in: don't ship DEBUGGING anymore.
+
+	* README.rst: mention this in a new "Troubleshooting" section.
+
+2013-08-15  Florent Rougon  <f.rougon@free.fr>
+
+	New dialog.__version__ attribute
+
+	* dialog.py: new dialog.__version__ attribute
+
+	* demo.py: use it to print the pythondialog version in the first screen
+
+	* setup.py: use dialog.__version__
+
+2013-08-15  Florent Rougon  <f.rougon@free.fr>
+
+	Add support for --print-version and --print-maxsize
+
+	* dialog.py (Dialog.backend_version, Dialog.maxsize): new methods that
+	respectively extract the relevant info from dialog --print-version and
+	--print-maxsize.
+
+	* demo.py: use them to display the backend version and terminal size in
+	the first screen (+ Python version as a bonus); also warn if the
+	terminal is too small, which might be the cause of Ubuntu#694824.
+
+2013-08-15  Florent Rougon  <f.rougon@free.fr>
+
+	New arg 'use_persistent_args' for _call_program() and _perform()
+
+	* dialog.py (Dialog._call_program, Dialog._perform): new argument
+	'use_persistent_args' that allows to skip the insertion of
+	dialog_persistent_arglist. This is necessary to use for instance
+	--print-version without emptying dialog_persistent_arglist first.
+
+	* dialog.py (Dialog._call_program, Dialog._perform): to enhance
+	readability and maintainability, make all keyword arguments of these
+	methods keyword-only.
+
+2013-08-13  Florent Rougon  <f.rougon@free.fr>
+
+	Add support for common options from dialog 1.1-20120215
+
+	* dialog.py: add support for dialog common options --ascii-lines,
+	--colors, --column-separator, --date-format, --exit-label,
+	--extra-button, --extra-label, --hfile, --hline, --keep-tite,
+	--keep-window, --no-collapse, --no-lines, --no-mouse, --no-nl-expand,
+	--no-ok, --scrollbar, --time-format, --trace and --visit-items
+	(closes: Ubuntu#739873).
+
+2013-08-12  Florent Rougon  <f.rougon@free.fr>
+
+	Improve exception handling
+
+	* dialog.py: don't assume that exceptions are strings; thus, use str()
+	to obtain the message when translating from a "foreign" exception to a
+	subclass of dialog.error.
+
+	* dialog.py: use str(e) instead of e.strerror when e is an OSError
+	instance, because e.strerror does not contain the file name (even when
+	there is one available in e.filename), contrary to str(e).
+
+	* dialog.py: prepare the transition from PythonDialogIOError to
+	PythonDialogOSError. PythonDialogIOError is now a subclass of
+	PythonDialogOSError so that users can safely replace "except
+	PythonDialogIOError" clauses with "except PythonDialogOSError" even if
+	running under Python < 3.3. pythondialog will raise PythonDialogOSError
+	instead of PythonDialogIOError when Python stops distinguishing between
+	IOError and OSError, i.e. when running under Python 3.3 or later.
+
+	* dialog.py: use "raise ... from ..." (available in Python >= 3.0) where
+	appropriate.
+
+2013-08-11  Florent Rougon  <f.rougon@free.fr>
+
+	Conform to the gauge protocol described in dialog(1)
+
+	* dialog.py (Dialog.gauge_update): actually conform to the gauge
+	protocol described in dialog(1); this fixes a slight synchronization bug
+	when 'update_text' is True (closes: SF#3; thanks to MapK for spotting
+	this and providing a patch).
+
+	* dialog.py (Dialog.gauge_update): raise BadPythonDialogUsage if the
+	'percent' argument is not an integer, since this is the only type
+	accepted by the gauge protocol as described in dialog(1).
+
+2013-08-10  Florent Rougon  <f.rougon@free.fr>
+
+	Escape non-option arguments to dialog that start with --
+
+	* dialog.py (_dash_escape): new function that inserts a '--' element
+	before every element in a list that starts with '--' (returns a new
+	list).
+
+	* dialog.py (_dash_escape_nf): same as _dash_escape, but ignores the
+	first element.
+
+	* dialog.py (Dialog.dash_escape, Dialog.dash_escape_nf): new class
+	methods for public use, for those using Dialog.add_persistent_args().
+
+	* dialog.py (Dialog._call_program): new keyword argument 'dash_escape'
+	to control the dash-escaping of the argument list; by default, the
+	appropriate part is filtered through _dash_escape_nf().
+
+	* dialog.py (Dialog._perform): new keyword argument 'dash_escape' that
+	is passed as is to Dialog._call_program() (closes: SF#5; thanks to
+	Denilson Figueiredo de Sá for the report).
+
+	* dialog.py: use _dash_escape_nf() where appropriate in
+	_common_args_syntax for options that are passed as keyword arguments
+	(e.g., title="...").
+
+	* dialog.py (Dialog.setBackgroundTitle): use self.dash_escape_nf() in
+	this long-deprecated method.
+
+2013-07-28  Florent Rougon  <f.rougon@free.fr>
+
+	Standard-behaving __str__ and __repr__ for our exceptions
+
+	* dialog.py:error.__str__(): return the exception message instead of
+	something enclosed in angle brackets.
+
+	* Compatibility is not affected unless one had the ill-advised idea to
+	parse the return value of __str__. The complete_message() method of
+	exceptions behaves exactly as before.
+
+	* demo.py: use the new, more standard method, to retrieve the error
+	  message.
+
+2013-07-28  Florent Rougon  <f.rougon@free.fr>
+
+	Use os.path.abspath(__file__) to refer to the demo source file
+
+	* This avoids problems when running the demo from a directory that is
+	not the one containing demo.py (closes: SF#4).
+
 2013-07-27  Florent Rougon  <f.rougon@free.fr>
 
 	* README: rename to README.rst, convert to reStructuredText and

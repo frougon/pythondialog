@@ -1,6 +1,7 @@
 # dialog.py --- A Python interface to the ncurses-based "dialog" utility
 #
 # Copyright (C) 2002, 2003, 2004, 2009, 2010, 2013  Florent Rougon
+# Copyright (C) 2004  Peter Åstrand
 # Copyright (C) 2000  Robb Shecter, Sultanbek Tezadov
 #
 # This library is free software; you can redistribute it and/or
@@ -21,7 +22,7 @@
 """Python interface to dialog-like programs.
 
 This module provides a Python interface to dialog-like programs such
-as 'dialog', 'Xdialog' and 'whiptail'.
+as 'dialog' and 'Xdialog'.
 
 It provides a Dialog class that retains some parameters such as the
 program name and path as well as the values to pass as DIALOG*
@@ -73,7 +74,7 @@ replace "except PythonDialogIOError" clauses with
 
 """
 
-__version__ = "2.11+git"
+__version__ = "2.12"
 
 import sys, os, tempfile, random, re, warnings, traceback
 from textwrap import dedent
@@ -209,8 +210,8 @@ class UnableToCreateTemporaryDirectory(error):
     """Exception raised when we cannot create a temporary directory."""
     ExceptionShortDescription = "Unable to create a temporary directory"
 
-# Values accepted for checklists
 try:
+    # Values accepted for checklists
     _on_rec = re.compile(r"on$", re.IGNORECASE)
     _off_rec = re.compile(r"off$", re.IGNORECASE)
 
@@ -527,7 +528,6 @@ _dialog_exit_status_vars = { "OK": 0,
 
 # Main class of the module
 class Dialog:
-
     """Class providing bindings for dialog-compatible programs.
 
     This class allows you to invoke dialog or a compatible program in
@@ -535,9 +535,9 @@ class Dialog:
     interfaces.
 
     An application typically creates one instance of the Dialog class
-    and uses it for all its widgets, but it is possible to use
-    concurrently several instances of this class with different
-    parameters (such as the background title) if you have the need
+    and uses it for all its widgets, but it is possible to
+    concurrently use several instances of this class with different
+    parameters (such as the background title) if you have a need
     for this.
 
     The exit code (exit status) returned by dialog is to be compared
@@ -564,6 +564,7 @@ class Dialog:
     calendar
     checklist
     dselect
+    editbox
     form
     fselect
 
@@ -667,7 +668,7 @@ class Dialog:
         The officially supported dialog-like program in pythondialog
         is the well-known dialog program written in C, based on the
         ncurses library. It is also known as cdialog and its home
-        page is currently (2010-03-15) located at:
+        page is currently (2013-08-12) located at:
 
             http://invisible-island.net/dialog/dialog.html
 
@@ -923,7 +924,6 @@ class Dialog:
 
         # Create a pipe so that the parent process can read dialog's
         # output on stderr (stdout with 'use_stdout')
-
         try:
             # rfd = File Descriptor for Reading
             # wfd = File Descriptor for Writing

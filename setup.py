@@ -1,8 +1,8 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # setup.py --- Setup script for pythondialog
-# Copyright (c) 2002, 2003, 2004, 2009, 2010, 2013 Florent Rougon
+# Copyright (c) 2002, 2003, 2004, 2009, 2010, 2013  Florent Rougon
 #
 # This file is part of pythondialog.
 #
@@ -41,9 +41,10 @@ def main():
                        "peter@cendio.se",
           maintainer="Florent Rougon",
           maintainer_email="f.rougon@free.fr",
-          url="http://people.via.ecp.fr/~flo/",
-          download_url="http://people.via.ecp.fr/~flo/projects/pythondialog/"
-          "dist/python3-%s-%s.tar.gz" % (PACKAGE, VERSION),
+          url="http://pythondialog.sourceforge.net/",
+          download_url="http://sourceforge.net/projects/pythondialog/files/\
+pythondialog/{version}/python3-{pkg}-{version}.tar.bz2".format(
+            pkg=PACKAGE, version=VERSION),
           # Well, there isn't much UNIX-specific code in dialog.py, if at all.
           # I am putting Unix here only because of the dialog dependency...
           # Note: using the "Unix" case instead of "UNIX", because it is
