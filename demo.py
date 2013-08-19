@@ -927,7 +927,7 @@ def main():
         # argument), you can use:
         #   d = dialog.Dialog(dialog="Xdialog", compat="Xdialog")
         d = dialog.Dialog(dialog="dialog")
-        d.add_persistent_args(["--backtitle", "pythondialog demo"])
+        d.set_background_title("pythondialog demo")
 
         if params["debug"]:
             debug_file = open(params["debug_filename"], "w")

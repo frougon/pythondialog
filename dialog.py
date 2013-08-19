@@ -558,40 +558,46 @@ class Dialog:
     Public methods of the Dialog class (mainly widgets)
     ---------------------------------------------------
 
-    The Dialog class has the following methods:
+    The Dialog class has the following widget-producing methods:
 
-    add_persistent_args
-    calendar
-    checklist
-    dselect
-    editbox
-    form
-    fselect
+      calendar
+      checklist
+      dselect
+      editbox
+      form
+      fselect
 
-    gauge_start
-    gauge_update
-    gauge_stop
+      gauge_start
+      gauge_update
+      gauge_stop
 
-    infobox
-    inputbox
-    inputmenu
-    menu
-    mixedform
-    mixedgauge
-    msgbox
-    passwordbox
-    passwordform
-    pause
-    progressbox
-    radiolist
-    scrollbox
-    tailbox
-    textbox
-    timebox
-    yesno
+      infobox
+      inputbox
+      inputmenu
+      menu
+      mixedform
+      mixedgauge
+      msgbox
+      passwordbox
+      passwordform
+      pause
+      progressbox
+      radiolist
+      scrollbox
+      tailbox
+      textbox
+      timebox
+      yesno
 
-    clear                 (has been OBSOLETE for many years!)
-    setBackgroundTitle    (has been OBSOLETE for many years!)
+    It also has a few non-widget-producing methods:
+
+      add_persistent_args
+      backend_version
+      maxsize
+      set_background_title
+
+      clear                 (has been OBSOLETE for many years!)
+      setBackgroundTitle    (has been OBSOLETE for many years!)
 
 
     Passing dialog "Common Options"
@@ -777,18 +783,28 @@ class Dialog:
         """
         self.dialog_persistent_arglist.extend(args)
 
-    # For compatibility with the old dialog...
+    def set_background_title(self, text):
+        """Set the background title for dialog.
+
+        text   -- string to use as the background title
+
+        """
+        self.add_persistent_args(self.dash_escape_nf(("--backtitle", text)))
+
+    # For compatibility with the old dialog
     def setBackgroundTitle(self, text):
         """Set the background title for dialog.
+
+        text   -- string to use as the background title
 
         This method is obsolete. Please remove calls to it from your
         programs.
 
         """
         warnings.warn("Dialog.setBackgroundTitle() has been obsolete for "
-                      "many years; look for 'backtitle' in demo.py for "
-                      "possible replacements", DeprecationWarning)
-        self.add_persistent_args(self.dash_escape_nf(("--backtitle", text)))
+                      "many years; use Dialog.set_background_title() instead",
+                      DeprecationWarning)
+        self.set_background_title(text)
 
     def setup_debug(self, enable, file=None, always_flush=False):
         """Setup the debugging parameters.
