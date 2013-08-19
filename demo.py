@@ -436,6 +436,16 @@ def dselect_demo(d, init_dir=None):
     return path
 
 
+def timebox_demo(d):
+    while True:
+        code, (hour, minute, second) = d.timebox(
+            "Demonstration of the timebox widget:", hour=12, minute=13,
+            second=14)
+        if handle_exit_code(d, code) == d.DIALOG_OK:
+            break
+
+    return (hour, minute, second)
+
 # Help strings used in several places
 FSELECT_HELP = """\
 Hint: the complete file path must be entered in the bottom field. One \
@@ -825,6 +835,7 @@ def additional_widgets(d):
     form_demo(d)
     passwordform_demo(d)
     directory = dselect_demo(d)
+    hour, minute, second = timebox_demo(d)
 
 
 def process_command_line():
