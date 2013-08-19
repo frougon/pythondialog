@@ -324,7 +324,7 @@ def checklist_demo(d):
                                    choices=[("Catsup", "",             False),
                                             ("Mustard", "",            False),
                                             ("Pesto", "",              False),
-                                            ("Mayonaise", "",          True),
+                                            ("Mayonnaise", "",          True),
                                             ("Horse radish","",        True),
                                             ("Sun-dried tomatoes", "", True)],
                                    title="Do you prefer ham or spam?",

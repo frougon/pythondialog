@@ -1,3 +1,37 @@
+2013-08-19  Florent Rougon  <f.rougon@free.fr>
+
+	Release 2.13
+
+	* setup.cfg: don't build zip files anymore, as I don't think anyone
+	using pythondialog could be unable to uncompress a tar.gz or tar.bz2
+	file.
+
+	* demo.py: "Mayonnaise" is spelt with two n's, dammit!
+
+2013-08-19  Florent Rougon  <f.rougon@free.fr>
+
+	New method Dialog.set_background_title(), better Dialog doc
+
+	* dialog.py (Dialog.set_background_title): new method. Now that we deal
+	with dash escaping, such a method does become useful since it avoids
+	users having to use the low-level Dialog.add_persistent_args() and
+	bother with dash escaping.
+
+	* dialog.py (Dialog.setBackgroundTitle): this old method from
+	pythondialog 1.0 is still deprecated because its case style is
+	inconsistent with the rest of pythondialog; it simply calls
+	Dialog.set_background_title() after printing a DeprecationWarning.
+
+	* dialog.py (Dialog): add set_background_title, maxsize and
+	backend_version to the docstring and reorganize a bit the list of public
+	methods.
+
+	* demo.py: use the new method.
+
+2013-08-19  Florent Rougon  <f.rougon@free.fr>
+
+	Add demo code for the timebox widget
+
 2013-08-16  Florent Rougon  <f.rougon@free.fr>
 
 	Prepare for the 2.12 release

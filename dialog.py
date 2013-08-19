@@ -74,7 +74,7 @@ replace "except PythonDialogIOError" clauses with
 
 """
 
-__version__ = "2.12"
+__version__ = "2.13"
 
 import sys, os, tempfile, random, re, warnings, traceback
 from textwrap import dedent
