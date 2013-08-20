@@ -561,7 +561,7 @@ def inputmenu_demo(d):
     d.msgbox(text, width=60, title="Outcome of the 'inputmenu' demo")
 
 
-def tailbox_demo(d):
+def tailbox_demo(d, height=22, width=78):
     widget = "tailbox"
 
     # First, ask the user for a file.
@@ -575,7 +575,7 @@ def tailbox_demo(d):
         # User chose to abort
         return
     else:
-        d.tailbox(path, 20, 60, title="Tailbox example")
+        d.tailbox(path, height, width, title="Tailbox example")
 
 
 def progressbox_demo_with_filepath(d):
@@ -760,7 +760,7 @@ def get_term_size_and_backend_version(d, min_rows, min_cols):
     return (term_rows, term_cols, backend_version)
 
 
-def demo(d):
+def demo(d, max_lines_with_backtitle, max_cols_with_backtitle):
     min_rows, min_cols = 24, 80
     term_rows, term_cols, backend_version = get_term_size_and_backend_version(
         d, min_rows, min_cols)
@@ -810,7 +810,10 @@ Haha. You thought it was over. Wrong. Even more fun is to come!
 Now, please select a file you would like to see growing (or not...).""",
              width=75)
 
-    tailbox_demo(d)
+    # Looks nicer if the screen is not completely filled by the widget, hence
+    # the -1.
+    tailbox_demo(d, height=max_lines_with_backtitle-1,
+                 width=max_cols_with_backtitle)
 
     timeout = 2 if params["fast_mode"] else 20
     pause_demo(d, timeout)
@@ -823,7 +826,7 @@ Now, please select a file you would like to see growing (or not...).""",
         time.sleep(1)
 
 
-def additional_widgets(d):
+def additional_widgets(d, max_lines_with_backtitle, max_cols_with_backtitle):
     progressbox_demo_with_filepath(d)
     # This can be confusing without any pause if the user specified a regular
     # file.
@@ -927,7 +930,11 @@ def main():
         # argument), you can use:
         #   d = dialog.Dialog(dialog="Xdialog", compat="Xdialog")
         d = dialog.Dialog(dialog="dialog")
-        d.set_background_title("pythondialog demo")
+
+        backtitle = "pythondialog demo"
+        d.set_background_title(backtitle)
+        max_lines_with_backtitle, max_cols_with_backtitle = \
+            d.maxsize(backtitle=backtitle)
 
         if params["debug"]:
             debug_file = open(params["debug_filename"], "w")
@@ -941,10 +948,11 @@ def main():
                 # Show the additional widgets before the "normal demo", so that
                 # I can test new widgets quickly and simply hit Ctrl-C once
                 # they've been shown.
-                additional_widgets(d)
+                additional_widgets(d, max_lines_with_backtitle,
+                                   max_cols_with_backtitle)
 
             # "Normal" demo
-            demo(d)
+            demo(d, max_lines_with_backtitle, max_cols_with_backtitle)
     except dialog.error as exc_instance:
         # The error that causes a PythonDialogErrorBeforeExecInChildProcess to
         # be raised happens in the child process used to run the dialog-like
