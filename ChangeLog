@@ -1,3 +1,22 @@
+2013-08-22  Florent Rougon  <f.rougon@free.fr>
+
+	Remove the installation prefix from setup.cfg and release 2.13.1
+
+	* setup.cfg: remove the /usr/local installation prefix that breaks
+	installations with pip in a virtualenv, at least.
+
+	* INSTALL: update the installation and uninstallation instructions to
+	document and favor the method based on pip.
+
+2013-08-20  Florent Rougon  <f.rougon@free.fr>
+
+	Demo improvement with Dialog.maxsize()
+
+	* demo.py: pass the available (terminal-dependent) width and height to
+	demo() and additional_widgets(); use this information to display a
+	tailbox widget that almost fills the screen (whatever the terminal
+	size).
+
 2013-08-19  Florent Rougon  <f.rougon@free.fr>
 
 	Release 2.13

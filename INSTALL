@@ -1,23 +1,51 @@
 INSTALLATION
-------------
+============
 
-pythondialog is packaged with Distutils (the current standard way to
-package Python extensions), so its installation should be as simple as:
+pythondialog is packaged with Distutils (the still-current standard
+framework for packaging simple Python extensions). With the current
+state of Python packaging and installation tools, there are several ways
+to perform the installation of pythondialog from source.
+
+Probably, the easiest and cleanest method at this date (August 2013) is
+to use pip (optionally in a virtualenv). Typically, you just have to
+run:
+
+  pip install /path/to/python3-pythondialog-X.Y.Z.tar.gz
+
+with the appropriate privileges. Uninstallation is as easy as:
+
+  pip uninstall pythondialog
+
+For more information about pip and virtualenv, you can visit:
+
+  <https://pypi.python.org/pypi/pip>
+
+and:
+
+  <https://pypi.python.org/pypi/virtualenv>
+
+
+Old way, without pip
+--------------------
+
+The following instructions explain how to install pythondialog directly
+from its setup.py, without using pip. If possible, the method based on
+pip is preferable because it makes uninstallation standard and easy.
+
+Here are the steps:
   - make this file's directory your shell's current directory
-  - optionally edit setup.cfg to make sure that it fits your needs
-    (particularly the installation prefix); in the case of the prefix,
-    you can alternatively specify it later with the --prefix,
-    --exec-prefix, etc. arguments of setup.py---these are described in
-    detail in the "Installing Python Modules" chapter of the Python
-    documentation.
+  - optionally edit setup.cfg (cf. the "Installing Python Modules"
+    chapter of the Python documentation).
 
   - a) 1) type:
 
             python3 ./setup.py build
 
-       2) then, as root:
+       2) then, as root (after replacing /usr/local with the actual
+          installation prefix you want to use):
 
-            python3 ./setup.py install --record /path/to/foo
+            python3 ./setup.py install --prefix=/usr/local \
+                                       --record /path/to/foo
 
           where foo is a file of your choice which will contain the list
           of all files installed on your system by the preceding
@@ -27,9 +55,10 @@ package Python extensions), so its installation should be as simple as:
 
     OR
 
-    b) type, as root:
+    b) type, as root (after replacing the installation prefix):
 
-            python3 ./setup.py install --record /path/to/foo
+            python3 ./setup.py install --prefix=/usr/local \
+                                       --record /path/to/foo
 
        This will automatically build the package before installing it.
        The observations made in a) also apply here.
@@ -42,11 +71,19 @@ base Python documentation and the chapter you'll need is most probably
 
 
 UNINSTALLATION
---------------
+==============
 
-Provided you have followed the instructions given in the installation
-section, you have a /path/to/foo file that contains all the files the
-installation process put on your system. Great! All you have to do is:
+If you installed pythondialog with pip, you can uninstall it with the
+following command:
+
+  pip uninstall pythondialog
+
+(which should be run under the same account that was used to run the
+"pip install" command)
+
+Otherwise, if you have followed the old installation procedure, you have
+a /path/to/foo file that contains all the files the installation process
+put on your system. Great! All you have to do is:
 
    while read file; do rm -f "$file"; done < /path/to/foo
 
