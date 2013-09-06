@@ -1,4 +1,5 @@
 # dialog.py --- A Python interface to the ncurses-based "dialog" utility
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2002, 2003, 2004, 2009, 2010, 2013  Florent Rougon
 # Copyright (C) 2004  Peter Åstrand
@@ -1922,7 +1923,7 @@ class Dialog:
 
         If this function is called with item_help=True (keyword
         argument), the option --item-help is passed to dialog and the
-        tuples contained in 'choices' must contain 3 elements each :
+        tuples contained in 'choices' must contain 3 elements each:
         (tag, item, help). The help string for the highlighted item
         is displayed in the bottom line of the screen and updated as
         the user highlights other items.

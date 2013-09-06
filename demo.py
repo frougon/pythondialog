@@ -768,7 +768,7 @@ def demo(d, max_lines_with_backtitle, max_cols_with_backtitle):
     d.msgbox("""\
 Hello, and welcome to the pythondialog {pydlg_version} demonstration program.
 
-You can scroll through this dialog box with the Up and Down arrow keys. \
+You can scroll through this dialog box with the Page Up and Page Down keys. \
 Please note that some of the dialogs will not work, and cause the demo to \
 stop, if your terminal is too small. The recommended size is (at least) \
 {min_rows} rows by {min_cols} columns.

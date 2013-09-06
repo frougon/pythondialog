@@ -1,4 +1,7 @@
-* Support --help-status; --item-help for more widgets; --output-separator
+* Support --help-status and --item-help for more widgets. Good --item-help
+  handling requires IMO the --help-tags option added in dialog 1.2-20130902.
+
+* Support for --output-separator.
 
 * Maybe get rid of _create_temporary_directory() in favor of what Python has
   in its stdlib now?
