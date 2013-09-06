@@ -319,6 +319,7 @@ _common_args_syntax = {
     "create_rc": lambda filename: _dash_escape_nf(("--create-rc", filename)),
     "date_format": lambda s: _dash_escape_nf(("--date-format", s)),
     "defaultno": lambda enable: _simple_option("--defaultno", enable),
+    "default_button": lambda s: _dash_escape_nf(("--default-button", s)),
     "default_item": lambda s: _dash_escape_nf(("--default-item", s)),
     "exit_label": lambda s: _dash_escape_nf(("--exit-label", s)),
     "extra_button": lambda enable: _simple_option("--extra-button", enable),
@@ -344,6 +345,7 @@ _common_args_syntax = {
     "no_nl_expand": lambda enable: _simple_option("--no-nl-expand", enable),
     "no_ok": lambda enable: _simple_option("--no-ok", enable),
     "no_shadow": lambda enable: _simple_option("--no-shadow", enable),
+    "no_tags": lambda enable: _simple_option("--no-tags", enable),
     "ok_label": lambda s: _dash_escape_nf(("--ok-label", s)),
     # cf. Dialog.maxsize()
     "print_maxsize": lambda enable: _simple_option("--print-maxsize",
