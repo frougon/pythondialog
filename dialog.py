@@ -94,6 +94,7 @@ __version__ = str(version_info)
 
 
 import sys, os, tempfile, random, re, warnings, traceback
+from contextlib import contextmanager
 from textwrap import dedent
 
 # This is not for calling programs, only to prepare the shell commands that are
@@ -226,6 +227,17 @@ code indicating an error."""
 class UnableToCreateTemporaryDirectory(error):
     """Exception raised when we cannot create a temporary directory."""
     ExceptionShortDescription = "Unable to create a temporary directory"
+
+
+@contextmanager
+def OSErrorHandling():
+    try:
+        yield
+    except OSError as e:
+        raise PythonDialogOSError(str(e)) from e
+    except IOError as e:
+        raise PythonDialogIOError(str(e)) from e
+
 
 try:
     # Values accepted for checklists
@@ -388,7 +400,7 @@ def _find_in_path(prog_name):
     Notable exception: PythonDialogOSError
 
     """
-    try:
+    with OSErrorHandling():
         # Note that the leading empty component in the default value for PATH
         # could lead to the returned path not being absolute.
         PATH = os.getenv("PATH", ":/bin:/usr/bin") # see the execvp(3) man page
@@ -398,8 +410,6 @@ def _find_in_path(prog_name):
                and os.access(file_path, os.R_OK | os.X_OK):
                 return file_path
         return None
-    except os.error as e:
-        raise PythonDialogOSError(str(e)) from e
 
 
 def _path_to_executable(f):
@@ -421,7 +431,7 @@ def _path_to_executable(f):
         PythonDialogOSError
 
     """
-    try:
+    with OSErrorHandling():
         if '/' in f:
             if os.path.isfile(f) and \
                    os.access(f, os.R_OK | os.X_OK):
@@ -434,8 +444,6 @@ def _path_to_executable(f):
                 raise ExecutableNotFound(
                     "can't find the executable for the dialog-like "
                     "program")
-    except os.error as e:
-        raise PythonDialogOSError(str(e)) from e
 
     return res
 
@@ -507,14 +515,11 @@ def _create_temporary_directory():
     """
     find_temporary_nb_attempts = 5
     for i in range(find_temporary_nb_attempts):
-        try:
+        with OSErrorHandling():
             tmp_dir = os.path.join(tempfile.gettempdir(),
                                    "%s-%d" \
                                    % ("pythondialog",
                                       random.randint(0, sys.maxsize)))
-        except os.error as e:
-            raise PythonDialogOSError(str(e)) from e
-
         try:
             os.mkdir(tmp_dir, 0o700)
         except os.error:
@@ -959,12 +964,10 @@ class Dialog:
 
         # Create a pipe so that the parent process can read dialog's
         # output on stderr (stdout with 'use_stdout')
-        try:
+        with OSErrorHandling():
             # rfd = File Descriptor for Reading
             # wfd = File Descriptor for Writing
             (child_output_rfd, child_output_wfd) = os.pipe()
-        except os.error as e:
-            raise PythonDialogOSError(str(e)) from e
 
         child_pid = os.fork()
         if child_pid == 0:
@@ -1009,10 +1012,8 @@ class Dialog:
         #   it is 1 until the father closes it itself; then it is 0 and a read
         #   on child_output_rfd encounters EOF once all the remaining data in
         #   the pipe has been read. ]
-        try:
+        with OSErrorHandling():
             os.close(child_output_wfd)
-        except os.error as e:
-            raise PythonDialogOSError(str(e)) from e
         return (child_pid, child_output_rfd)
 
     def _wait_for_program_termination(self, child_pid, child_output_rfd):
@@ -1104,17 +1105,13 @@ class Dialog:
         # check that is being discussed wouldn't help at all.
 
         # Read dialog's output on its stderr (stdout with 'use_stdout')
-        try:
+        with OSErrorHandling():
             with os.fdopen(child_output_rfd, "r") as f:
                 child_output = f.read()
             # The closing of the file object causes the end of the pipe we used
             # to read dialog's output on its stderr to be closed too. This is
             # important, otherwise invoking dialog enough times would
             # eventually exhaust the maximum number of open file descriptors.
-        except OSError as e:
-            raise PythonDialogOSError(str(e)) from e
-        except IOError as e:
-            raise PythonDialogIOError(str(e)) from e
 
         return (exit_code, child_output)
 
@@ -1642,7 +1639,7 @@ class Dialog:
             - PythonDialogOSError
 
         """
-        try:
+        with OSErrorHandling():
             # We need a pipe to send data to the child (dialog) process's
             # stdin while it is running.
             # rfd = File Descriptor for Reading
@@ -1663,8 +1660,6 @@ class Dialog:
                 "stdin": os.fdopen(child_stdin_wfd, "w"),
                 "child_output_rfd": child_output_rfd
                 }
-        except os.error as e:
-            raise PythonDialogOSError(str(e)) from e
 
     def gauge_update(self, percent, text="", update_text=False):
         """Update a running gauge box.
@@ -1701,13 +1696,9 @@ class Dialog:
             gauge_data = "XXX\n{0}\n{1}\nXXX\n".format(percent, text)
         else:
             gauge_data = "{0}\n".format(percent)
-        try:
+        with OSErrorHandling():
             self._gauge_process["stdin"].write(gauge_data)
             self._gauge_process["stdin"].flush()
-        except OSError as e:
-            raise PythonDialogOSError(str(e)) from e
-        except IOError as e:
-            raise PythonDialogIOError(str(e)) from e
 
     # For "compatibility" with the old dialog.py...
     def gauge_iterate(*args, **kwargs):
@@ -1736,12 +1727,8 @@ class Dialog:
         """
         p = self._gauge_process
         # Close the pipe that we are using to feed dialog's stdin
-        try:
+        with OSErrorHandling():
             p["stdin"].close()
-        except OSError as e:
-            raise PythonDialogOSError(str(e)) from e
-        except IOError as e:
-            raise PythonDialogIOError(str(e)) from e
         exit_code = \
                   self._wait_for_program_termination(p["pid"],
                                                      p["child_output_rfd"])[0]
@@ -2210,7 +2197,7 @@ class Dialog:
                 "Dialog.%s: either 'file_path' or 'fd' must be provided, and "
                 "not both at the same time" % my_name)
 
-        try:
+        with OSErrorHandling():
             if file_path is not None:
                 if fd is not None:
                     raise PythonDialogBug(
@@ -2230,10 +2217,6 @@ class Dialog:
             if file_path is not None:
                 # We open()ed file_path ourselves, let's close it now.
                 os.close(fd)
-        except OSError as e:
-            raise PythonDialogOSError(str(e)) from e
-        except IOError as e:
-            raise PythonDialogIOError(str(e)) from e
 
         return code
 
@@ -2313,7 +2296,7 @@ class Dialog:
         # tempfile.mkstemp(), and unfortunately, tempfile.mktemp() is
         # insecure. So, I create a non-world-writable temporary directory and
         # store the temporary file in this directory.
-        try:
+        with OSErrorHandling():
             tmp_dir = _create_temporary_directory()
             fName = os.path.join(tmp_dir, "text")
             # If we are here, tmp_dir *is* created (no exception was raised),
@@ -2343,10 +2326,6 @@ class Dialog:
                 if os.path.exists(fName):
                     os.unlink(fName)
                 os.rmdir(tmp_dir)
-        except OSError as e:
-            raise PythonDialogOSError(str(e)) from e
-        except IOError as e:
-            raise PythonDialogIOError(str(e)) from e
 
     def tailbox(self, filename, height=20, width=60, **kwargs):
         """Display the contents of a file in a dialog box, as with "tail -f".
