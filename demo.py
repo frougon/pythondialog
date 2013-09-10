@@ -527,6 +527,20 @@ def radiolist_demo(d):
     return tag
 
 
+def rangebox_demo(d):
+    while True:
+        (code, nb) = d.rangebox("""\
+How many Microsoft(TM) engineers are needed to prepare such a sandwich?
+
+You can use the Up and Down arrows, Page Up and Page Down, Home and End keys \
+to change the value; you may also use the Tab key, Left and Right arrows \
+and any of the 0-9 keys to change a digit of the value.""", min=1, max=20,
+                                init=10)
+        if handle_exit_code(d, code) == d.DIALOG_OK:
+            break
+    return nb
+
+
 def calendar_demo(d):
     while True:
         (code, date) = d.calendar("When do you think Georg Cantor was born?",
@@ -563,27 +577,30 @@ def comment_on_Cantor_date_of_birth(day, month, year):
         return "Well, not quite. {0}".format(complement)
 
 
-def scrollbox_demo(d, name, favorite_day, toppings, sandwich, date,
-                   password):
+def scrollbox_demo(d, name, favorite_day, toppings, sandwich, nb_engineers,
+                   date, password):
     tw71 = textwrap.TextWrapper(width=71, break_long_words=False,
                                 break_on_hyphens=True)
     day, month, year = date
     msg = """\
 Here are some vital statistics about you:
 
-Name: %s
-Favorite day of the week: %s
-Favorite sandwich toppings:%s
-Favorite sandwich: %s
+Name: {name}
+Favorite day of the week: {favday}
+Favorite sandwich toppings:{toppings}
+Favorite sandwich: {sandwich} (the preparation of which requires,
+according to you, {nb_engineers} MS engineers)
 
-Your answer about Georg Cantor's date of birth: %04d-%02d-%02d.
-%s
+Your answer about Georg Cantor's date of birth: \
+{year:04d}-{month:02d}-{day:02d}.
+{comment}
 
-Your root password is: ************************** (looks good!)""" \
-     % (name, favorite_day,
-        "\n    ".join([''] + toppings),
-        sandwich, year, month, day,
-        tw71.fill(comment_on_Cantor_date_of_birth(day, month, year)))
+Your root password is: ************************** (looks good!)""".format(
+        name=name, favday=favorite_day,
+        toppings="\n    ".join([''] + toppings),
+        sandwich=sandwich, nb_engineers=nb_engineers,
+        year=year, month=month, day=day,
+        comment=tw71.fill(comment_on_Cantor_date_of_birth(day, month, year)))
     d.scrollbox(msg, height=20, width=75, title="Great Report of the Year")
 
 
@@ -845,9 +862,11 @@ The dialog-like program displaying this message box reports version \
                              last_will4)
     toppings = checklist_demo(d)
     sandwich = radiolist_demo(d)
+    nb_engineers = rangebox_demo(d)
     date = calendar_demo(d)
     password = passwordbox_demo(d)
-    scrollbox_demo(d, name, favorite_day, toppings, sandwich, date, password)
+    scrollbox_demo(d, name, favorite_day, toppings, sandwich, nb_engineers,
+                   date, password)
 
     d.msgbox("""\
 Haha. You thought it was over. Wrong. Even more fun is to come!

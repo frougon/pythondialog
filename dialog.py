@@ -608,6 +608,7 @@ class Dialog:
       programbox
       progressbox
       radiolist
+      rangebox
       scrollbox
       tailbox
       textbox
@@ -2300,6 +2301,66 @@ class Dialog:
         tag = self._strip_xdialog_newline(tag)
 
         return (code, tag)
+
+    def rangebox(self, text, height=0, width=0, min=None, max=None, init=None,
+                 **kwargs):
+        """Display an range dialog box.
+
+        text   -- text to display above the actual range control
+        height -- height of the box
+        width  -- width of the box
+        min    -- minimum value for the range control
+        max    -- maximum value for the range control
+        init   -- initial value for the range control
+
+        The rangebox dialog allows the user to select from a range of
+        values using a kind of slider. The range control shows the
+        current value as a bar (like the gauge dialog).
+
+        The return value is a tuple of the form (code, val) where
+        'code' is the exit status of the dialog-like program, and
+        'val' is an integer: the value chosen by the user.
+
+        The Tab and arrow keys move the cursor between the buttons
+        and the range control. When the cursor is on the latter, you
+        can change the value with the following keys:
+
+          Left/Right arrows   select a digit to modify
+
+          +/-                 increment/decrement the selected digit
+                              by one unit
+
+          0-9                 set the selected digit to the given
+                              value
+
+        Some keys are also recognized in all cursor positions:
+
+          Home/End            set the value to its minimum or maximum
+
+          PageUp/PageDown     decrement/increment the value so that
+                              the slider moves by one column
+
+        This widget requires dialog >= 1.2 (2012-12-30).
+
+        Notable exceptions:
+
+            any exception raised by self._perform()
+
+        """
+        for name in ("min", "max", "init"):
+            if not isinstance(locals()[name], int):
+                raise BadPythonDialogUsage(
+                    "{0!r} argument not an int: {1!r}".format(name,
+                                                              locals()[name]))
+        (code, value) = self._perform(
+            ["--rangebox", text] + [ str(i) for i in
+                                     (height, width, min, max, init) ],
+            **kwargs)
+
+        if code == self.DIALOG_OK:
+            return (code, int(value))
+        else:
+            return (code, None)
 
     def scrollbox(self, text, height=20, width=78, **kwargs):
         """Display a string in a scrollable box, with no line wrapping.
