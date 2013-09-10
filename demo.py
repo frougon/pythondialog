@@ -114,6 +114,176 @@ def handle_exit_code(d, code):
         return code
 
 
+def progressbox_demo_with_filepath(d):
+    widget = "progressbox"
+
+    # First, ask the user for a file (possibly FIFO)
+    d.msgbox(FIFO_HELP(widget), width=72, height=20)
+    path = fselect_demo(d, widget, allow_FIFOs=True,
+                        title="Please choose a file to be shown as with "
+                        "'tail -f'")
+
+    if path is None:
+        # User chose to abort
+        return
+    else:
+        d.progressbox(file_path=path, text="You can put some header text here",
+                      title="Progressbox example with a file path")
+
+
+def progressboxoid(d, widget, func_name, text):
+    # Since this is just a demo, I will not try to catch os.error exceptions
+    # in this function, for the sake of readability.
+    read_fd, write_fd = os.pipe()
+
+    child_pid = os.fork()
+    if child_pid == 0:
+        try:
+            # We are in the child process. We MUST NOT raise any exception.
+            # No need for this one in the child process
+            os.close(read_fd)
+
+            # Python file objects are easier to use than file descriptors. For
+            # a start, you don't have to check the number of bytes actually
+            # written every time...
+            # "buffering = 1" means wfile is going to be line-buffered
+            with os.fdopen(write_fd, mode="w", buffering=1) as wfile:
+                for line in text.split('\n'):
+                    wfile.write(line + '\n')
+                    time.sleep(0.02 if params["fast_mode"] else 1.2)
+
+            os._exit(0)
+        except:
+            os._exit(127)
+
+    # We are in the father process. No need for write_fd anymore.
+    os.close(write_fd)
+    # Call d.progressbox() if widget == "progressbox"
+    #      d.programbox() if widget == "programbox"
+    # etc.
+    getattr(d, widget)(
+        fd=read_fd, title="{0} example with a file descriptor".format(widget))
+
+    # Now that the progressbox is over (second child process, running the
+    # dialog-like program), we can wait() for the first child process.
+    # Otherwise, we could have a deadlock in case the pipe gets full, since
+    # dialog wouldn't be reading it.
+    exit_info = os.waitpid(child_pid, 0)[1]
+    if os.WIFEXITED(exit_info):
+        exit_code = os.WEXITSTATUS(exit_info)
+    elif os.WIFSIGNALED(exit_info):
+        d.msgbox("%s(): first child process terminated by signal %d" %
+                 (func_name, os.WTERMSIG(exit_info)))
+    else:
+        assert False, "How the hell did we manage to get here?"
+
+    if exit_code != 0:
+        d.msgbox("%s(): first child process ended with exit status %d"
+                 % (func_name, exit_code))
+
+
+def progressbox_demo_with_file_descriptor(d):
+    func_name = "progressbox_demo_with_file_descriptor"
+    text = """\
+A long time ago in a galaxy far,
+far away...
+
+
+
+
+
+A NEW HOPE
+
+It was a period of intense
+sucking. Graphical toolkits for
+Python were all nice and clean,
+but they were, well, graphical.
+And as every one knows, REAL
+PROGRAMMERS ALWAYS WORK ON VT-100
+TERMINALS. In text mode.
+
+Besides, those graphical toolkits
+were usually too complex for
+simple programs, so most FLOSS
+geeks ended up writing
+command-line tools except when
+they really needed the full power
+of mainstream graphical toolkits,
+such as Qt, GTK+ and wxWidgets.
+
+But... thanks to people like
+Thomas E. Dickey, there are now
+at our disposal several free
+software command-line programs,
+such as dialog, that allow easy
+building of graphically-oriented
+interfaces in text-mode
+terminals. These are good for
+tasks where line-oriented
+interfaces are not well suited,
+as well as for the increasingly
+common type who runs away as soon
+as he sees something remotely
+resembling a command line.
+
+But this is not for Python! I want
+my poney!
+
+Seeing this unacceptable
+situation, Robb Shecter had the
+idea, back in the olden days of
+Y2K (when the world was supposed
+to suddenly collapse, remember?),
+to wrap a dialog interface into a
+Python module called dialog.py.
+
+pythondialog was born. Florent
+Rougon, who was looking for
+something like that in 2002,
+found the idea rather cool and
+improved the module during the
+following years...""" + 15*'\n'
+
+    return progressboxoid(d, "progressbox", func_name, text)
+
+
+def programbox_demo_with_file_descriptor(d):
+    func_name = "programbox_demo_with_file_descriptor"
+    text = """\
+The 'progressbox' widget
+has a little brother
+called 'programbox'
+that displays text
+read from a pipe
+and only adds an OK button
+when the pipe indicates EOF
+(End Of File).
+
+This can be used
+to display the output
+of some external program.
+
+This will be done right away if you choose "Yes" in the next dialog.
+This choice will cause 'find /usr/bin' to be run with subprocess.Popen()
+and the output to be displayed, via a pipe, in a 'programbox' widget.\n"""
+    progressboxoid(d, "programbox", func_name, text)
+
+    if d.yesno("Do you want to run 'find /usr/bin' in a programbox widget?") \
+            == d.DIALOG_OK:
+        args = ["find", "/usr/bin"]
+        p = subprocess.Popen(args, stdout=subprocess.PIPE,
+                             stderr=subprocess.DEVNULL, close_fds=True)
+        # One could use title=... instead of text=... to put the text in the
+        # title bar.
+        d.programbox(fd=p.stdout.fileno(),
+                     text=
+                     "Example showing the output of a command with programbox")
+        retcode = p.wait()
+        return retcode
+    else:
+        return None
+
+
 def infobox_demo(d):
     # Exit code thrown away to keep this demo code simple (however, real
     # errors are propagated by an exception)
@@ -578,131 +748,6 @@ def tailbox_demo(d, height=22, width=78):
         d.tailbox(path, height, width, title="Tailbox example")
 
 
-def progressbox_demo_with_filepath(d):
-    widget = "progressbox"
-
-    # First, ask the user for a file (possibly FIFO)
-    d.msgbox(FIFO_HELP(widget), width=72, height=20)
-    path = fselect_demo(d, widget, allow_FIFOs=True,
-                        title="Please choose a file to be shown as with "
-                        "'tail -f'")
-
-    if path is None:
-        # User chose to abort
-        return
-    else:
-        d.progressbox(file_path=path, text="You can put some header text here",
-                      title="Progressbox example with a file path")
-
-
-def progressbox_demo_with_file_descriptor(d):
-    func_name = "progressbox_demo_with_file_descriptor"
-    text = """\
-A long time ago in a galaxy far,
-far away...
-
-
-
-
-
-A NEW HOPE
-
-It was a period of intense
-sucking. Graphical toolkits for
-Python were all nice and clean,
-but they were, well, graphical.
-And as every one knows, REAL
-PROGRAMMERS ALWAYS WORK ON VT-100
-TERMINALS. In text mode.
-
-Besides, those graphical toolkits
-were usually too complex for
-simple programs, so most FLOSS
-geeks ended up writing
-command-line tools except when
-they really needed the full power
-of mainstream graphical toolkits,
-such as Qt, GTK+ and wxWidgets.
-
-But... thanks to people like
-Thomas E. Dickey, there are now
-at our disposal several free
-software command-line programs,
-such as dialog, that allow easy
-building of graphically-oriented
-interfaces in text-mode
-terminals. These are good for
-tasks where line-oriented
-interfaces are not well suited,
-as well as for the increasingly
-common type who runs away as soon
-as he sees something remotely
-resembling a command line.
-
-But this is not for Python! I want
-my poney!
-
-Seeing this unacceptable
-situation, Robb Shecter had the
-idea, back in the olden days of
-Y2K (when the world was supposed
-to suddenly collapse, remember?),
-to wrap a dialog interface into a
-Python module called dialog.py.
-
-pythondialog was born. Florent
-Rougon, who was looking for
-something like that in 2002,
-found the idea rather cool and
-improved the module during the
-following years...""" + 15*'\n'
-
-    # Since this is just a demo, I will not try to catch os.error exceptions
-    # in this function, for the sake of readability.
-    read_fd, write_fd = os.pipe()
-
-    child_pid = os.fork()
-    if child_pid == 0:
-        try:
-            # We are in the child process. We MUST NOT raise any exception.
-            # No need for this one in the child process
-            os.close(read_fd)
-
-            # Python file objects are easier to use than file descriptors. For
-            # a start, you don't have to check the number of bytes actually
-            # written every time...
-            # "buffering = 1" means wfile is going to be line-buffered
-            with os.fdopen(write_fd, mode="w", buffering=1) as wfile:
-                for line in text.split('\n'):
-                    wfile.write(line + '\n')
-                    time.sleep(0.02 if params["fast_mode"] else 1.2)
-
-            os._exit(0)
-        except:
-            os._exit(127)
-
-    # We are in the father process. No need for write_fd anymore.
-    os.close(write_fd)
-    d.progressbox(fd=read_fd, title="Progressbox example with a file descriptor")
-
-    # Now that the progressbox is over (second child process, running the
-    # dialog-like program), we can wait() for the first child process.
-    # Otherwise, we could have a deadlock in case the pipe gets full, since
-    # dialog wouldn't be reading it.
-    exit_info = os.waitpid(child_pid, 0)[1]
-    if os.WIFEXITED(exit_info):
-        exit_code = os.WEXITSTATUS(exit_info)
-    elif os.WIFSIGNALED(exit_info):
-        d.msgbox("%s(): first child process terminated by signal %d" %
-                 (func_name, os.WTERMSIG(exit_info)))
-    else:
-        assert False, "How the hell did we manage to get here?"
-
-    if exit_code != 0:
-        d.msgbox("%s(): first child process ended with exit status %d"
-                 % (func_name, exit_code))
-
-
 def pause_demo(d, seconds):
     d.pause("""\
 Ugh, sorry. pythondialog is still in development, and its advanced circuitry \
@@ -832,6 +877,12 @@ def additional_widgets(d, max_lines_with_backtitle, max_cols_with_backtitle):
     # file.
     time.sleep(1 if params["fast_mode"] else 2)
 
+    # programbox_demo_with_file_descriptor would be fine right after
+    # progressbox_demo_with_file_descriptor in demo(), but there is a little
+    # bug in dialog 1.2-20130902 that makes the first two lines disappear too
+    # early. Until the fix is widely deployed, it is probably best to keep
+    # programbox_demo_with_file_descriptor out of the main demo.
+    programbox_demo_with_file_descriptor(d)
     mixedgauge_demo(d)
     editbox_demo(d, "/etc/passwd")
     inputmenu_demo(d)

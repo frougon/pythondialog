@@ -605,6 +605,7 @@ class Dialog:
       passwordbox
       passwordform
       pause
+      programbox
       progressbox
       radiolist
       scrollbox
@@ -613,7 +614,12 @@ class Dialog:
       timebox
       yesno
 
-    It also has a few non-widget-producing methods:
+    All these widgets are described in the docstrings of the
+    corresponding Dialog methods. Many of these descriptions are
+    adapted from the dialog(1) manual page, with the kind permission
+    of Thomas Dickey.
+
+    The Dialog class also has a few non-widget-producing methods:
 
       add_persistent_args
       backend_version
@@ -2149,6 +2155,40 @@ class Dialog:
 
         return (code, password)
 
+    def _progressboxoid(self, widget, file_path=None, file_flags=os.O_RDONLY,
+                        fd=None, text=None, height=20, width=78, **kwargs):
+        if (file_path is None and fd is None) or \
+                (file_path is not None and fd is not None):
+            raise BadPythonDialogUsage(
+                "{0}.{1}.{2}: either 'file_path' or 'fd' must be provided, and "
+                "not both at the same time".format(
+                    __name__, self.__class__.__name__, widget))
+
+        with OSErrorHandling():
+            if file_path is not None:
+                if fd is not None:
+                    raise PythonDialogBug(
+                        "unexpected non-None value for 'fd': {0!r}".format(fd))
+                # No need to pass 'mode', as the file is not going to be
+                # created here.
+                fd = os.open(file_path, file_flags)
+
+            try:
+                args = [ "--{0}".format(widget) ]
+                if text is not None:
+                    args.append(text)
+                args.extend([str(height), str(width)])
+
+                code = self._perform(args, redir_child_stdin_from_fd=fd,
+                                     **kwargs)[0]
+            finally:
+                with OSErrorHandling():
+                    if file_path is not None:
+                        # We open()ed file_path ourselves, let's close it now.
+                        os.close(fd)
+
+        return code
+
     def progressbox(self, file_path=None, file_flags=os.O_RDONLY,
                     fd=None, text=None, height=20, width=78, **kwargs):
         """Display a possibly growing stream in a dialog box, as with "tail -f".
@@ -2164,7 +2204,7 @@ class Dialog:
           fd       -- file descriptor for the stream to be displayed
 
         text     -- caption continuously displayed at the top, above the
-                    stream text
+                    stream text, or None to disable the caption
         height   -- height of the box
         width    -- width of the box
 
@@ -2189,36 +2229,35 @@ class Dialog:
             any exception raised by self._perform()
 
         """
-        my_name = "progressbox"
+        return self._progressboxoid(
+            "progressbox", file_path=file_path, file_flags=file_flags,
+            fd=fd, text=text, height=height, width=width, **kwargs)
 
-        if (file_path is None and fd is None) or \
-                (file_path is not None and fd is not None):
-            raise BadPythonDialogUsage(
-                "Dialog.%s: either 'file_path' or 'fd' must be provided, and "
-                "not both at the same time" % my_name)
+    def programbox(self, file_path=None, file_flags=os.O_RDONLY,
+                   fd=None, text=None, height=20, width=78, **kwargs):
+        """Display a possibly growing stream in a dialog box, as with "tail -f".
 
-        with OSErrorHandling():
-            if file_path is not None:
-                if fd is not None:
-                    raise PythonDialogBug(
-                        "unexpected non-None value for 'fd': {0!r}".format(fd))
-                # No need to pass 'mode', as the file is not going to be
-                # created here.
-                fd = os.open(file_path, file_flags)
+        A programbox is very similar to a progressbox. The only
+        difference between a program box and a progress box is that a
+        program box displays an OK button, but only after the input
+        stream has been exhausted (i.e., End Of File has been
+        reached).
 
-            args = [ "--progressbox" ]
-            if text is not None:
-                args.append(text)
-            args.extend([str(height), str(width)])
+        This dialog box can be used to display the piped output of an
+        external program. After the program completes, the user can
+        press the Enter key to close the dialog and resume execution
+        of the calling program.
 
-            code = self._perform(args, redir_child_stdin_from_fd=fd,
-                                 **kwargs)[0]
+        The parameters and exceptions are the same as for
+        'progressbox'. Please refer to the corresponding
+        documentation.
 
-            if file_path is not None:
-                # We open()ed file_path ourselves, let's close it now.
-                os.close(fd)
+        This widget requires dialog >= 1.1 (2011-03-02).
 
-        return code
+        """
+        return self._progressboxoid(
+            "programbox", file_path=file_path, file_flags=file_flags,
+            fd=fd, text=text, height=height, width=width, **kwargs)
 
     def radiolist(self, text, height=15, width=54, list_height=7,
                   choices=[], **kwargs):
