@@ -2535,6 +2535,71 @@ class Dialog:
             time = None
         return (code, time)
 
+    def treeview(self, text, height=0, width=0, list_height=0,
+                 nodes=[], **kwargs):
+        """Display a treeview box.
+
+        text        -- text to display at the top of the box
+        height      -- height of the box
+        width       -- width of the box
+        list_height -- number of lines reserved for the main part of
+                       the box, where the tree is displayed
+        nodes       -- a list of (tag, item, status, depth) tuples
+                       describing nodes, where:
+                         - 'tag' is used to indicate which node was
+                           selected by the user on exit;
+                         - 'item' is the text displayed for the node;
+                         - 'status' specifies the initial on/off
+                           state of each node; can be True or False,
+                           1 or 0, "on" or "off" (True, 1 and "on"
+                           meaning selected), or any case variation
+                           of these two strings;
+                         - 'depth' is a non-negative integer
+                           indicating the depth of the node in the
+                           tree (0 for the root node).
+
+        Display nodes organized in a tree structure. Each node has a
+        tag, an 'item' text, a selected status, and a depth in the
+        tree. Only the 'item' texts are displayed in the widget; tags
+        are only used for the return value. Only one node can be
+        selected at a given time, as for the radiolist widget.
+
+        Return a tuple of the form (code, tag) where:
+          - 'tag' is the tag of the selected node when the user chose
+            OK, or None if Cancel was pressed instead;
+          - 'code' is the exit status of the dialog-like program.
+
+        Notable exceptions:
+
+            any exception raised by self._perform() or _to_onoff()
+
+        """
+        cmd = ["--treeview", text, str(height), str(width), str(list_height)]
+
+        nselected = 0
+        for i, t in enumerate(nodes):
+            if not isinstance(t[3], int):
+                raise BadPythonDialogUsage(
+                    "fourth element of node {0} not an int: {1!r}".format(
+                        i, t[3]))
+
+            status = _to_onoff(t[2])
+            if status == "on":
+                nselected += 1
+
+            cmd.extend((t[0], t[1], status, str(t[3])))
+
+        if nselected != 1:
+            raise BadPythonDialogUsage(
+                "exactly one node must be selected, not {0}".format(nselected))
+
+        (code, output) = self._perform(cmd, **kwargs)
+
+        if code == self.DIALOG_OK:
+            return (code, output)
+        else:
+            return (code, None)
+
     def yesno(self, text, height=10, width=30, **kwargs):
         """Display a yes/no dialog box.
 

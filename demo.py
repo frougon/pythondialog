@@ -776,6 +776,33 @@ reboot. In %d seconds.
 Fasten your seatbelt...""" % seconds, height=18, seconds=seconds)
 
 
+def treeview_demo(d):
+    while True:
+        (code, tag) = d.treeview("""\
+This is an example of the 'treeview' widget. Nodes are labelled in a way \
+that reflects their position in the tree, but this is not a requirement: \
+you are free to name them the way you like.
+
+Node 0 is the root node. It has 3 children tagged 0.1, 0.2 and 0.3. \
+You should now select a node with the space bar.""",
+                                 nodes=[ ("0", "node 0", False, 0),
+                                         ("0.1", "node 0.1", False, 1),
+                                         ("0.2", "node 0.2", False, 1),
+                                         ("0.2.1", "node 0.2.1", False, 2),
+                                         ("0.2.1.1", "node 0.2.1.1", True, 3),
+                                         ("0.2.2", "node 0.2.2", False, 2),
+                                         ("0.3", "node 0.3", False, 1),
+                                         ("0.3.1", "node 0.3.1", False, 2),
+                                         ("0.3.2", "node 0.3.2", False, 2) ],
+                                 title="treeview demo")
+        if handle_exit_code(d, code) == d.DIALOG_OK:
+            break
+
+    d.msgbox("You selected the node tagged {0!r}.".format(tag),
+             title="treeview demo")
+    return tag
+
+
 def clear_screen(d):
     # This program comes with ncurses
     program = "clear"
@@ -868,6 +895,7 @@ The dialog-like program displaying this message box reports version \
     scrollbox_demo(d, name, favorite_day, toppings, sandwich, nb_engineers,
                    date, password)
 
+    treeview_demo(d)
     d.msgbox("""\
 Haha. You thought it was over. Wrong. Even more fun is to come!
 
