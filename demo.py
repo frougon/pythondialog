@@ -26,7 +26,7 @@ import contextlib               # Not really indispensable here
 import dialog
 
 progname = os.path.basename(sys.argv[0])
-progversion = "0.5"
+progversion = "0.6"
 version_blurb = """Demonstration program and cheap test suite for pythondialog.
 
 Copyright (C) 2002-2010  Florent Rougon
@@ -332,7 +332,7 @@ def mixedgauge_demo(d):
                                # why I made the range() above start at 1.
                                ("Task 9", -max(1, 100-i)),
                                ("Task 10", -i)])
-        time.sleep(2)
+        time.sleep(0.5 if params["fast_mode"] else 2)
 
 
 def yesno_demo(d):
@@ -534,8 +534,8 @@ How many Microsoft(TM) engineers are needed to prepare such a sandwich?
 
 You can use the Up and Down arrows, Page Up and Page Down, Home and End keys \
 to change the value; you may also use the Tab key, Left and Right arrows \
-and any of the 0-9 keys to change a digit of the value.""", min=1, max=20,
-                                init=10)
+and any of the 0-9 keys to change a digit of the value.""",
+                                min=1, max=20, init=10)
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
     return nb
@@ -563,9 +563,12 @@ def passwordbox_demo(d):
 
 
 def comment_on_Cantor_date_of_birth(day, month, year):
-    complement = "For your information, Georg Ferdinand Ludwig Philip Cantor, " \
-        "a great mathematician, was born on March 3, 1845 in Saint " \
-        "Petersburg, and died on January 6, 1918."
+    complement = """\
+For your information, Georg Ferdinand Ludwig Philip Cantor, a great \
+mathematician, was born on March 3, 1845 in Saint Petersburg, and died on \
+January 6, 1918. Among other things, Georg Cantor laid the foundation for \
+the set theory (which is at the basis of most modern mathematics) \
+and was the first person to give a rigorous definition of real numbers."""
 
     if (year, month, day) == (1845, 3, 3):
         return "Spot-on! I'm impressed."
@@ -589,7 +592,7 @@ Name: {name}
 Favorite day of the week: {favday}
 Favorite sandwich toppings:{toppings}
 Favorite sandwich: {sandwich} (the preparation of which requires,
-according to you, {nb_engineers} MS engineers)
+according to you, {nb_engineers} MS {engineers})
 
 Your answer about Georg Cantor's date of birth: \
 {year:04d}-{month:02d}-{day:02d}.
@@ -599,6 +602,7 @@ Your root password is: ************************** (looks good!)""".format(
         name=name, favday=favorite_day,
         toppings="\n    ".join([''] + toppings),
         sandwich=sandwich, nb_engineers=nb_engineers,
+        engineers="engineers" if nb_engineers != 1 else "engineer",
         year=year, month=month, day=day,
         comment=tw71.fill(comment_on_Cantor_date_of_birth(day, month, year)))
     d.scrollbox(msg, height=20, width=75, title="Great Report of the Year")
@@ -615,6 +619,9 @@ def dselect_demo(d, init_dir=None):
         (code, path) = d.dselect(init_dir, 10, 50,
                                  title="Please choose a directory")
         if handle_exit_code(d, code) == d.DIALOG_OK:
+            # When Python 3.2 is old enough, we'll be able to check if
+            # path.endswith(os.sep) and remove the trailing os.sep if this
+            # does not change the path according to os.path.samefile().
             if not os.path.isdir(path):
                 d.msgbox("Hmm. It seems that '%s' is not a directory" % path)
             else:
@@ -624,10 +631,16 @@ def dselect_demo(d, init_dir=None):
 
 
 def timebox_demo(d):
+    # Get the current time (to display initially in the timebox)
+    tm = time.localtime()
+    init_hour, init_min, init_sec = tm.tm_hour, tm.tm_min, tm.tm_sec
+    # tm.tm_sec can be 60 or even 61 according to the doc of the time module!
+    init_sec = min(59, init_sec)
+
     while True:
         code, (hour, minute, second) = d.timebox(
-            "Demonstration of the timebox widget:", hour=12, minute=13,
-            second=14)
+            "Demonstration of the timebox widget:",
+            hour=init_hour, minute=init_min, second=init_sec)
         if handle_exit_code(d, code) == d.DIALOG_OK:
             break
 
@@ -895,7 +908,11 @@ The dialog-like program displaying this message box reports version \
     scrollbox_demo(d, name, favorite_day, toppings, sandwich, nb_engineers,
                    date, password)
 
+    hour, minute, second = timebox_demo(d)
     treeview_demo(d)
+    mixedgauge_demo(d)
+    editbox_demo(d, "/etc/passwd")
+    inputmenu_demo(d)
     d.msgbox("""\
 Haha. You thought it was over. Wrong. Even more fun is to come!
 
@@ -906,6 +923,8 @@ Now, please select a file you would like to see growing (or not...).""",
     # the -1.
     tailbox_demo(d, height=max_lines_with_backtitle-1,
                  width=max_cols_with_backtitle)
+
+    directory = dselect_demo(d)
 
     timeout = 2 if params["fast_mode"] else 20
     pause_demo(d, timeout)
@@ -919,6 +938,7 @@ Now, please select a file you would like to see growing (or not...).""",
 
 
 def additional_widgets(d, max_lines_with_backtitle, max_cols_with_backtitle):
+    # Requires a careful choice of the file to be of any interest
     progressbox_demo_with_filepath(d)
     # This can be confusing without any pause if the user specified a regular
     # file.
@@ -930,13 +950,10 @@ def additional_widgets(d, max_lines_with_backtitle, max_cols_with_backtitle):
     # early. Until the fix is widely deployed, it is probably best to keep
     # programbox_demo_with_file_descriptor out of the main demo.
     programbox_demo_with_file_descriptor(d)
-    mixedgauge_demo(d)
-    editbox_demo(d, "/etc/passwd")
-    inputmenu_demo(d)
+    # Almost identical to mixedform (mixedform being more powerful)
     form_demo(d)
+    # Almost identical to passwordbox
     passwordform_demo(d)
-    directory = dselect_demo(d)
-    hour, minute, second = timebox_demo(d)
 
 
 def process_command_line():
