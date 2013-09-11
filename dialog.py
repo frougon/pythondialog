@@ -230,7 +230,7 @@ class UnableToCreateTemporaryDirectory(error):
 
 
 @contextmanager
-def OSErrorHandling():
+def _OSErrorHandling():
     try:
         yield
     except OSError as e:
@@ -241,12 +241,12 @@ def OSErrorHandling():
 
 try:
     # Values accepted for checklists
-    _on_rec = re.compile(r"on$", re.IGNORECASE)
-    _off_rec = re.compile(r"off$", re.IGNORECASE)
+    _on_cre = re.compile(r"on$", re.IGNORECASE)
+    _off_cre = re.compile(r"off$", re.IGNORECASE)
 
-    _calendar_date_rec = re.compile(
+    _calendar_date_cre = re.compile(
         r"(?P<day>\d\d)/(?P<month>\d\d)/(?P<year>\d\d\d\d)$")
-    _timebox_time_rec = re.compile(
+    _timebox_time_cre = re.compile(
         r"(?P<hour>\d\d):(?P<minute>\d\d):(?P<second>\d\d)$")
 except re.error as e:
     raise PythonDialogReModuleError(str(e)) from e
@@ -400,7 +400,7 @@ def _find_in_path(prog_name):
     Notable exception: PythonDialogOSError
 
     """
-    with OSErrorHandling():
+    with _OSErrorHandling():
         # Note that the leading empty component in the default value for PATH
         # could lead to the returned path not being absolute.
         PATH = os.getenv("PATH", ":/bin:/usr/bin") # see the execvp(3) man page
@@ -431,7 +431,7 @@ def _path_to_executable(f):
         PythonDialogOSError
 
     """
-    with OSErrorHandling():
+    with _OSErrorHandling():
         if '/' in f:
             if os.path.isfile(f) and \
                    os.access(f, os.R_OK | os.X_OK):
@@ -466,9 +466,9 @@ def _to_onoff(val):
         return "on" if val else "off"
     elif isinstance(val, str):
         try:
-            if _on_rec.match(val):
+            if _on_cre.match(val):
                 return "on"
-            elif _off_rec.match(val):
+            elif _off_cre.match(val):
                 return "off"
         except re.error as e:
             raise PythonDialogReModuleError(str(e)) from e
@@ -515,7 +515,7 @@ def _create_temporary_directory():
     """
     find_temporary_nb_attempts = 5
     for i in range(find_temporary_nb_attempts):
-        with OSErrorHandling():
+        with _OSErrorHandling():
             tmp_dir = os.path.join(tempfile.gettempdir(),
                                    "%s-%d" \
                                    % ("pythondialog",
@@ -613,6 +613,7 @@ class Dialog:
       tailbox
       textbox
       timebox
+      treeview
       yesno
 
     All these widgets are described in the docstrings of the
@@ -971,7 +972,7 @@ class Dialog:
 
         # Create a pipe so that the parent process can read dialog's
         # output on stderr (stdout with 'use_stdout')
-        with OSErrorHandling():
+        with _OSErrorHandling():
             # rfd = File Descriptor for Reading
             # wfd = File Descriptor for Writing
             (child_output_rfd, child_output_wfd) = os.pipe()
@@ -1019,7 +1020,7 @@ class Dialog:
         #   it is 1 until the father closes it itself; then it is 0 and a read
         #   on child_output_rfd encounters EOF once all the remaining data in
         #   the pipe has been read. ]
-        with OSErrorHandling():
+        with _OSErrorHandling():
             os.close(child_output_wfd)
         return (child_pid, child_output_rfd)
 
@@ -1112,7 +1113,7 @@ class Dialog:
         # check that is being discussed wouldn't help at all.
 
         # Read dialog's output on its stderr (stdout with 'use_stdout')
-        with OSErrorHandling():
+        with _OSErrorHandling():
             with os.fdopen(child_output_rfd, "r") as f:
                 child_output = f.read()
             # The closing of the file object causes the end of the pipe we used
@@ -1280,7 +1281,7 @@ class Dialog:
             **kwargs)
         if code == self.DIALOG_OK:
             try:
-                mo = _calendar_date_rec.match(output)
+                mo = _calendar_date_cre.match(output)
             except re.error as e:
                 raise PythonDialogReModuleError(str(e)) from e
 
@@ -1646,7 +1647,7 @@ class Dialog:
             - PythonDialogOSError
 
         """
-        with OSErrorHandling():
+        with _OSErrorHandling():
             # We need a pipe to send data to the child (dialog) process's
             # stdin while it is running.
             # rfd = File Descriptor for Reading
@@ -1703,7 +1704,7 @@ class Dialog:
             gauge_data = "XXX\n{0}\n{1}\nXXX\n".format(percent, text)
         else:
             gauge_data = "{0}\n".format(percent)
-        with OSErrorHandling():
+        with _OSErrorHandling():
             self._gauge_process["stdin"].write(gauge_data)
             self._gauge_process["stdin"].flush()
 
@@ -1734,7 +1735,7 @@ class Dialog:
         """
         p = self._gauge_process
         # Close the pipe that we are using to feed dialog's stdin
-        with OSErrorHandling():
+        with _OSErrorHandling():
             p["stdin"].close()
         exit_code = \
                   self._wait_for_program_termination(p["pid"],
@@ -2165,7 +2166,7 @@ class Dialog:
                 "not both at the same time".format(
                     __name__, self.__class__.__name__, widget))
 
-        with OSErrorHandling():
+        with _OSErrorHandling():
             if file_path is not None:
                 if fd is not None:
                     raise PythonDialogBug(
@@ -2183,7 +2184,7 @@ class Dialog:
                 code = self._perform(args, redir_child_stdin_from_fd=fd,
                                      **kwargs)[0]
             finally:
-                with OSErrorHandling():
+                with _OSErrorHandling():
                     if file_path is not None:
                         # We open()ed file_path ourselves, let's close it now.
                         os.close(fd)
@@ -2396,7 +2397,7 @@ class Dialog:
         # tempfile.mkstemp(), and unfortunately, tempfile.mktemp() is
         # insecure. So, I create a non-world-writable temporary directory and
         # store the temporary file in this directory.
-        with OSErrorHandling():
+        with _OSErrorHandling():
             tmp_dir = _create_temporary_directory()
             fName = os.path.join(tmp_dir, "text")
             # If we are here, tmp_dir *is* created (no exception was raised),
@@ -2523,7 +2524,7 @@ class Dialog:
             **kwargs)
         if code == self.DIALOG_OK:
             try:
-                mo = _timebox_time_rec.match(output)
+                mo = _timebox_time_cre.match(output)
                 if mo is None:
                     raise UnexpectedDialogOutput(
                         "the dialog-like program returned the following "
