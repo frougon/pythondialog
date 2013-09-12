@@ -24,6 +24,7 @@ policy for pythondialog calls in this demo.
 import sys, os, locale, stat, time, getopt, subprocess, traceback, textwrap
 import contextlib               # Not really indispensable here
 import dialog
+from dialog import DialogBackendVersion
 
 progname = os.path.basename(sys.argv[0])
 progversion = "0.6"
@@ -112,6 +113,27 @@ def handle_exit_code(d, code):
         # particular dialog box, d.DIALOG_EXTRA, d.DIALOG_HELP,
         # d.DIALOG_ITEM_HELP... (cf. _dialog_exit_status_vars in dialog.py)
         return code
+
+
+def dialog_version_check(d, version_string, feature=None, explain=False):
+    if d.compat != "dialog":
+        # non-dialog implementations are not affected by 'dialog_version_check'.
+        return True
+
+    minimum_version = DialogBackendVersion.fromstring(version_string)
+    res = (d.cached_backend_version >= minimum_version)
+
+    if explain and not res:
+        assert feature, feature
+        too_old_dialog_version(d, feature, min=version_string)
+
+    return res
+
+def too_old_dialog_version(d, feature, *, min=None):
+    d.msgbox("Skipping {feature}, because it requires dialog {min} or later; "
+             "however, it appears that you are using version {used}.".format(
+            feature=feature, min=min, used=d.cached_backend_version),
+             width=60, height=9, title="Demo skipped")
 
 
 def progressbox_demo_with_filepath(d):
@@ -247,8 +269,8 @@ following years...""" + 15*'\n'
     return progressboxoid(d, "progressbox", func_name, text)
 
 
-def programbox_demo_with_file_descriptor(d):
-    func_name = "programbox_demo_with_file_descriptor"
+def programbox_demo(d):
+    func_name = "programbox_demo"
     text = """\
 The 'progressbox' widget
 has a little brother
@@ -584,6 +606,18 @@ def scrollbox_demo(d, name, favorite_day, toppings, sandwich, nb_engineers,
                    date, password):
     tw71 = textwrap.TextWrapper(width=71, break_long_words=False,
                                 break_on_hyphens=True)
+
+    if nb_engineers is not None:
+        sandwich_comment = " (the preparation of which requires, \
+according to you, {nb_engineers} MS {engineers})".format(
+            nb_engineers=nb_engineers,
+            engineers="engineers" if nb_engineers != 1 else "engineer")
+    else:
+        sandwich_comment = ""
+
+    sandwich_report = "Favorite sandwich: {sandwich}{comment}".format(
+        sandwich=sandwich, comment=sandwich_comment)
+
     day, month, year = date
     msg = """\
 Here are some vital statistics about you:
@@ -591,8 +625,7 @@ Here are some vital statistics about you:
 Name: {name}
 Favorite day of the week: {favday}
 Favorite sandwich toppings:{toppings}
-Favorite sandwich: {sandwich} (the preparation of which requires,
-according to you, {nb_engineers} MS {engineers})
+{sandwich_report}
 
 Your answer about Georg Cantor's date of birth: \
 {year:04d}-{month:02d}-{day:02d}.
@@ -601,8 +634,7 @@ Your answer about Georg Cantor's date of birth: \
 Your root password is: ************************** (looks good!)""".format(
         name=name, favday=favorite_day,
         toppings="\n    ".join([''] + toppings),
-        sandwich=sandwich, nb_engineers=nb_engineers,
-        engineers="engineers" if nb_engineers != 1 else "engineer",
+        sandwich_report=tw71.fill(sandwich_report),
         year=year, month=month, day=day,
         comment=tw71.fill(comment_on_Cantor_date_of_birth(day, month, year)))
     d.scrollbox(msg, height=20, width=75, title="Great Report of the Year")
@@ -903,14 +935,22 @@ The dialog-like program displaying this message box reports version \
                              last_will4)
     toppings = checklist_demo(d)
     sandwich = radiolist_demo(d)
-    nb_engineers = rangebox_demo(d)
+
+    if dialog_version_check(d, "1.2", "the rangebox demo", explain=True):
+        nb_engineers = rangebox_demo(d)
+    else:
+        nb_engineers = None
+
     date = calendar_demo(d)
     password = passwordbox_demo(d)
     scrollbox_demo(d, name, favorite_day, toppings, sandwich, nb_engineers,
                    date, password)
 
     hour, minute, second = timebox_demo(d)
-    treeview_demo(d)
+
+    if dialog_version_check(d, "1.2", "the treeview demo", explain=True):
+        treeview_demo(d)
+
     mixedgauge_demo(d)
     editbox_demo(d, "/etc/passwd")
     inputmenu_demo(d)
@@ -945,12 +985,13 @@ def additional_widgets(d, max_lines_with_backtitle, max_cols_with_backtitle):
     # file.
     time.sleep(1 if params["fast_mode"] else 2)
 
-    # programbox_demo_with_file_descriptor would be fine right after
+    # programbox_demo would be fine right after
     # progressbox_demo_with_file_descriptor in demo(), but there is a little
     # bug in dialog 1.2-20130902 that makes the first two lines disappear too
     # early. Until the fix is widely deployed, it is probably best to keep
-    # programbox_demo_with_file_descriptor out of the main demo.
-    programbox_demo_with_file_descriptor(d)
+    # programbox_demo out of the main demo.
+    if dialog_version_check(d, "1.1", "the programbox demo", explain=True):
+        programbox_demo(d)
     # Almost identical to mixedform (mixedform being more powerful)
     form_demo(d)
     # Almost identical to passwordbox

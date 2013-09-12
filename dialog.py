@@ -59,6 +59,7 @@ Here is the hierarchy of notable exceptions raised by this module:
      UnableToRetrieveBackendVersion
      UnableToParseBackendVersion
         UnableToParseDialogBackendVersion
+     InadequateBackendVersion
      PythonDialogBug
      ProbablyPythonBug
 
@@ -247,6 +248,11 @@ class UnableToParseDialogBackendVersion(UnableToParseBackendVersion):
     """Exception raised when we cannot parse the version string of the dialog \
 backend."""
     ExceptionShortDescription = "Unable to parse as a dialog version string"
+
+class InadequateBackendVersion(error):
+    """Exception raised when the backend version in use is inadequate \
+in a given situation."""
+    ExceptionShortDescription = "Inadequate backend version"
 
 
 @contextmanager
@@ -1395,6 +1401,16 @@ class Dialog:
                       DeprecationWarning)
         self._perform_no_options('--clear')
 
+    def _dialog_version_check(self, version_string, feature):
+        if self.compat == "dialog":
+            minimum_version = DialogBackendVersion.fromstring(version_string)
+
+            if self.cached_backend_version < minimum_version:
+                raise InadequateBackendVersion(
+                    "the programbox widget requires dialog {0} or later, "
+                    "but you seem to be using version {1}".format(
+                        minimum_version, self.cached_backend_version))
+
     def backend_version(self):
         """Get the version of the dialog-like program (backend).
 
@@ -2489,6 +2505,7 @@ class Dialog:
         This widget requires dialog >= 1.1 (2011-03-02).
 
         """
+        self._dialog_version_check("1.1", "the programbox widget")
         return self._progressboxoid(
             "programbox", file_path=file_path, file_flags=file_flags,
             fd=fd, text=text, height=height, width=width, **kwargs)
@@ -2580,6 +2597,8 @@ class Dialog:
             any exception raised by self._perform()
 
         """
+        self._dialog_version_check("1.2", "the rangebox widget")
+
         for name in ("min", "max", "init"):
             if not isinstance(locals()[name], int):
                 raise BadPythonDialogUsage(
@@ -2802,11 +2821,14 @@ class Dialog:
             OK, or None if Cancel was pressed instead;
           - 'code' is the exit status of the dialog-like program.
 
+        This widget requires dialog >= 1.2 (2012-12-30).
+
         Notable exceptions:
 
             any exception raised by self._perform() or _to_onoff()
 
         """
+        self._dialog_version_check("1.2", "the treeview widget")
         cmd = ["--treeview", text, str(height), str(width), str(list_height)]
 
         nselected = 0
