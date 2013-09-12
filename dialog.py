@@ -56,6 +56,9 @@ Here is the hierarchy of notable exceptions raised by this module:
      DialogTerminatedBySignal
      DialogError
      UnableToCreateTemporaryDirectory
+     UnableToRetrieveBackendVersion
+     UnableToParseBackendVersion
+        UnableToParseDialogBackendVersion
      PythonDialogBug
      ProbablyPythonBug
 
@@ -227,6 +230,23 @@ code indicating an error."""
 class UnableToCreateTemporaryDirectory(error):
     """Exception raised when we cannot create a temporary directory."""
     ExceptionShortDescription = "Unable to create a temporary directory"
+
+class UnableToRetrieveBackendVersion(error):
+    """Exception raised when we cannot retrieve the version string of the \
+dialog-like backend."""
+    ExceptionShortDescription = "Unable to retrieve the version of the \
+dialog-like backend"
+
+class UnableToParseBackendVersion(error):
+    """Exception raised when we cannot parse the version string of the \
+dialog-like backend."""
+    ExceptionShortDescription = "Unable to parse as a dialog-like backend \
+version string"
+
+class UnableToParseDialogBackendVersion(UnableToParseBackendVersion):
+    """Exception raised when we cannot parse the version string of the dialog \
+backend."""
+    ExceptionShortDescription = "Unable to parse as a dialog version string"
 
 
 @contextmanager
@@ -533,6 +553,171 @@ def _create_temporary_directory():
     return tmp_dir
 
 
+# Classes for dealing with the version of dialog-like backend programs
+if sys.hexversion >= 0x030200F0:
+    import abc
+    # Abstract base class
+    class BackendVersion(metaclass=abc.ABCMeta):
+        @abc.abstractmethod
+        def __str__(self):
+            raise NotImplementedError()
+
+        if sys.hexversion >= 0x030300F0:
+            @classmethod
+            @abc.abstractmethod
+            def fromstring(cls, s):
+                raise NotImplementedError()
+        else:                   # for Python 3.2
+            @abc.abstractclassmethod
+            def fromstring(cls, s):
+                raise NotImplementedError()
+
+        @abc.abstractmethod
+        def __lt__(self, other):
+            raise NotImplementedError()
+
+        @abc.abstractmethod
+        def __le__(self, other):
+            raise NotImplementedError()
+
+        @abc.abstractmethod
+        def __eq__(self, other):
+            raise NotImplementedError()
+
+        @abc.abstractmethod
+        def __ne__(self, other):
+            raise NotImplementedError()
+
+        @abc.abstractmethod
+        def __gt__(self, other):
+            raise NotImplementedError()
+
+        @abc.abstractmethod
+        def __ge__(self, other):
+            raise NotImplementedError()
+else:
+    class BackendVersion:
+        pass
+
+
+class DialogBackendVersion(BackendVersion):
+    """Class representing possible versions of the dialog backend.
+
+    The purpose of this class is to make it easy to reliably compare
+    between versions of the dialog backend. It encapsulates the
+    specific details of the backend versioning scheme to allow
+    eventual adaptations to changes in this scheme without affecting
+    external code.
+
+    The version is represented by two components in this class: the
+    "dotted part" and the "rest". For instance, in the '1.2' version
+    string, the dotted part is [1, 2] and the rest is the empty
+    string. However, in version '1.2-20130902', the dotted part is
+    still [1, 2], but the rest is the string '-20130902'.
+
+    Instances of this class can be created with the constructor by
+    specifying the dotted part and the rest. Alternatively, an
+    instance can be created from the corresponding version string
+    (e.g., '1.2-20130902') using the fromstring() class method. This
+    is particularly useful with the result of d.backend_version(),
+    where 'd' is a Dialog instance. Actually, the main constructor
+    detects if its first argument is a string and calls fromstring()
+    in this case as a convenience. Therefore, all of the following
+    expressions are valid to create a DialogBackendVersion instance:
+
+      DialogBackendVersion([1, 2])
+      DialogBackendVersion([1, 2], "-20130902")
+      DialogBackendVersion("1.2-20130902")
+      DialogBackendVersion.fromstring("1.2-20130902")
+
+    If 'bv' is a DialogBackendVersion instance, str(bv) is a string
+    representing the same version (for instance, "1.2-20130902").
+
+    Two DialogBackendVersion instances can be compared with the usual
+    comparison operators (<, <=, ==, !=, >=, >). The algorithm is
+    designed so that the following order is respected (after
+    instanciation with fromstring()):
+
+      1.2 < 1.2-20130902 < 1.2-20130903 < 1.2.0 < 1.2.0-20130902
+
+    among other cases. Actually, the "dotted parts" are the primary
+    keys when comparing and "rest" strings act as secondary keys.
+    Dotted parts are compared with the standard Python list
+    comparison and "rest" strings using the standard Python string
+    comparison.
+
+    """
+    try:
+        _backend_version_cre = re.compile(r"""(?P<dotted> (\d+) (\.\d+)* )
+                                              (?P<rest>.*)$""", re.VERBOSE)
+    except re.error as e:
+        raise PythonDialogReModuleError(str(e)) from e
+
+    def __init__(self, dotted_part_or_str, rest=""):
+        """Create a DialogBackendVersion instance.
+
+        Please see the class docstring for details.
+
+        """
+        if isinstance(dotted_part_or_str, str):
+            if rest:
+                raise BadPythonDialogUsage(
+                    "non-empty 'rest' with 'dotted_part_or_str' as string: "
+                    "{0!r}".format(rest))
+            else:
+                tmp = self.__class__.fromstring(dotted_part_or_str)
+                dotted_part_or_str, rest = tmp.dotted_part, tmp.rest
+
+        for elt in dotted_part_or_str:
+            if not isinstance(elt, int):
+                raise BadPythonDialogUsage(
+                    "when 'dotted_part_or_str' is not a string, it must "
+                    "be a sequence (or iterable) of integers; however, "
+                    "{0!r} is not an integer.".format(elt))
+
+        self.dotted_part = list(dotted_part_or_str)
+        self.rest = rest
+
+    def __repr__(self):
+        return "{0}.{1}({2!r}, rest={3!r})".format(
+            __name__, self.__class__.__name__, self.dotted_part, self.rest)
+
+    def __str__(self):
+        return '.'.join(map(str, self.dotted_part)) + self.rest
+
+    @classmethod
+    def fromstring(cls, s):
+        try:
+            mo = cls._backend_version_cre.match(s)
+            if not mo:
+                raise UnableToParseDialogBackendVersion(s)
+            dotted_part = [ int(x) for x in mo.group("dotted").split(".") ]
+            rest = mo.group("rest")
+        except re.error as e:
+            raise PythonDialogReModuleError(str(e)) from e
+
+        return cls(dotted_part, rest)
+
+    def __lt__(self, other):
+        return (self.dotted_part, self.rest) < (other.dotted_part, other.rest)
+
+    def __le__(self, other):
+        return (self.dotted_part, self.rest) <= (other.dotted_part, other.rest)
+
+    def __eq__(self, other):
+        return (self.dotted_part, self.rest) == (other.dotted_part, other.rest)
+
+    # Python 3.2 has a decorator (functools.total_ordering) to automate this.
+    def __ne__(self, other):
+        return not (self == other)
+
+    def __gt__(self, other):
+        return not (self <= other)
+
+    def __ge__(self, other):
+        return not (self < other)
+
+
 # DIALOG_OK, DIALOG_CANCEL, etc. are environment variables controlling
 # dialog's exit status in the corresponding situation.
 #
@@ -624,7 +809,7 @@ class Dialog:
     The Dialog class also has a few non-widget-producing methods:
 
       add_persistent_args
-      backend_version
+      backend_version       (see "Checking the backend version" below)
       maxsize
       set_background_title
 
@@ -658,6 +843,30 @@ class Dialog:
          keyword argument. Therefore, "--no-shadow" is passed by
          giving a "no_shadow=True" keyword argument to a Dialog method
          (the leading two dashes are also consistently removed).
+
+
+    Checking the backend version
+    ----------------------------
+
+    The Dialog constructor retrieves the version string of the dialog
+    backend and stores it as an instance of a BackendVersion subclass
+    into the 'cached_backend_version' attribute. This allows doing
+    things such as ('d' being a Dialog instance):
+
+      if d.compat == "dialog" and \\
+        d.cached_backend_version >= DialogBackendVersion("1.2-20130902"):
+          ...
+
+    in a reliable way, allowing to fix the parsing and comparison
+    algorithms right in the appropriate BackendVersion subclass,
+    should the dialog-like backend versioning scheme change in
+    unforeseen ways.
+
+    As Xdialog seems to be dead and not to support --print-version,
+    the 'cached_backend_version' attribute is set to None in
+    Xdialog-compatibility mode (2013-09-12). Should this ever change,
+    one should define an XDialogBackendVersion class to handle the
+    particularities of the Xdialog versioning scheme.
 
 
     Exceptions
@@ -730,6 +939,8 @@ class Dialog:
 
             ExecutableNotFound
             PythonDialogOSError
+            UnableToRetrieveBackendVersion
+            UnableToParseBackendVersion
 
         """
         # DIALOGRC differs from the other DIALOG* variables in that:
@@ -764,6 +975,13 @@ class Dialog:
             self.add_persistent_args(["--stdout"])
 
         self.setup_debug(False)
+
+        if compat == "dialog":
+            self.cached_backend_version = DialogBackendVersion.fromstring(
+                self.backend_version())
+        else:
+            # Xdialog doesn't seem to offer --print-version (2013-09-12)
+            self.cached_backend_version = None
 
     @classmethod
     def dash_escape(cls, args):
@@ -1180,15 +1398,28 @@ class Dialog:
     def backend_version(self):
         """Get the version of the dialog-like program (backend).
 
-        If the exit status of the dialog-like program is
-        self.DIALOG_OK, return its version as a string; otherwise,
-        return None.
+        If the version of the dialog-like program can be retrieved,
+        return it as a string; otherwise, raise
+        UnableToRetrieveBackendVersion.
 
         This version is not to be confused with the pythondialog
         version.
 
+        In most cases, you should rather use the
+        'cached_backend_version' attribute of Dialog instances,
+        because:
+          - it avoids calling the backend every time one needs the
+            version;
+          - it is a BackendVersion instance (or instance of a
+            subclass) that allows easy and reliable comparisons
+            between versions;
+          - the version string corresponding to a BackendVersion
+            instance (or instance of a subclass) can be obtained with
+            str().
+
         Notable exceptions:
 
+            UnableToRetrieveBackendVersion
             PythonDialogReModuleError
             any exception raised by self._perform()
 
@@ -1201,13 +1432,14 @@ class Dialog:
                 if mo:
                     return mo.group("version")
                 else:
-                    raise PythonDialogBug(
-                        "Unable to parse the output of '{0} --print-version': "
+                    raise UnableToRetrieveBackendVersion(
+                        "unable to parse the output of '{0} --print-version': "
                         "{1!r}".format(self._dialog_prg, output))
             except re.error as e:
                 raise PythonDialogReModuleError(str(e)) from e
         else:
-            return None
+            raise UnableToRetrieveBackendVersion(
+                "exit status {0} from the backend".format(code))
 
     def maxsize(self, **kwargs):
         """Get the maximum size of dialog boxes.

@@ -842,7 +842,8 @@ def clear_screen(d):
 
 
 def get_term_size_and_backend_version(d, min_rows, min_cols):
-    backend_version = d.backend_version()
+    # Avoid running '<backend> --print-version' every time we need the version
+    backend_version = d.cached_backend_version
     if not backend_version:
         print(tw.fill(
                 "Unable to retrieve the version of the dialog-like backend. "
