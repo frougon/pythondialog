@@ -724,6 +724,28 @@ class DialogBackendVersion(BackendVersion):
         return not (self < other)
 
 
+def widget(func):
+    """Decorator to mark Dialog methods that provide widgets.
+
+    This allows code to perform automatic operations on these
+    specific methods. For instance, one can define a class that
+    behaves similarly to Dialog, except that after every
+    widget-producing call, it spawns a "confirm quit" dialog if the
+    widget returned DIALOG_ESC, and loops in case the user doesn't
+    actually want to quit.
+
+    When it is unclear whether a method should have the decorator or
+    not, the return value is used to draw the line. For instance,
+    among 'gauge_start', 'gauge_update' and 'gauge_stop', only the
+    last one has the decorator because it returns the dialog-like
+    backend exit status, whereas the first two don't return anything
+    meaningful.
+
+    """
+    func.is_widget = True
+    return func
+
+
 # DIALOG_OK, DIALOG_CANCEL, etc. are environment variables controlling
 # dialog's exit status in the corresponding situation.
 #
@@ -1490,6 +1512,7 @@ class Dialog:
         else:
             return None
 
+    @widget
     def calendar(self, text, height=6, width=0, day=0, month=0, year=0,
                  **kwargs):
         """Display a calendar dialog box.
@@ -1542,6 +1565,7 @@ class Dialog:
             date = None
         return (code, date)
 
+    @widget
     def checklist(self, text, height=15, width=54, list_height=7,
                   choices=[], **kwargs):
         """Display a checklist box.
@@ -1676,6 +1700,7 @@ class Dialog:
         return self._generic_form("form", "form", text, elements,
                                   height, width, form_height, **kwargs)
 
+    @widget
     def passwordform(self, text, elements, height=0, width=0, form_height=0,
                      **kwargs):
         """Display a form consisting of labels and invisible fields.
@@ -1700,6 +1725,7 @@ class Dialog:
                                   elements, height, width, form_height,
                                   **kwargs)
 
+    @widget
     def mixedform(self, text, elements, height=0, width=0, form_height=0,
                   **kwargs):
         """Display a form consisting of labels and fields.
@@ -1740,6 +1766,7 @@ class Dialog:
         return self._generic_form("mixedform", "mixedform", text, elements,
                                   height, width, form_height, **kwargs)
 
+    @widget
     def dselect(self, filepath, height=0, width=0, **kwargs):
         """Display a directory selection dialog box.
 
@@ -1782,6 +1809,7 @@ class Dialog:
 
         return (code, output)
 
+    @widget
     def editbox(self, filepath, height=0, width=0, **kwargs):
         """Display a basic text editor dialog box.
 
@@ -1812,6 +1840,7 @@ class Dialog:
 
         return (code, output)
 
+    @widget
     def fselect(self, filepath, height=0, width=0, **kwargs):
         """Display a file selection dialog box.
 
@@ -1962,6 +1991,7 @@ class Dialog:
                       "many years", DeprecationWarning)
         gauge_update(*args, **kwargs)
 
+    @widget
     def gauge_stop(self):
         """Terminate a running gauge widget.
 
@@ -1990,6 +2020,7 @@ class Dialog:
                                                      p["child_output_rfd"])[0]
         return exit_code
 
+    @widget
     def infobox(self, text, height=10, width=30, **kwargs):
         """Display an information dialog box.
 
@@ -2017,6 +2048,7 @@ class Dialog:
             ["--infobox", text, str(height), str(width)],
             **kwargs)[0]
 
+    @widget
     def inputbox(self, text, height=10, width=30, init='', **kwargs):
         """Display an input dialog box.
 
@@ -2049,6 +2081,7 @@ class Dialog:
 
         return (code, string_)
 
+    @widget
     def inputmenu(self, text, height=0, width=60, menu_height=7, choices=[],
              **kwargs):
         """Display an inputmenu dialog box.
@@ -2145,6 +2178,7 @@ class Dialog:
         else:
             return (code, None, None)
 
+    @widget
     def menu(self, text, height=15, width=54, menu_height=7, choices=[],
              **kwargs):
         """Display a menu dialog box.
@@ -2239,6 +2273,7 @@ class Dialog:
         else:
             return (code, output)
 
+    @widget
     def mixedgauge(self, text, height=0, width=0, percent=0, elements=[],
              **kwargs):
         """Display a mixed gauge dialog box.
@@ -2299,6 +2334,7 @@ class Dialog:
             cmd.extend( (t[0], str(t[1])) )
         return self._perform(cmd, **kwargs)[0]
 
+    @widget
     def msgbox(self, text, height=10, width=30, **kwargs):
         """Display a message dialog box, with scrolling and line wrapping.
 
@@ -2338,6 +2374,7 @@ class Dialog:
             ["--msgbox", text, str(height), str(width)],
             **kwargs)[0]
 
+    @widget
     def pause(self, text, height=15, width=60, seconds=5, **kwargs):
         """Display a pause dialog box.
 
@@ -2366,6 +2403,7 @@ class Dialog:
             ["--pause", text, str(height), str(width), str(seconds)],
             **kwargs)[0]
 
+    @widget
     def passwordbox(self, text, height=10, width=60, init='', **kwargs):
         """Display an password input dialog box.
 
@@ -2439,6 +2477,7 @@ class Dialog:
 
         return code
 
+    @widget
     def progressbox(self, file_path=None, file_flags=os.O_RDONLY,
                     fd=None, text=None, height=20, width=78, **kwargs):
         """Display a possibly growing stream in a dialog box, as with "tail -f".
@@ -2483,6 +2522,7 @@ class Dialog:
             "progressbox", file_path=file_path, file_flags=file_flags,
             fd=fd, text=text, height=height, width=width, **kwargs)
 
+    @widget
     def programbox(self, file_path=None, file_flags=os.O_RDONLY,
                    fd=None, text=None, height=20, width=78, **kwargs):
         """Display a possibly growing stream in a dialog box, as with "tail -f".
@@ -2510,6 +2550,7 @@ class Dialog:
             "programbox", file_path=file_path, file_flags=file_flags,
             fd=fd, text=text, height=height, width=width, **kwargs)
 
+    @widget
     def radiolist(self, text, height=15, width=54, list_height=7,
                   choices=[], **kwargs):
         """Display a radiolist box.
@@ -2552,6 +2593,7 @@ class Dialog:
 
         return (code, tag)
 
+    @widget
     def rangebox(self, text, height=0, width=0, min=None, max=None, init=None,
                  **kwargs):
         """Display an range dialog box.
@@ -2614,6 +2656,7 @@ class Dialog:
         else:
             return (code, None)
 
+    @widget
     def scrollbox(self, text, height=20, width=78, **kwargs):
         """Display a string in a scrollable box, with no line wrapping.
 
@@ -2679,6 +2722,7 @@ class Dialog:
                     os.unlink(fName)
                 os.rmdir(tmp_dir)
 
+    @widget
     def tailbox(self, filename, height=20, width=60, **kwargs):
         """Display the contents of a file in a dialog box, as with "tail -f".
 
@@ -2704,6 +2748,7 @@ class Dialog:
             **kwargs)[0]
     # No tailboxbg widget, at least for now.
 
+    @widget
     def textbox(self, filename, height=20, width=60, **kwargs):
         """Display the contents of a file in a dialog box.
 
@@ -2737,6 +2782,7 @@ class Dialog:
             ["--textbox", filename, str(height), str(width)],
             **kwargs)[0]
 
+    @widget
     def timebox(self, text, height=3, width=30, hour=-1, minute=-1,
                 second=-1, **kwargs):
         """Display a time dialog box.
@@ -2787,6 +2833,7 @@ class Dialog:
             time = None
         return (code, time)
 
+    @widget
     def treeview(self, text, height=0, width=0, list_height=0,
                  nodes=[], **kwargs):
         """Display a treeview box.
@@ -2855,6 +2902,7 @@ class Dialog:
         else:
             return (code, None)
 
+    @widget
     def yesno(self, text, height=10, width=30, **kwargs):
         """Display a yes/no dialog box.
 
