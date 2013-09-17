@@ -29,9 +29,11 @@ It provides a Dialog class that retains some parameters such as the
 program name and path as well as the values to pass as DIALOG*
 environment variables to the chosen program.
 
-For a quick start, you should look at the demo.py file that comes
-with pythondialog. It demonstrates a simple use of each widget
-offered by the Dialog class.
+For a quick start, you should look at the simple_example.py file that
+comes with pythondialog. It is a very simple and straightforward
+example using a few basic widgets. Then, you could study the demo.py
+file that illustrates most features of pythondialog, or more directly
+dialog.py.
 
 See the Dialog class documentation for general usage information,
 list of available widgets and ways to pass options to dialog.
