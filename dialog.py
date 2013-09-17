@@ -95,7 +95,7 @@ class VersionInfo(_VersionInfo):
     def __repr__(self):
         return "{0}.{1}".format(__name__, _VersionInfo.__repr__(self))
 
-version_info = VersionInfo(2, 13, 1, None)
+version_info = VersionInfo(2, 14, 0, None)
 __version__ = str(version_info)
 
 
@@ -2003,7 +2003,7 @@ class Dialog:
         See the 'gauge_start' function's documentation for
         information about how to use a gauge.
 
-        Return value: undefined.
+        Return value: the exit status of the dialog-like program.
 
         Notable exceptions:
             - any exception raised by
@@ -2017,6 +2017,7 @@ class Dialog:
         # Close the pipe that we are using to feed dialog's stdin
         with _OSErrorHandling():
             p["stdin"].close()
+        # According to dialog(1), the output should always be empty.
         exit_code = \
                   self._wait_for_program_termination(p["pid"],
                                                      p["child_output_rfd"])[0]

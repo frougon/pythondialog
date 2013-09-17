@@ -42,7 +42,16 @@ Requirements
 ------------
 
 * As of version 2.12, pythondialog requires Python 3.0 or later in the
-  3.x series. This release has been tested with Python 3.2 and 3.3.
+  3.x series. pythondialog 2.14.0 has been tested with Python 3.2 and
+  3.3.
+
+* I will probably provide a Python 2 backport at some point around
+  release 2.15, but this will not be regular, and probably not of the
+  same quality as the Python 3 version. In the meantime, users who
+  really want to stick to Python 2 should use version 2.11 (which can be
+  found from the home page, or directly from the `SourceForge download
+  page
+  <http://sourceforge.net/projects/pythondialog/files/pythondialog/>`_).
 
 * Apart from that, pythondialog requires the dialog_ program (or a
   drop-in replacement for dialog). You can download dialog from:
@@ -55,11 +64,14 @@ Documentation
 
 pythondialog is fully documented through Python docstrings. This
 documentation can be browsed with the pydoc3 standalone program or by
-simply opening dialog.py in a pager.
+simply opening dialog.py in a pager or editor. The documentation of the
+latest version as rendered by pydoc3 should be available at:
 
-You can type "pydoc3 dialog" at the command prompt in the pythondialog
-base directory or "pydoc3 /path/to/dialog.py". Alternatively, you can
-type::
+  http://pythondialog.sourceforge.net/doc/pythondialog.html
+
+To generate the documentation yourself from dialog.py, you can type
+"pydoc3 dialog" at the command prompt in the pythondialog base directory
+or "pydoc3 /path/to/dialog.py". Alternatively, you can type::
 
    >>> import dialog; help(dialog)
 

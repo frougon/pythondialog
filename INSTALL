@@ -6,13 +6,27 @@ framework for packaging simple Python extensions). With the current
 state of Python packaging and installation tools, there are several ways
 to perform the installation of pythondialog from source.
 
-Probably, the easiest and cleanest method at this date (August 2013) is
-to use pip (optionally in a virtualenv). Typically, you just have to
-run:
+Probably, the easiest and cleanest method at this date (September 2013)
+is to use pip (optionally in a virtualenv). Typically, you just have to
+run one of the following commands with the appropriate privileges:
+
+  pip install pythondialog       (which installs from PyPI)
+
+or
 
   pip install /path/to/python3-pythondialog-X.Y.Z.tar.gz
 
-with the appropriate privileges. Uninstallation is as easy as:
+or
+
+  pip install https://url/to/python3-pythondialog-X.Y.Z.tar.gz
+
+or
+
+  pip install http://url/to/python3-pythondialog-X.Y.Z.tar.gz
+
+Note: old versions of pip don't support https.
+
+Uninstallation is as easy as:
 
   pip uninstall pythondialog
 
