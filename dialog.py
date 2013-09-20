@@ -743,6 +743,18 @@ def widget(func):
     backend exit status, whereas the first two don't return anything
     meaningful.
 
+    Warnings:
+      1. Some methods return the backend exit status, but other
+         methods return a *sequence*, the first element of which is
+         the backend exit status; when the return value supports
+         indexing, the exit status must be its first element.
+
+      2. The exit status mentioned here is actually pythondialog's
+         extension of dialog's exit status: it may be an integer
+         (DIALOG_OK, DIALOG_CANCEL, DIALOG_ESC, DIALOG_EXTRA) but
+         also a string that is specific to the pythondialog API:
+         "help", "renamed", "accepted"...
+
     """
     func.is_widget = True
     return func
@@ -797,7 +809,8 @@ class Dialog:
     Public methods of the Dialog class (mainly widgets)
     ---------------------------------------------------
 
-    The Dialog class has the following widget-producing methods:
+    The Dialog class has the following methods that produce or update
+    widgets:
 
       calendar
       checklist
@@ -836,7 +849,8 @@ class Dialog:
     adapted from the dialog(1) manual page, with the kind permission
     of Thomas Dickey.
 
-    The Dialog class also has a few non-widget-producing methods:
+    The Dialog class also has a few other methods, that are not
+    related to a particular widget:
 
       add_persistent_args
       backend_version       (see "Checking the backend version" below)

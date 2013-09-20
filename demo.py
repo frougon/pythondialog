@@ -178,9 +178,12 @@ class MyDialog:
     def widget_loop(self, method):
         """Decorator to handle eventual exit requests from a Dialog widget.
 
-        method   -- a dialog.Dialog method that returns either a
-                    dialog exit status, or a sequence where the first
-                    element is a dialog exit status
+        method -- a dialog.Dialog method that returns either a Dialog
+                  method exit status, or a sequence where the first
+                  element is a Dialog method exit status (i.e., a
+                  dialog exit status such as DIALOG_OK, or a
+                  pythondialog-specific extension such as "help" or
+                  "renamed"---cf. the docstring of dialog.widget())
 
         Return a wrapper function that behaves exactly like 'method',
         except for the following point:
