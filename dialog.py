@@ -1662,6 +1662,7 @@ class Dialog:
 
         return (code, output.split('\n')[:-1])
 
+    @widget
     def form(self, text, elements, height=0, width=0, form_height=0, **kwargs):
         """Display a form consisting of labels and fields.
 
