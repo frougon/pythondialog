@@ -1316,6 +1316,15 @@ class Dialog:
             ProbablyPythonBug
 
         """
+        # Read dialog's output on its stderr (stdout with 'use_stdout')
+        with _OSErrorHandling():
+            with os.fdopen(child_output_rfd, "r") as f:
+                child_output = f.read()
+            # The closing of the file object causes the end of the pipe we used
+            # to read dialog's output on its stderr to be closed too. This is
+            # important, otherwise invoking dialog enough times would
+            # eventually exhaust the maximum number of open file descriptors.
+
         exit_info = os.waitpid(child_pid, 0)[1]
         if os.WIFEXITED(exit_info):
             exit_code = os.WEXITSTATUS(exit_info)
@@ -1331,11 +1340,12 @@ class Dialog:
 
         if exit_code == self.DIALOG_ERROR:
             raise DialogError(
-                "the dialog-like program exited with code %d (was passed to "
-                "it as the DIALOG_ERROR environment variable). Sometimes, "
+                "the dialog-like program exited with code {0} (which was passed "
+                "to it as the DIALOG_ERROR environment variable). Sometimes, "
                 "the reason is simply that dialog was given a height or width "
-                "parameter that is too big for the terminal in use."
-                % exit_code)
+                "parameter that is too big for the terminal in use. Its "
+                "output, with leading and trailing whitespace stripped, was:"
+                "\n\n{1}".format(exit_code, child_output.strip()))
         elif exit_code == 127:
             raise PythonDialogErrorBeforeExecInChildProcess(dedent("""\
             possible reasons include:
@@ -1373,15 +1383,6 @@ class Dialog:
         # the same by default as one of those we chose for the other exit
         # codes already known by pythondialog. But in this situation, the
         # check that is being discussed wouldn't help at all.
-
-        # Read dialog's output on its stderr (stdout with 'use_stdout')
-        with _OSErrorHandling():
-            with os.fdopen(child_output_rfd, "r") as f:
-                child_output = f.read()
-            # The closing of the file object causes the end of the pipe we used
-            # to read dialog's output on its stderr to be closed too. This is
-            # important, otherwise invoking dialog enough times would
-            # eventually exhaust the maximum number of open file descriptors.
 
         return (exit_code, child_output)
 
