@@ -625,15 +625,27 @@ and the output to be displayed, via a pipe, in a 'programbox' widget.\n"""
         self.progressboxoid("programbox", func_name, text)
 
         if d.Yesno("Do you want to run 'find /usr/bin' in a programbox widget?"):
+            try:
+                devnull = subprocess.DEVNULL
+            except AttributeError: # Python < 3.3
+                devnull_context = devnull = open(os.devnull, "wb")
+            else:
+                devnull_context = DummyContextManager()
+
             args = ["find", "/usr/bin"]
-            p = subprocess.Popen(args, stdout=subprocess.PIPE,
-                                 stderr=subprocess.DEVNULL, close_fds=True)
-            # One could use title=... instead of text=... to put the text in the
-            # title bar.
-            d.programbox(fd=p.stdout.fileno(),
-                         text="Example showing the output of a command with "
-                         "programbox")
-            retcode = p.wait()
+            with devnull_context:
+                p = subprocess.Popen(args, stdout=subprocess.PIPE,
+                                     stderr=devnull, close_fds=True)
+                # One could use title=... instead of text=... to put the text
+                # in the title bar.
+                d.programbox(fd=p.stdout.fileno(),
+                             text="Example showing the output of a command "
+                             "with programbox")
+                retcode = p.wait()
+
+            # Context manager support for subprocess.Popen objects requires
+            # Python 3.2 or later.
+            p.stdout.close()
             return retcode
         else:
             return None
