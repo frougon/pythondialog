@@ -53,7 +53,7 @@ between:
   <Escape>    DIALOG_ESC        when the Escape key is pressed
   Help        "help"            when help_button=True was passed and the
                                 help button is pressed (only for menu now;
-                                most/all widgets in pythondialog 2.15)
+                                most/all widgets in pythondialog 3.x)
   Extra       DIALOG_EXTRA      when extra_button=True was passed and the
                                 extra button is pressed
 

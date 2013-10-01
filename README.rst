@@ -9,17 +9,30 @@ Overview
 
 pythondialog is a Python wrapper for the UNIX dialog_ utility
 originally written by Savio Lam and later rewritten by Thomas E. Dickey.
-
-.. _dialog: http://invisible-island.net/dialog/dialog.html
-
 Its purpose is to provide an easy to use, pythonic and as complete as
 possible interface to dialog_ from Python code.
 
-pythondialog is free software, licensed under the GNU LGPL (GNU Lesser
-General Public License).
+.. _dialog: http://invisible-island.net/dialog/dialog.html
 
-If you want to get a quick idea of what this module allows you to do,
-you should run demo.py::
+pythondialog is free software, licensed under the GNU LGPL (GNU Lesser
+General Public License). Its home page is located at:
+
+  http://pythondialog.sourceforge.net/
+
+and contains a `short example`_, screenshots_, a `summary of the recent
+changes <http://pythondialog.sourceforge.net/#news>`_, links to the
+documentation_, the `Git repository
+<http://sourceforge.net/p/pythondialog/code/>`_, the `mailing list`_,
+the `issue tracker`_, etc.
+
+.. _short example: http://pythondialog.sourceforge.net/#example
+.. _screenshots: http://pythondialog.sourceforge.net/gallery.html
+.. _documentation: http://pythondialog.sourceforge.net/doc/pythondialog.html
+.. _mailing list: http://sourceforge.net/p/pythondialog/mailman/
+.. _issue tracker: http://sourceforge.net/p/pythondialog/_list/tickets
+
+If you want to get a quick idea of what this module allows one to do,
+you can download a release tarball and run demo.py::
 
   python3 demo.py
 
@@ -42,11 +55,11 @@ Requirements
 ------------
 
 * As of version 2.12, pythondialog requires Python 3.0 or later in the
-  3.x series. pythondialog 2.14.0 has been tested with Python 3.2 and
+  3.x series. pythondialog 2.14.1 has been tested with Python 3.2 and
   3.3.
 
-* I will probably provide a Python 2 backport at some point around
-  release 2.15, but this will not be regular, and probably not of the
+* I will probably provide a Python 2 backport with release 3.0 (which is
+  in preparation), but this will not be regular, and probably not of the
   same quality as the Python 3 version. In the meantime, users who
   really want to stick to Python 2 should use version 2.11 (which can be
   found from the home page, or directly from the `SourceForge download
@@ -88,6 +101,47 @@ port 1234. You can then point your browser to http://localhost:1234/ and
 read the documentation.
 
 See the pydoc module documentation for more information.
+
+
+Enabling Deprecation Warnings
+-----------------------------
+
+There are a few places in dialog.py that send a DeprecationWarning to
+warn developers about obsolete features. However, because of:
+
+  - the dialog output to the terminal;
+  - the fact that such warnings are silenced by default since Python 2.7
+    and 3.2;
+
+you have to do two things in order to see them:
+
+  - redirect the standard error stream to a file;
+  - enable the warnings for the Python interpreter.
+
+For instance, to see the warnings produced when running the demo, you
+can do::
+
+   python3 -Wd demo.py 2>/path/to/file
+
+and examine /path/to/file. This can also help you to find files that are
+still open when your program exits. For more explanations and other
+methods to enable the warnings, please refer to:
+
+  http://docs.python.org/3.3/whatsnew/2.7.html
+
+
+Troubleshooting
+---------------
+
+If you have a problem with a pythondialog call, you should read its
+documentation and the dialog(1) manual page. If this is not enough, you
+can enable logging of shell command-line equivalents of all dialog calls
+made by your program with a simple call to Dialog.setup_debug(), first
+available in pythondialog 2.12. An example of this can be found in
+demo.py.
+
+As of version 2.12, you can also enable this debugging facility for
+demo.py by calling it with the --debug flag (cf. 'demo.py --help').
 
 
 Using Xdialog instead of dialog
@@ -132,20 +186,6 @@ Well, pythondialog seems not to work very well with whiptail. The reason
 is that whiptail is not compatible with dialog anymore. Although you can
 tell pythondialog the program you want it to invoke, only programs that
 are mostly dialog-compatible are supported.
-
-
-Troubleshooting
----------------
-
-If you have a problem with a pythondialog call, you should read its
-documentation and the dialog(1) manual page. If this is not enough, you
-can enable logging of shell command-line equivalents of all dialog calls
-made by your program with a simple call to Dialog.setup_debug(), first
-available in pythondialog 2.12. An example of this can be found in
-demo.py.
-
-As of version 2.12, you can also enable this debugging facility for
-demo.py by calling it with the --debug flag (cf. 'demo.py --help').
 
 
 History
