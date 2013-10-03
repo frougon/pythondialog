@@ -746,8 +746,10 @@ def widget(func):
     Warnings:
       1. Some methods return the backend exit status, but other
          methods return a *sequence*, the first element of which is
-         the backend exit status; when the return value supports
-         indexing, the exit status must be its first element.
+         the backend exit status; the difference can be made by
+         looking at the 'retval_is_code' attribute of the method.
+         Please refer to the docstring of the 'retval_is_code'
+         decorator.
 
       2. The exit status mentioned here is actually pythondialog's
          extension of dialog's exit status: it may be an integer
@@ -757,6 +759,20 @@ def widget(func):
 
     """
     func.is_widget = True
+    return func
+
+
+def retval_is_code(func):
+    """Decorator for Dialog widget-producing methods whose return value is \
+the dialog exit status.
+
+    This decorator is intended for widget-producing methods whose
+    return value consists solely of the dialog exit status. When this
+    decorator is *not* used on a widget-producing method, the dialog
+    exit status must be the first element of the return value.
+
+    """
+    func.retval_is_code = True
     return func
 
 
@@ -2010,6 +2026,7 @@ class Dialog:
         gauge_update(*args, **kwargs)
 
     @widget
+    @retval_is_code
     def gauge_stop(self):
         """Terminate a running gauge widget.
 
@@ -2040,6 +2057,7 @@ class Dialog:
         return exit_code
 
     @widget
+    @retval_is_code
     def infobox(self, text, height=10, width=30, **kwargs):
         """Display an information dialog box.
 
@@ -2293,6 +2311,7 @@ class Dialog:
             return (code, output)
 
     @widget
+    @retval_is_code
     def mixedgauge(self, text, height=0, width=0, percent=0, elements=[],
              **kwargs):
         """Display a mixed gauge dialog box.
@@ -2354,6 +2373,7 @@ class Dialog:
         return self._perform(cmd, **kwargs)[0]
 
     @widget
+    @retval_is_code
     def msgbox(self, text, height=10, width=30, **kwargs):
         """Display a message dialog box, with scrolling and line wrapping.
 
@@ -2394,6 +2414,7 @@ class Dialog:
             **kwargs)[0]
 
     @widget
+    @retval_is_code
     def pause(self, text, height=15, width=60, seconds=5, **kwargs):
         """Display a pause dialog box.
 
@@ -2497,6 +2518,7 @@ class Dialog:
         return code
 
     @widget
+    @retval_is_code
     def progressbox(self, file_path=None, file_flags=os.O_RDONLY,
                     fd=None, text=None, height=20, width=78, **kwargs):
         """Display a possibly growing stream in a dialog box, as with "tail -f".
@@ -2542,6 +2564,7 @@ class Dialog:
             fd=fd, text=text, height=height, width=width, **kwargs)
 
     @widget
+    @retval_is_code
     def programbox(self, file_path=None, file_flags=os.O_RDONLY,
                    fd=None, text=None, height=20, width=78, **kwargs):
         """Display a possibly growing stream in a dialog box, as with "tail -f".
@@ -2676,6 +2699,7 @@ class Dialog:
             return (code, None)
 
     @widget
+    @retval_is_code
     def scrollbox(self, text, height=20, width=78, **kwargs):
         """Display a string in a scrollable box, with no line wrapping.
 
@@ -2742,6 +2766,7 @@ class Dialog:
                 os.rmdir(tmp_dir)
 
     @widget
+    @retval_is_code
     def tailbox(self, filename, height=20, width=60, **kwargs):
         """Display the contents of a file in a dialog box, as with "tail -f".
 
@@ -2768,6 +2793,7 @@ class Dialog:
     # No tailboxbg widget, at least for now.
 
     @widget
+    @retval_is_code
     def textbox(self, filename, height=20, width=60, **kwargs):
         """Display the contents of a file in a dialog box.
 
@@ -2922,6 +2948,7 @@ class Dialog:
             return (code, None)
 
     @widget
+    @retval_is_code
     def yesno(self, text, height=10, width=30, **kwargs):
         """Display a yes/no dialog box.
 

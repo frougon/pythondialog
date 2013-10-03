@@ -210,10 +210,13 @@ class MyDialog:
         def wrapper(*args, **kwargs):
             while True:
                 res = method(*args, **kwargs)
-                try:
-                    code = res[0]
-                except TypeError:
+
+                if hasattr(method, "retval_is_code") \
+                        and getattr(method, "retval_is_code"):
                     code = res
+                else:
+                    code = res[0]
+
                 if self.check_exit_request(code):
                     break
             return res
