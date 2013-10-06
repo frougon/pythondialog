@@ -23,10 +23,10 @@ d.set_background_title("A Simple Example")
 d.msgbox("""\
 This is a very simple example of a program using pythondialog.
 
-Contrary to demo.py, the return code for the Escape key is not checked \
-after every call, therefore it is not so easy to exit from this program \
-as it is for the demo. The goal here is to show basic pythondialog usage \
-in its simplest form.
+Contrary to what is done in demo.py, the Dialog exit code for the Escape key \
+is not checked after every call, therefore it is not so easy to exit from \
+this program as it is for the demo. The goal here is to show basic \
+pythondialog usage in its simplest form.
 
 With not too old versions of dialog, the size of dialog boxes is \
 automatically computed when one passes width=0 and height=0 to the \
@@ -48,24 +48,24 @@ The return value is not simply True or False: for consistency with \
 dialog and the other widgets, the return code allows to distinguish \
 between:
 
-  Yes         DIALOG_OK
-  No          DIALOG_CANCEL
-  <Escape>    DIALOG_ESC        when the Escape key is pressed
-  Help        "help"            when help_button=True was passed and the
-                                help button is pressed (only for menu now;
-                                most/all widgets in pythondialog 3.x)
-  Extra       DIALOG_EXTRA      when extra_button=True was passed and the
+  Yes         Dialog.OK         (equal to the string "ok")
+  No          Dialog.CANCEL     (equal to the string "cancel")
+  <Escape>    Dialog.ESC        when the Escape key is pressed
+  Help        Dialog.HELP       when help_button=True was passed and the
+                                help button is pressed (only for 'menu' in
+                                pythondialog 2.x)
+  Extra       Dialog.EXTRA      when extra_button=True was passed and the
                                 extra button is pressed
 
-DIALOG_ERROR is not in this list, because pythondialog \
-translates it into an exception.""",
+The DIALOG_ERROR exit status of dialog has no equivalent in this list, \
+because pythondialog translates it into an exception.""",
                width=0, height=0, title="'yesno' example", no_collapse=True)
 
-if code == d.DIALOG_OK:
+if code == d.OK:
     msg = "You chose the 'Yes' button in the previous dialog."
-elif code == d.DIALOG_CANCEL:
+elif code == d.CANCEL:
     msg = "You chose the 'No' button in the previous dialog."
-elif code == d.DIALOG_ESC:
+elif code == d.ESC:
     msg = "You pressed the Escape key in the previous dialog."
 else:
     msg = "Unexpected exit code from d.yesno(). Please report a bug."
@@ -82,11 +82,11 @@ You can test it now:""",
                               init="Initial contents",
                               width=0, height=0, title="'inputbox' example")
 
-if code == d.DIALOG_OK:
+if code == d.OK:
     msg = "Your input in the previous dialog was '{0}'.".format(user_input)
-elif code == d.DIALOG_CANCEL:
+elif code == d.CANCEL:
     msg = "You chose the 'Cancel' button in the previous dialog."
-elif code == d.DIALOG_ESC:
+elif code == d.ESC:
     msg = "You pressed the Escape key in the previous dialog."
 else:
     msg = "Unexpected exit code from d.inputbox(). Please report a bug."

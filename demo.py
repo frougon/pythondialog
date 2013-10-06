@@ -45,9 +45,9 @@ widget-producing methods of dialog.Dialog. Therefore, most of the
 demo can be read as if the module-level 'd' attribute were a
 dialog.Dialog instance whereas it is actually a MyDialog instance.
 The only meaningful difference is that MyDialog.<widget>() will never
-return a DIALOG_CANCEL or DIALOG_ESC code (attributes of 'd', or more
-generally of dialog.Dialog). The reason is that these return codes
-are automatically handled by the MyDialog.__getattr__() machinery to
+return a CANCEL or ESC code (attributes of 'd', or more generally of
+dialog.Dialog). The reason is that these return codes are
+automatically handled by the MyDialog.__getattr__() machinery to
 display the "confirm quit" dialog box.
 
 In some cases (e.g., fselect_demo()), I wanted the "Cancel" button to
@@ -55,16 +55,15 @@ perform a specific action instead of spawning the "confirm quit"
 dialog box. To achieve this, the widget is invoked using
 dialog.Dialog.<widget> instead of MyDialog.<widget>, and the return
 code is handled in a semi-manual way. A prominent feature that needs
-such special-casing is the yesno widget, because the "No" button in
-the dialog backend corresponds to the DIALOG_CANCEL return code,
-which in general must not be interpreted as an attempt to quit the
-program!
+such special-casing is the yesno widget, because the "No" button
+corresponds to the CANCEL exit code, which in general must not be
+interpreted as an attempt to quit the program!
 
 To sum it up, you can read most of the code in the MyApp class (which
 defines the actual contents of the demo) as if 'd' were a
 dialog.Dialog instance. Just keep in mind that there is a little
-magic behind the scenes that automatically handles the DIALOG_CANCEL
-and DIALOG_ESC return codes, which wouldn't be the case if 'd' were a
+magic behind the scenes that automatically handles the CANCEL and ESC
+Dialog exit codes, which wouldn't be the case if 'd' were a
 dialog.Dialog instance. For a first introduction to pythondialog with
 simple stuff and absolutely no magic, please have a look at
 simple_example.py.
@@ -155,20 +154,20 @@ class MyDialog:
         self.dlg = Dialog_instance
 
     def check_exit_request(self, code, ignore_Cancel=False):
-        if code == self.DIALOG_CANCEL and ignore_Cancel:
+        if code == self.CANCEL and ignore_Cancel:
             # Ignore the Cancel button, i.e., don't interpret it as an exit
-            # request; instead, let the caller handle DIALOG_CANCEL himself.
+            # request; instead, let the caller handle CANCEL himself.
             return True
 
-        if code in (self.DIALOG_CANCEL, self.DIALOG_ESC):
-            button_name = { self.DIALOG_CANCEL: "Cancel",
-                            self.DIALOG_ESC: "Escape" }
+        if code in (self.CANCEL, self.ESC):
+            button_name = { self.CANCEL: "Cancel",
+                            self.ESC: "Escape" }
             msg = "You pressed {0} in the last dialog box. Do you want " \
                 "to exit this demo?".format(button_name[code])
             # 'self.dlg' instead of 'self' here, because we want to use the
             # original yesno() method from the Dialog class instead of the
             # decorated method returned by self.__getattr__().
-            if self.dlg.yesno(msg) == self.DIALOG_OK:
+            if self.dlg.yesno(msg) == self.OK:
                 sys.exit(0)
             else:               # "No" button chosen, or ESC pressed
                 return False    # in the "confirm quit" dialog
@@ -179,22 +178,19 @@ class MyDialog:
         """Decorator to handle eventual exit requests from a Dialog widget.
 
         method -- a dialog.Dialog method that returns either a Dialog
-                  method exit status, or a sequence where the first
-                  element is a Dialog method exit status (i.e., a
-                  dialog exit status such as DIALOG_OK, or a
-                  pythondialog-specific extension such as "help" or
-                  "renamed"---cf. the docstring of dialog.widget())
+                  exit code, or a sequence whose first element is a
+                  Dialog exit code (cf. the docstring of the Dialog
+                  class in dialog.py)
 
         Return a wrapper function that behaves exactly like 'method',
         except for the following point:
 
-          If the dialog exit status obtained from 'method' is
-          DIALOG_CANCEL or DIALOG_ESC (attributes of dialog.Dialog),
-          a "confirm quit" dialog is spawned; depending on the user
-          choice, either the program exits or 'method' is called
-          again, with the same arguments and same handling of the
-          exit status. In other words, the wrapper function builds a
-          loop around 'method'.
+          If the Dialog exit code obtained from 'method' is CANCEL or
+          ESC (attributes of dialog.Dialog), a "confirm quit" dialog
+          is spawned; depending on the user choice, either the
+          program exits or 'method' is called again, with the same
+          arguments and same handling of the exit status. In other
+          words, the wrapper function builds a loop around 'method'.
 
         The above condition on 'method' is satisfied for all
         dialog.Dialog widget-producing methods. More formally, these
@@ -248,7 +244,7 @@ class MyDialog:
             return False
 
         if retcode > 0:
-            msg = "Program %s returned exit code %d." % (program, retcode)
+            msg = "Program %s returned exit status %d." % (program, retcode)
         elif retcode < 0:
             msg = "Program %s was terminated by signal %d." % (program, -retcode)
         else:
@@ -271,12 +267,12 @@ class MyDialog:
         # self.check_exit_request() manually.
         while True:
             code = self.dlg.yesno(*args, **kwargs)
-            # If code == self.DIALOG_CANCEL, it means the "No" button was
-            # chosen; don't interpret this as a wish to quit the program!
+            # If code == self.CANCEL, it means the "No" button was chosen;
+            # don't interpret this as a wish to quit the program!
             if self.check_exit_request(code, ignore_Cancel=True):
                 break
 
-        return code == self.dlg.DIALOG_OK
+        return code == self.dlg.OK
 
 
 # Dummy context manager to make sure the debug file is closed on exit, be it
@@ -654,8 +650,6 @@ and the output to be displayed, via a pipe, in a 'programbox' widget.\n"""
             return None
 
     def infobox_demo(self):
-        # Exit code thrown away to keep this demo code simple (however, real
-        # errors are propagated by an exception)
         d.infobox("One moment, please. Just wasting some time here to "
                   "show you the infobox...")
 
@@ -999,7 +993,7 @@ You should now select a node with the space bar.""",
             text = "The item corresponding to tag '%s' was renamed to '%s'." \
                 % (tag, new_item_text)
         else:
-            text = "The dialog-like program returned exit status {0}.".format(
+            text = "The 'inputmenu' widget returned exit code {0}.".format(
                 exit_info)
 
         d.msgbox(text, width=60, title="Outcome of the 'inputmenu' demo")
@@ -1051,8 +1045,8 @@ line.""".format(widget=widget)
             # without having to bother choosing a file, therefore we use the
             # original fselect() from dialog.Dialog and interpret the return
             # code manually. (By default, the MyDialog class defined in this
-            # file intercepts the DIALOG_CANCEL and DIALOG_ESC return codes and
-            # causes them to spawn the "confirm quit" dialog.)
+            # file intercepts the CANCEL and ESC exit codes and causes them to
+            # spawn the "confirm quit" dialog.)
             code, path = self.Dialog_instance.fselect(init_dir, height=10,
                                                       width=60, **kwargs)
 
@@ -1061,10 +1055,10 @@ line.""".format(widget=widget)
                 continue
 
             # Provide an easy way out...
-            if code == d.DIALOG_CANCEL:
+            if code == d.CANCEL:
                 path = None
                 break
-            elif code == d.DIALOG_OK:
+            elif code == d.OK:
                 # Of course, one can use os.path.isfile(path) here, but we want
                 # to allow regular files *and* possibly FIFOs. Since there is
                 # no os.path.is*** convenience function for FIFOs, let's go
@@ -1093,8 +1087,8 @@ Cancel button.\n\n%s""" % (self.FSELECT_HELP,)
 
                     d.msgbox(help_text, width=72, height=20)
             else:
-                d.msgbox("Unexpected exit status from the dialog-like program: "
-                         "{0}.\n\nIt may be a bug. Please report.".format(code))
+                d.msgbox("Unexpected exit code from Dialog.fselect(): {0}.\n\n"
+                         "It may be a bug. Please report.".format(code))
         return path
 
     def dselect_demo(self, init_dir=None):

@@ -733,29 +733,23 @@ def widget(func):
     specific methods. For instance, one can define a class that
     behaves similarly to Dialog, except that after every
     widget-producing call, it spawns a "confirm quit" dialog if the
-    widget returned DIALOG_ESC, and loops in case the user doesn't
+    widget returned Dialog.ESC, and loops in case the user doesn't
     actually want to quit.
 
     When it is unclear whether a method should have the decorator or
     not, the return value is used to draw the line. For instance,
     among 'gauge_start', 'gauge_update' and 'gauge_stop', only the
-    last one has the decorator because it returns the dialog-like
-    backend exit status, whereas the first two don't return anything
-    meaningful.
+    last one has the decorator because it returns a Dialog exit code,
+    whereas the first two don't return anything meaningful.
 
-    Warnings:
-      1. Some methods return the backend exit status, but other
-         methods return a *sequence*, the first element of which is
-         the backend exit status; the difference can be made by
-         looking at the 'retval_is_code' attribute of the method.
-         Please refer to the docstring of the 'retval_is_code'
-         decorator.
+    Note:
 
-      2. The exit status mentioned here is actually pythondialog's
-         extension of dialog's exit status: it may be an integer
-         (DIALOG_OK, DIALOG_CANCEL, DIALOG_ESC, DIALOG_EXTRA) but
-         also a string that is specific to the pythondialog API:
-         "help", "renamed", "accepted"...
+      Some widget-producing methods return the Dialog exit code, but
+      other methods return a *sequence*, the first element of which
+      is the Dialog exit code; the 'retval_is_code' attribute, which
+      is set by the decorator of the same name, allows to
+      programmatically discover the interface a given method conforms
+      to.
 
     """
     func.is_widget = True
@@ -764,33 +758,30 @@ def widget(func):
 
 def retval_is_code(func):
     """Decorator for Dialog widget-producing methods whose return value is \
-the dialog exit status.
+the Dialog exit code.
 
     This decorator is intended for widget-producing methods whose
-    return value consists solely of the dialog exit status. When this
-    decorator is *not* used on a widget-producing method, the dialog
-    exit status must be the first element of the return value.
+    return value consists solely of the Dialog exit code. When this
+    decorator is *not* used on a widget-producing method, the Dialog
+    exit code must be the first element of the return value.
 
     """
     func.retval_is_code = True
     return func
 
 
-# DIALOG_OK, DIALOG_CANCEL, etc. are environment variables controlling
-# dialog's exit status in the corresponding situation.
-#
-# Note:
-#    - 127 must not be used for any of the DIALOG_* values. It is used
-#      when a failure occurs in the child process before it exec()s
-#      dialog (where "before" includes a potential exec() failure).
-#    - 126 is also used (although in presumably rare situations).
-_dialog_exit_status_vars = { "OK": 0,
-                             "CANCEL": 1,
-                             "ESC": 2,
-                             "ERROR": 3,
-                             "EXTRA": 4,
-                             "HELP": 5,
-                             "ITEM_HELP": 6}
+def _obsolete_property(name, replacement=None):
+    if replacement is None:
+        replacement = name
+
+    def getter(self):
+        warnings.warn("the DIALOG_{name} attribute of Dialog instances is "
+                      "obsolete; use the Dialog.{repl} class attribute "
+                      "instead.".format(name=name, repl=replacement),
+                      DeprecationWarning)
+        return getattr(self, replacement)
+
+    return getter
 
 
 # Main class of the module
@@ -807,11 +798,6 @@ class Dialog:
     parameters (such as the background title) if you have a need
     for this.
 
-    The exit code (exit status) returned by dialog is to be compared
-    with the DIALOG_OK, DIALOG_CANCEL, DIALOG_ESC, DIALOG_ERROR,
-    DIALOG_EXTRA, DIALOG_HELP and DIALOG_ITEM_HELP attributes of the
-    Dialog instance (they are integers).
-
     Note: although this class does all it can to allow the caller to
           differentiate between the various reasons that caused a
           dialog box to be closed, its backend, dialog 0.9a-20020309a
@@ -823,7 +809,7 @@ class Dialog:
 
 
     Public methods of the Dialog class (mainly widgets)
-    ---------------------------------------------------
+    ===================================================
 
     The Dialog class has the following methods that produce or update
     widgets:
@@ -878,7 +864,7 @@ class Dialog:
 
 
     Passing dialog "Common Options"
-    -------------------------------
+    ===============================
 
     Every widget method has a **kwargs argument allowing you to pass
     dialog so-called Common Options (see the dialog(1) manual page)
@@ -905,8 +891,62 @@ class Dialog:
          (the leading two dashes are also consistently removed).
 
 
+    Return value of widget-producing methods
+    ========================================
+
+    Most Dialog methods that create a widget (actually: all methods
+    that supervise the exit of a widget) return a value which fits
+    into one of these categories:
+
+      1. The return value is a Dialog exit code (see below).
+
+      2. The return value is a sequence whose first element is a
+         Dialog exit code (the rest of the sequence being related to
+         what the user entered in the widget).
+
+    "Dialog exit code" (high-level)
+    -------------------------------
+    A Dialog exit code is a string such as "ok", "cancel", "esc",
+    "help" and "extra", respectively available as Dialog.OK,
+    Dialog.CANCEL, Dialog.ESC, Dialog.HELP and Dialog.EXTRA, i.e.
+    attributes of the Dialog class. These are the standard Dialog
+    exit codes, also known as "high-level exit codes", that user code
+    should deal with. They indicate how/why the widget ended. Some
+    widgets may return additional, non-standard exit codes; for
+    instance, the inputmenu widget may return "accepted" or "renamed"
+    in addition to the standard Dialog exit codes.
+
+    When getting a Dialog exit code from a widget-producing method,
+    user code should compare it with Dialog.OK and friends (or
+    equivalently, with "ok" and friends) using the == operator. This
+    allows to easily replace Dialog.OK and friends with objects that
+    compare the same with "ok" and u"ok" in Python 2, for instance.
+
+    "dialog exit status" (low-level)
+    --------------------------------
+    The standard Dialog exit codes are derived from the dialog exit
+    status, also known as "low-level exit code". This low-level exit
+    code is an integer returned by the dialog backend whose different
+    possible values are referred to as DIALOG_OK, DIALOG_CANCEL,
+    DIALOG_ESC, DIALOG_ERROR, DIALOG_EXTRA, DIALOG_HELP and
+    DIALOG_ITEM_HELP in the dialog(1) manual page. Note that:
+      - DIALOG_HELP and DIALOG_ITEM_HELP both map to Dialog.HELP in
+        pythondialog, because they both correspond to the same user
+        action and the difference brings no information that the
+        caller does not already have;
+      - DIALOG_ERROR has no counterpart as a Dialog attribute,
+        because it is automatically translated into a DialogError
+        exception when received.
+
+    In pythondialog 2.x, the low-level exit codes were available
+    as the DIALOG_OK, DIALOG_CANCEL, etc. attributes of Dialog
+    instances. For compatibility, the Dialog class has attributes of
+    the same names mapped to Dialog.OK, Dialog.CANCEL, etc., but
+    their use is deprecated as of pythondialog 3.0.
+
+
     Checking the backend version
-    ----------------------------
+    ============================
 
     The Dialog constructor retrieves the version string of the dialog
     backend and stores it as an instance of a BackendVersion subclass
@@ -930,7 +970,7 @@ class Dialog:
 
 
     Exceptions
-    ----------
+    ==========
 
     Please refer to the specific methods' docstrings or simply to the
     module's docstring for a list of all exceptions that might be
@@ -946,6 +986,69 @@ class Dialog:
             r"^Version:[ \t]+(?P<version>.+?)[ \t]*$", re.MULTILINE)
     except re.error as e:
         raise PythonDialogReModuleError(str(e)) from e
+
+    # DIALOG_OK, DIALOG_CANCEL, etc. are environment variables controlling
+    # the dialog backend exit status in the corresponding situation ("low-level
+    # exit status/code").
+    #
+    # Note:
+    #    - 127 must not be used for any of the DIALOG_* values. It is used
+    #      when a failure occurs in the child process before it exec()s
+    #      dialog (where "before" includes a potential exec() failure).
+    #    - 126 is also used (although in presumably rare situations).
+    _DIALOG_OK        = 0
+    _DIALOG_CANCEL    = 1
+    _DIALOG_ESC       = 2
+    _DIALOG_ERROR     = 3
+    _DIALOG_EXTRA     = 4
+    _DIALOG_HELP      = 5
+    _DIALOG_ITEM_HELP = 6
+    # cf. also _lowlevel_exit_codes and _dialog_exit_code_ll_to_hl which are
+    # created by __init__(). It is not practical to define everything here,
+    # because there is no equivalent of 'self' for the class outside method
+    # definitions.
+    _lowlevel_exit_code_varnames = frozenset(("OK", "CANCEL", "ESC", "ERROR",
+                                              "EXTRA", "HELP", "ITEM_HELP"))
+
+    # High-level exit codes, AKA "Dialog exit codes". These are the codes that
+    # pythondialog-based applications should use.
+    OK     = "ok"
+    CANCEL = "cancel"
+    ESC    = "esc"
+    EXTRA  = "extra"
+    HELP   = "help"
+
+    # Define properties to maintain backward-compatibility while warning about
+    # the obsolete attributes (which used to refer to the low-level exit codes
+    # in pythondialog 2.x).
+    DIALOG_OK        = property(_obsolete_property("OK"),
+                         doc="Obsolete property superseded by Dialog.OK")
+    DIALOG_CANCEL    = property(_obsolete_property("CANCEL"),
+                         doc="Obsolete property superseded by Dialog.CANCEL")
+    DIALOG_ESC       = property(_obsolete_property("ESC"),
+                         doc="Obsolete property superseded by Dialog.ESC")
+    DIALOG_EXTRA     = property(_obsolete_property("EXTRA"),
+                         doc="Obsolete property superseded by Dialog.EXTRA")
+    DIALOG_HELP      = property(_obsolete_property("HELP"),
+                         doc="Obsolete property superseded by Dialog.HELP")
+    # We treat DIALOG_ITEM_HELP and DIALOG_HELP the same way in pythondialog,
+    # since both indicate the same user action ("Help" button pressed).
+    DIALOG_ITEM_HELP = property(_obsolete_property("ITEM_HELP",
+                                                   replacement="HELP"),
+                         doc="Obsolete property superseded by Dialog.HELP")
+
+    @property
+    def DIALOG_ERROR(self):
+        warnings.warn("the DIALOG_ERROR attribute of Dialog instances is "
+                      "obsolete. Since the corresponding exit status is "
+                      "automatically translated into a DialogError exception, "
+                      "users should not see nor need this attribute. If you "
+                      "think you have a good reason to use it, please expose "
+                      "your situation on the pythondialog mailing-list.",
+                      DeprecationWarning)
+        # There is no corresponding high-level code; and if the user *really*
+        # wants to know the (integer) error exit status, here it is...
+        return self._DIALOG_ERROR
 
     def __init__(self, dialog="dialog", DIALOGRC=None,
                  compat="dialog", use_stdout=None):
@@ -1003,20 +1106,32 @@ class Dialog:
             UnableToParseBackendVersion
 
         """
-        # DIALOGRC differs from the other DIALOG* variables in that:
-        #   1. It should be a string if not None
-        #   2. We may very well want it to be unset
+        # DIALOGRC differs from the Dialog._DIALOG_* attributes in that:
+        #   1. It is an instance attribute instead of a class attribute.
+        #   2. It should be a string if not None.
+        #   3. We may very well want it to be unset.
         if DIALOGRC is not None:
             self.DIALOGRC = DIALOGRC
 
-        # After reflexion, I think DIALOG_OK, DIALOG_CANCEL, etc.
-        # should never have been instance attributes (I cannot see a
-        # reason why the user would want to change their values or
-        # even read them), but it is a bit late, now. So, we set them
-        # based on the (global) _dialog_exit_status_vars.keys.
-        for status, code in _dialog_exit_status_vars.items():
-            varname = "DIALOG_" + status
-            setattr(self, varname, code)
+        # Mapping from "OK", "CANCEL", ... to the corresponding dialog exit
+        # statuses (integers).
+        self._lowlevel_exit_codes = {
+            name: getattr(self, "_DIALOG_" + name)
+            for name in self._lowlevel_exit_code_varnames }
+
+        # Mapping from dialog exit status (integer) to Dialog exit code ("ok",
+        # "cancel", ... strings referred to by Dialog.OK, Dialog.CANCEL, ...);
+        # in other words, from low-level to high-level exit code.
+        self._dialog_exit_code_ll_to_hl = {}
+        for name in self._lowlevel_exit_code_varnames:
+            intcode = self._lowlevel_exit_codes[name]
+
+            if name == "ITEM_HELP":
+                self._dialog_exit_code_ll_to_hl[intcode] = self.HELP
+            elif name == "ERROR":
+                continue
+            else:
+                self._dialog_exit_code_ll_to_hl[intcode] = getattr(self, name)
 
         self._dialog_prg = _path_to_executable(dialog)
         self.compat = compat
@@ -1153,7 +1268,7 @@ class Dialog:
             envvar_settings_list.append(
                 "DIALOGRC={0}".format(_shell_quote(env["DIALOGRC"])))
 
-        for var in _dialog_exit_status_vars.keys():
+        for var in self._lowlevel_exit_code_varnames:
             varname = "DIALOG_" + var
             envvar_settings_list.append(
                 "{0}={1}".format(varname, _shell_quote(env[varname])))
@@ -1221,9 +1336,9 @@ class Dialog:
         # even control) the possible dialog exit statuses.
         new_environ = {}
         new_environ.update(os.environ)
-        for var in _dialog_exit_status_vars:
+        for var, value in self._lowlevel_exit_codes.items():
             varname = "DIALOG_" + var
-            new_environ[varname] = str(getattr(self, varname))
+            new_environ[varname] = str(value)
         if hasattr(self, "DIALOGRC"):
             new_environ["DIALOGRC"] = self.DIALOGRC
 
@@ -1307,8 +1422,9 @@ class Dialog:
 
         This function waits for the specified process to terminate,
         raises the appropriate exceptions in case of abnormal
-        termination and returns the exit status and stderr[*] output
-        of the process as a tuple: (exit_code, output_string).
+        termination and returns the Dialog exit code (high-level) and
+        stderr[*] output of the process as a tuple:
+        (hl_exit_code, output_string).
 
         'child_output_rfd' must be the file descriptor for the
         reading end of the pipe created by self._call_program(), the
@@ -1343,7 +1459,7 @@ class Dialog:
 
         exit_info = os.waitpid(child_pid, 0)[1]
         if os.WIFEXITED(exit_info):
-            exit_code = os.WEXITSTATUS(exit_info)
+            ll_exit_code = os.WEXITSTATUS(exit_info)
         # As we wait()ed for the child process to terminate, there is no
         # need to call os.WIFSTOPPED()
         elif os.WIFSIGNALED(exit_info):
@@ -1354,15 +1470,16 @@ class Dialog:
             raise PythonDialogBug("please report this bug to the "
                                   "pythondialog maintainer(s)")
 
-        if exit_code == self.DIALOG_ERROR:
+        if ll_exit_code == self._DIALOG_ERROR:
             raise DialogError(
-                "the dialog-like program exited with code {0} (which was passed "
-                "to it as the DIALOG_ERROR environment variable). Sometimes, "
-                "the reason is simply that dialog was given a height or width "
-                "parameter that is too big for the terminal in use. Its "
-                "output, with leading and trailing whitespace stripped, was:"
-                "\n\n{1}".format(exit_code, child_output.strip()))
-        elif exit_code == 127:
+                "the dialog-like program exited with status {0} (which was "
+                "passed to it as the DIALOG_ERROR environment variable). "
+                "Sometimes, the reason is simply that dialog was given a "
+                "height or width parameter that is too big for the terminal "
+                "in use. Its output, with leading and trailing whitespace "
+                "stripped, was:\n\n{1}".format(ll_exit_code,
+                                               child_output.strip()))
+        elif ll_exit_code == 127:
             raise PythonDialogErrorBeforeExecInChildProcess(dedent("""\
             possible reasons include:
               - the dialog-like program could not be executed (this can happen
@@ -1374,41 +1491,29 @@ class Dialog:
               - a cosmic ray hit the system memory and flipped nasty bits.
             There ought to be a traceback above this message that describes
             more precisely what happened."""))
-        elif exit_code == 126:
+        elif ll_exit_code == 126:
             raise ProbablyPythonBug(
                 "a child process returned with exit status 126; this might "
                 "be the exit status of the dialog-like program, for some "
                 "unknown reason (-> probably a bug in the dialog-like "
                 "program); otherwise, we have probably found a python bug")
 
-        # We might want to check here whether exit_code is really one of
-        # DIALOG_OK, DIALOG_CANCEL, etc. However, I prefer not doing it
-        # because it would break pythondialog for no strong reason when new
-        # exit codes are added to the dialog-like program.
-        #
-        # As it is now, if such a thing happens, the program using
-        # pythondialog may receive an exit_code it doesn't know about. OK, the
-        # programmer just has to tell the pythondialog maintainer about it and
-        # can temporarily set the appropriate DIALOG_* environment variable if
-        # he wants and assign the corresponding value to the Dialog instance's
-        # DIALOG_FOO attribute from his program. He doesn't even need to use a
-        # patched pythondialog before he upgrades to a version that knows
-        # about the new exit codes.
-        #
-        # The bad thing that might happen is a new DIALOG_FOO exit code being
-        # the same by default as one of those we chose for the other exit
-        # codes already known by pythondialog. But in this situation, the
-        # check that is being discussed wouldn't help at all.
+        try:
+            hl_exit_code = self._dialog_exit_code_ll_to_hl[ll_exit_code]
+        except KeyError:
+            raise PythonDialogBug(
+                "unexpected low-level exit status (new code?): {0!r}".format(
+                    ll_exit_code))
 
-        return (exit_code, child_output)
+        return (hl_exit_code, child_output)
 
     def _perform(self, cmdargs, *, dash_escape="non-first",
                  use_persistent_args=True, **kwargs):
         """Perform a complete dialog-like program invocation.
 
         This function invokes the dialog-like program, waits for its
-        termination and returns its exit status and whatever it wrote
-        on its standard error stream.
+        termination and returns the appropriate Dialog exit code
+        (high-level) along with whatever output it produced.
 
         See _call_program() for a description of the parameters.
 
@@ -1497,7 +1602,7 @@ class Dialog:
         """
         code, output = self._perform(["--print-version"],
                                      use_persistent_args=False)
-        if code == self.DIALOG_OK:
+        if code == self.OK:
             try:
                 mo = self._print_version_cre.match(output)
                 if mo:
@@ -1510,14 +1615,13 @@ class Dialog:
                 raise PythonDialogReModuleError(str(e)) from e
         else:
             raise UnableToRetrieveBackendVersion(
-                "exit status {0} from the backend".format(code))
+                "exit code {0} from the backend".format(code))
 
     def maxsize(self, **kwargs):
         """Get the maximum size of dialog boxes.
 
-        If the exit status of the dialog-like program is
-        self.DIALOG_OK, return a (lines, cols) tuple of integers;
-        otherwise, return None.
+        If the exit code from the backend is self.OK, return a
+        (lines, cols) tuple of integers; otherwise, return None.
 
         If you want to obtain the number of lines and columns of the
         terminal, you should call this method with
@@ -1531,7 +1635,7 @@ class Dialog:
 
         """
         code, output = self._perform(["--print-maxsize"], **kwargs)
-        if code == self.DIALOG_OK:
+        if code == self.OK:
             try:
                 mo = self._print_maxsize_cre.match(output)
                 if mo:
@@ -1567,11 +1671,11 @@ class Dialog:
         current date is used as an initial value.
 
         Return a tuple of the form (code, date) where 'code' is the
-        exit status (an integer) of the dialog-like program and
-        'date' is a list of the form [day, month, year] (where 'day',
-        'month' and 'year' are integers corresponding to the date
-        chosen by the user) if the box was closed with OK, or None if
-        it was closed with the Cancel button.
+        Dialog exit code and 'date' is a list of the form
+        [day, month, year] (where 'day', 'month' and 'year' are
+        integers corresponding to the date chosen by the user) if the
+        box was closed with OK, or None if it was closed with the
+        Cancel button.
 
         Notable exceptions:
             - any exception raised by self._perform()
@@ -1583,7 +1687,7 @@ class Dialog:
             ["--calendar", text, str(height), str(width), str(day),
                str(month), str(year)],
             **kwargs)
-        if code == self.DIALOG_OK:
+        if code == self.OK:
             try:
                 mo = _calendar_date_cre.match(output)
             except re.error as e:
@@ -1616,7 +1720,7 @@ class Dialog:
 
         Return a tuple of the form (code, [tag, ...]) with the tags
         for the entries that were selected by the user. 'code' is the
-        exit status of the dialog-like program.
+        Dialog exit code.
 
         If the user exits with ESC or CANCEL, the returned tag list
         is empty.
@@ -1721,9 +1825,8 @@ class Dialog:
           - if INPUT_LENGTH is zero, it is set to FIELD_LENGTH.
 
         Return a tuple of the form (code, list) where 'code' is the
-        exit status (an integer) of the dialog-like program and
-        'list' gives the contents of every editable field on exit,
-        with the same order as in 'elements'.
+        Dialog exit code and 'list' gives the contents of every
+        editable field on exit, with the same order as in 'elements'.
 
         Notable exceptions:
 
@@ -1829,8 +1932,8 @@ class Dialog:
         current value in the text-entry window and exit.
 
         Return a tuple of the form (code, path) where 'code' is the
-        exit status (an integer) of the dialog-like program and
-        'path' is the directory chosen by the user.
+        Dialog exit code and 'path' is the directory chosen by the
+        user.
 
         Notable exceptions:
 
@@ -1860,8 +1963,8 @@ class Dialog:
         key within the box will split the corresponding line.
 
         Return a tuple of the form (code, text) where 'code' is the
-        exit status (an integer) of the dialog-like program and
-        'text' is the contents of the text entry window on exit.
+        Dialog exit code and 'text' is the contents of the text entry
+        window on exit.
 
         Notable exceptions:
 
@@ -1905,9 +2008,8 @@ class Dialog:
         button to cancel.
 
         Return a tuple of the form (code, path) where 'code' is the
-        exit status (an integer) of the dialog-like program and
-        'path' is the path chosen by the user (the last element of
-        which may be a directory or a file).
+        Dialog exit code and 'path' is the path chosen by the user
+        (the last element of which may be a directory or a file).
 
         Notable exceptions:
 
@@ -2036,7 +2138,7 @@ class Dialog:
         See the 'gauge_start' function's documentation for
         information about how to use a gauge.
 
-        Return value: the exit status of the dialog-like program.
+        Return value: the Dialog exit code from the backend.
 
         Notable exceptions:
             - any exception raised by
@@ -2073,8 +2175,7 @@ class Dialog:
         when you want to inform the user that some operations are
         carrying on that may require some time to finish.
 
-        Return the exit status (an integer) of the dialog-like
-        program.
+        Return the Dialog exit code from the backend.
 
         Notable exceptions:
 
@@ -2102,8 +2203,8 @@ class Dialog:
         can fit in the dialog box, the input field will be scrolled.
 
         Return a tuple of the form (code, string) where 'code' is the
-        exit status of the dialog-like program and 'string' is the
-        string entered by the user.
+        Dialog exit code and 'string' is the string entered by the
+        user.
 
         Notable exceptions:
 
@@ -2182,8 +2283,8 @@ class Dialog:
             without renaming;
           - the string "renamed", meaning that an entry was accepted
             after being renamed;
-          - an integer, being the exit status of the dialog-like
-            program.
+          - one of the standard Dialog exit codes Dialog.CANCEL,
+            Dialog.ESC, Dialog.HELP.
 
         'tag' indicates which entry was accepted (with or without
         renaming), if any. If no entry was accepted (e.g., if the
@@ -2203,9 +2304,9 @@ class Dialog:
             cmd.extend(t)
         (code, output) = self._perform(cmd, **kwargs)
 
-        if code == self.DIALOG_OK:
+        if code == self.OK:
             return ("accepted", output, None)
-        elif code == self.DIALOG_EXTRA:
+        elif code == self.EXTRA:
             if not output.startswith("RENAMED "):
                 raise PythonDialogBug(
                     "'output' does not start with 'RENAMED ': {0!r}".format(
@@ -2275,11 +2376,13 @@ class Dialog:
         Return value
         ------------
 
+        XXX This is a bit confusing and will be fixed soon with
+        general help and Extra button support for all widgets.
+
         Return a tuple of the form (exit_info, string).
 
         'exit_info' is either:
-          - an integer, being the exit status of the dialog-like
-            program
+          - the Dialog exit code from the backend
           - or the string "help", meaning that help_button=True was
             passed and that the user chose the Help button instead of
             OK or Cancel.
@@ -2359,8 +2462,7 @@ class Dialog:
         to display different percentages in the global progress bar,
         or status indicators for a given task.
 
-        Return the exit status (an integer) of the dialog-like
-        program.
+        Return the Dialog exit code from the backend.
 
         Notable exceptions:
 
@@ -2401,8 +2503,7 @@ class Dialog:
         needed. If you want no automatic line wrapping, consider
         using scrollbox().
 
-        Return the exit status (an integer) of the dialog-like
-        program.
+        Return the Dialog exit code from the backend.
 
         Notable exceptions:
 
@@ -2430,9 +2531,9 @@ class Dialog:
         is elapsed, or immediately if the user presses the OK button,
         the Cancel button or the Esc key.
 
-        Return the exit status (an integer) of the dialog-like
-        program, which is DIALOG_OK if the pause ended automatically
-        after 'seconds' seconds, or if the user pressed the OK button.
+        Return the Dialog exit code, which is Dialog.OK if the pause
+        ended automatically after 'seconds' seconds or if the user
+        pressed the OK button.
 
         Notable exceptions:
 
@@ -2467,8 +2568,8 @@ class Dialog:
         asterisk to be echoed for each character entered by the user.
 
         Return a tuple of the form (code, password) where 'code' is
-        the exit status of the dialog-like program and 'password' is
-        the password entered by the user.
+        the Dialog exit code and 'password' is the password entered
+        by the user.
 
         Notable exceptions:
 
@@ -2549,8 +2650,7 @@ class Dialog:
             which case it may not even be a file; for instance, it
             could be an anonymous pipe created with os.pipe()).
 
-        Return the exit status (an integer) of the dialog-like
-        program.
+        Return the Dialog exit code from the backend.
 
         Notable exceptions:
 
@@ -2614,8 +2714,8 @@ class Dialog:
         by setting its status to True.
 
         Return a tuple of the form (code, tag) with the tag for the
-        entry that was chosen by the user. 'code' is the exit status
-        of the dialog-like program.
+        entry that was chosen by the user. 'code' is the Dialog exit
+        code from the backend.
 
         If the user exits with ESC or CANCEL, or if all entries were
         initially set to False and not altered before the user chose
@@ -2652,8 +2752,8 @@ class Dialog:
         current value as a bar (like the gauge dialog).
 
         The return value is a tuple of the form (code, val) where
-        'code' is the exit status of the dialog-like program, and
-        'val' is an integer: the value chosen by the user.
+        'code' is the Dialog exit code and 'val' is an integer: the
+        value chosen by the user.
 
         The Tab and arrow keys move the cursor between the buttons
         and the range control. When the cursor is on the latter, you
@@ -2693,7 +2793,7 @@ class Dialog:
                                      (height, width, min, max, init) ],
             **kwargs)
 
-        if code == self.DIALOG_OK:
+        if code == self.OK:
             return (code, int(value))
         else:
             return (code, None)
@@ -2719,7 +2819,7 @@ class Dialog:
         widget instead (the 'textwrap' module from the Python
         standard library is also worth knowing about).
 
-        Return the dialog-like program's exit status.
+        Return the Dialog exit code from the backend.
 
         Notable exceptions:
             - UnableToCreateTemporaryDirectory
@@ -2779,8 +2879,7 @@ class Dialog:
         dialog box whenever the file grows, as with the "tail -f"
         command.
 
-        Return the exit status (an integer) of the dialog-like
-        program.
+        Return the Dialog exit code from the backend.
 
         Notable exceptions:
 
@@ -2811,8 +2910,7 @@ class Dialog:
         convenience, forward and backward searching functions are
         also provided.
 
-        Return the exit status (an integer) of the dialog-like
-        program.
+        Return the Dialog exit code from the backend.
 
         Notable exceptions:
 
@@ -2848,11 +2946,11 @@ class Dialog:
         windows.
 
         Return a tuple of the form (code, time) where 'code' is the
-        exit status (an integer) of the dialog-like program and
-        'time' is a list of the form [hour, minute, second] (where
-        'hour', 'minute' and 'second' are integers corresponding to
-        the time chosen by the user) if the box was closed with OK,
-        or None if it was closed with the Cancel button.
+        Dialog exit code and 'time' is a list of the form
+        [hour, minute, second] (where 'hour', 'minute' and 'second'
+        are integers corresponding to the time chosen by the user) if
+        the box was closed with OK, or None if it was closed with the
+        Cancel button.
 
         Notable exceptions:
             - any exception raised by self._perform()
@@ -2864,7 +2962,7 @@ class Dialog:
             ["--timebox", text, str(height), str(width),
                str(hour), str(minute), str(second)],
             **kwargs)
-        if code == self.DIALOG_OK:
+        if code == self.OK:
             try:
                 mo = _timebox_time_cre.match(output)
                 if mo is None:
@@ -2911,7 +3009,7 @@ class Dialog:
         Return a tuple of the form (code, tag) where:
           - 'tag' is the tag of the selected node when the user chose
             OK, or None if Cancel was pressed instead;
-          - 'code' is the exit status of the dialog-like program.
+          - 'code' is the Dialog exit code from the backend.
 
         This widget requires dialog >= 1.2 (2012-12-30).
 
@@ -2942,7 +3040,7 @@ class Dialog:
 
         (code, output) = self._perform(cmd, **kwargs)
 
-        if code == self.DIALOG_OK:
+        if code == self.OK:
             return (code, output)
         else:
             return (code, None)
@@ -2968,8 +3066,7 @@ class Dialog:
         in which the user can switch between by pressing the TAB
         key.
 
-        Return the exit status (an integer) of the dialog-like
-        program.
+        Return the Dialog exit code from the backend.
 
         Notable exceptions:
 
