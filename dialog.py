@@ -367,6 +367,8 @@ _common_args_syntax = {
     "help": lambda enable: _simple_option("--help", enable),
     "help_button": lambda enable: _simple_option("--help-button", enable),
     "help_label": lambda s: _dash_escape_nf(("--help-label", s)),
+    "help_status": lambda enable: _simple_option("--help-status", enable),
+    "help_tags": lambda enable: _simple_option("--help-tags", enable),
     "hfile": lambda filename: _dash_escape_nf(("--hfile", filename)),
     "hline": lambda s: _dash_escape_nf(("--hline", s)),
     "ignore": lambda enable: _simple_option("--ignore", enable),
@@ -944,6 +946,192 @@ class Dialog:
     the same names mapped to Dialog.OK, Dialog.CANCEL, etc., but
     their use is deprecated as of pythondialog 3.0.
 
+
+    Providing on-line help facilities
+    =================================
+
+    With most dialog widgets, it is possible to provide online help
+    to the final user. At the time of this writing (October 2013),
+    there are three main options governing these help facilities in
+    the dialog backend: --help-button, --item-help and --help-status.
+    Since dialog 1.2-20130902, there is also --help-tags that
+    modifies the way --item-help works. As explained previously, to
+    use these options in pythondialog, you can pass the
+    'help_button', 'item_help', 'help_status' and 'help_tags' keyword
+    arguments to Dialog widget-producing methods.
+
+    Adding a Help button
+    --------------------
+    In order to provide a Help button in addition to the normal
+    buttons of a widget, you can pass help_button=True (keyword
+    argument) to the corresponding Dialog method. For instance, if
+    'd' is a Dialog instance, you can write:
+
+      code = d.yesno("<text>", height=10, width=40, help_button=True)
+
+    or
+
+      code, answer = d.inputbox("<text>", init="<init>",
+                                help_button=True)
+
+    When the method returns, the exit code is Dialog.HELP (i.e., the
+    string "help") if the user pressed the Help button. Apart from
+    that, it works exactly as if 'help_button=True' had not been
+    used. In the last example, if the user presses the Help button,
+    'answer' will contain the user input, just as if OK had been
+    pressed. Similarly, if you write:
+
+      code, t = d.checklist(
+                    "<text>", height=0, width=0, list_height=0,
+                    choices=[ ("Tag 1", "Item 1", False),
+                              ("Tag 2", "Item 2", True),
+                              ("Tag 3", "Item 3", True) ],
+                    help_button=True)
+
+    and find that code == Dialog.HELP, then 't' contains the tag
+    string for the highlighted item when the Help button was pressed.
+
+    Finally, note that it is possible to choose the text written on
+    the Help button by supplying a string as the 'help_label' keyword
+    argument.
+
+    Providing inline per-item help
+    ------------------------------
+    In addition to, or instead of the Help button, you can provide
+    item-specific help that is normally displayed at the bottom of
+    the widget. This can be done by passing the 'item_help=True'
+    keyword argument to the widget-producing method and by including
+    the item-specific help strings in the appropriate argument.
+
+    For widgets where item-specific help makes sense (i.e., there are
+    several elements that can be highlighted), there is usually a
+    parameter, often called 'elements', 'choices', 'nodes'..., that
+    must be provided as a sequence describing the various
+    lines/items/nodes/... that can be highlighted in the widget. When
+    'item_help=True' is passed, every element of this sequence must
+    be completed with a string which is the item-help string of the
+    element (dialog(1) terminology). For instance, the following call
+    with no inline per-item help support:
+
+      code, t = d.checklist(
+                    "<text>", height=0, width=0, list_height=0,
+                    choices=[ ("Tag 1", "Item 1", False),
+                              ("Tag 2", "Item 2", True),
+                              ("Tag 3", "Item 3", True) ],
+                    help_button=True)
+
+    can be altered this way to provide inline item-specific help:
+
+      code, t = d.checklist(
+                    "<text>", height=0, width=0, list_height=0,
+                    choices=[ ("Tag 1", "Item 1", False, "Help 1"),
+                              ("Tag 2", "Item 2", True,  "Help 2"),
+                              ("Tag 3", "Item 3", True,  "Help 3") ],
+                    help_button=True, item_help=True, help_tags=True)
+
+    With this modification, the item-help string for the highlighted
+    item is displayed in the bottom line of the screen and updated as
+    the user highlights other items.
+
+    If you don't want a Help button, just use 'item_help=True'
+    without 'help_button=True' ('help_tags' doesn't matter). Then,
+    you have the inline help at the bottom of the screen, and the
+    following discussion about the return value can be ignored.
+
+    If the user chooses the Help button, 'code' will be equal to
+    Dialog.HELP ("help") and 't' will contain the tag string
+    corresponding to the highlighted item when the Help button was
+    pressed ("Tag 1/2/3" in the example). This is because of the
+    'help_tags' option; without it (or with 'help_tags=False'), 't'
+    would have contained the item-help string of the highlighted
+    choice ("Help 1/2/3" in the example).
+
+    If you remember what was said earlier, if 'item_help=True' had
+    not been used in the previous example, 't' would still contain
+    the tag of the highlighted choice if the user closed the widget
+    with the Help button. This is the same as when using
+    'item_help=True' in combination with 'help_tags=True'; however,
+    you would get the item-help string instead if 'help_tags' were
+    False (which is the default, as in the dialog backend, and in
+    order to preserve compatibility with the 'menu' implementation
+    that is several years old).
+
+    Therefore, I recommend for consistency to use 'help_tags=True'
+    whenever possible when specifying 'item_help=True'. This makes
+    "--help-tags" a good candidate for use with
+    Dialog.add_persistent_args() to avoid repeating it over and over.
+    However, there are two cases where 'help_tags=True' cannot be
+    used:
+      - when the version of the dialog backend is lower than
+        1.2-20130902 (the --help-tags option was added in this
+        version);
+      - when using empty or otherwise identical tags for presentation
+        purposes (unless you don't need to tell which element was
+        highlighted when the Help button was pressed, in which case
+        it doesn't matter to be unable to discriminate between the
+        tags).
+
+    Getting the widget status before the Help button was pressed
+    ------------------------------------------------------------
+    Typically, when the user chooses Help in a widget, the
+    application will display a dialog box such as 'textbox', 'msgbox'
+    or 'scrollbox' and redisplay the original widget afterwards. For
+    simple widgets such as 'inputbox', when the Dialog exit code is
+    equal to Dialog.HELP, the return value contains enough
+    information to redisplay the widget in the same state it had when
+    Help was chosen. However, for more complex widgets such as
+    'radiolist', 'checklist', 'form' and its derivatives, knowing the
+    highlighted item is not enough to restore the widget state after
+    processing the help request: one needs to know the checked item /
+    list of checked items / form contents.
+
+    This is where the 'help_status' keyword argument becomes useful.
+    Example:
+
+      code, t = d.checklist(
+                    "<text>", height=0, width=0, list_height=0,
+                    choices=[ ("Tag 1", "Item 1", False),
+                              ("Tag 2", "Item 2", True),
+                              ("Tag 3", "Item 3", True) ],
+                    help_button=True, help_status=True)
+
+    When Help is chosen, code == Dialog.HELP and 't' is a tuple of the
+    form (tag, selected_tags, choices) where:
+      - 'tag' gives the tag string of the highlighted item (which
+        would be the value of 't' if 'help_status' were set to
+        False);
+      - 'selected_tags' is the... list of selected tags (note that
+        highlighting and selecting an item are different things!);
+      - 'choices' is a list built from the original 'choices'
+        argument of the 'checklist' call and from the list of
+        selected tags, that can be used as is to create a widget with
+        the same items and selection state as the original widget had
+        when Help was chosen.
+
+    Normally, pythondialog should always provide something similar to
+    the last item in the previous example in order to make it as easy
+    as possible to redisplay the widget in the appropriate state. To
+    know precisely what is returned with 'help_status=True', the best
+    ways are usually to experiment or read the code (by the way,
+    there are many examples of widgets with various combinations of
+    'help_button', 'item_help' and 'help_status' in the demo).
+
+    As can be inferred from the last sentence, the various options
+    related to help support are not mutually exclusive and may be
+    used together to provide good help support.
+
+    It is also worth noting that the docstrings of the various
+    widgets are written, in most cases, under the assumption that the
+    widget was closed "normally" (i.e., typically, with the OK
+    button). For instance, a docstring may state that the method
+    returns a tuple of the form (code, tag) where 'tag' is ..., but
+    actually, if using 'item_help=True' with 'help_tags=False', the
+    'tag' may very well be an item-help string, and if using
+    'help_status=True', it is likely to be a structured object such
+    as a tuple or list. Of course, handling all these possible
+    variations for all widgets would be a tedious task and would
+    probably significantly degrade the readability of said
+    docstrings.
 
     Checking the backend version
     ============================
@@ -1561,6 +1749,136 @@ class Dialog:
                       DeprecationWarning)
         self._perform_no_options('--clear')
 
+    def _help_status_on(self, kwargs):
+        return ("--help-status" in self.dialog_persistent_arglist
+                or kwargs.get("help_status", False))
+
+    def _parse_quoted_string(self, s):
+        """Parse a quoted string from a dialog help output."""
+        if not s.startswith('"'):
+            raise PythonDialogBug("quoted string does not start with a double "
+                                  "quote: {0!r}".format(s))
+
+        l = []
+        i = 1
+
+        while i < len(s) and s[i] != '"':
+            if s[i] == "\\":
+                i += 1
+                if i >= len(s):
+                    raise PythonDialogBug(
+                        "quoted string ends with a backslash: {0!r}".format(s))
+            l.append(s[i])
+            i += 1
+
+        if s[i] != '"':
+            raise PythonDialogBug("quoted string does not and with a double "
+                                  "quote: {0!r}".format(s))
+
+        return (''.join(l), i+1)
+
+    def _parse_help(self, output, kwargs, multival=False, raw_format=False):
+        """Parse the dialog help output from a widget.
+
+        'kwargs' should contain the keyword arguments used in the
+        widget call that produced the help output.
+
+        'multival' is for widgets that return a list of values as
+        opposed to a single value.
+
+        'raw_format' is for widgets that don't start their help
+        output with the string "HELP ".
+
+        """
+        l = output.splitlines()
+
+        if raw_format:
+            # This format of the help output is either empty or consists of
+            # only one line (possibly terminated with \n). It is
+            # encountered with --calendar and --inputbox, among others.
+            if len(l) > 1:
+                raise PythonDialogBug("raw help feedback unexpected as "
+                                      "multiline: {0!r}".format(output))
+            elif len(l) == 0:
+                return ""
+            else:
+                return l[0]
+
+        # Simple widgets such as 'yesno' will fall in this case if they use
+        # this method.
+        if not l:
+            return None
+
+        # The widgets that actually use --help-status always have the first
+        # help line indicating the active item; there is no risk of
+        # confusing this line with the first line produced by --help-status.
+        if not l[0].startswith("HELP "):
+            raise PythonDialogBug(
+                "unexpected help output that does not start with 'HELP ': "
+                "{0!r}".format(output))
+
+        # Everything that follows "HELP "; what it contains depends on whether
+        # --item-help and/or --help-tags were passed to dialog.
+        s = l[0][5:]
+
+        if not self._help_status_on(kwargs):
+            return s
+
+        if multival:
+            return (s, l[1:])
+        else:
+            if not s:
+                raise PythonDialogBug(
+                    "unexpected help output whose first line is 'HELP '")
+            elif s[0] != '"':
+                l2 = s.split(' ', 1)
+                if len(l2) == 1:
+                    raise PythonDialogBug(
+                        "expected 'HELP <id> <status>' in the help output, "
+                        "but couldn't find any space after 'HELP '")
+                else:
+                    return tuple(l2)
+            else:
+                help_id, after_index = self._parse_quoted_string(s)
+                if not s[after_index:].startswith(" "):
+                    raise PythonDialogBug(
+                        "expected 'HELP <quoted_id> <status>' in the help "
+                        "output, but couldn't find any space after "
+                        "'HELP <quoted_id>'")
+                return (help_id, s[after_index+1:])
+
+    def _widget_with_string_output(self, args, kwargs,
+                                   strip_xdialog_newline=False,
+                                   raw_help=False):
+        """Generic implementation for a widget that produces a single string.
+
+        The help output must be present regardless of whether
+        --help-status was passed or not.
+
+        """
+        code, output = self._perform(args, **kwargs)
+
+        if strip_xdialog_newline:
+            output = self._strip_xdialog_newline(output)
+
+        if code == self.HELP:
+            # No check for --help-status
+            help_data = self._parse_help(output, kwargs, raw_format=raw_help)
+            return (code, help_data)
+        else:
+            return (code, output)
+
+    def _widget_with_no_output(self, widget_name, args, kwargs):
+        """Generic implementation for a widget that produces no output."""
+        code, output = self._perform(args, **kwargs)
+
+        if output:
+            raise PythonDialogBug(
+                "expected an empty output from {0!r}, but got: {1!r}".format(
+                    widget_name, output))
+
+        return code
+
     def _dialog_version_check(self, version_string, feature):
         if self.compat == "dialog":
             minimum_version = DialogBackendVersion.fromstring(version_string)
@@ -1649,6 +1967,20 @@ class Dialog:
         else:
             return None
 
+    def _calendar_parse_date(self, date_str):
+        try:
+            mo = _calendar_date_cre.match(date_str)
+        except re.error as e:
+            raise PythonDialogReModuleError(str(e)) from e
+
+        if not mo:
+            raise UnexpectedDialogOutput(
+                "the dialog-like program returned the following "
+                "unexpected output (a date string was expected) from the "
+                "calendar box: {0!r}".format(date_str))
+
+        return [ int(s) for s in mo.group("day", "month", "year") ]
+
     @widget
     def calendar(self, text, height=6, width=0, day=0, month=0, year=0,
                  **kwargs):
@@ -1687,20 +2019,16 @@ class Dialog:
             ["--calendar", text, str(height), str(width), str(day),
                str(month), str(year)],
             **kwargs)
-        if code == self.OK:
-            try:
-                mo = _calendar_date_cre.match(output)
-            except re.error as e:
-                raise PythonDialogReModuleError(str(e)) from e
 
-            if mo is None:
-                raise UnexpectedDialogOutput(
-                    "the dialog-like program returned the following "
-                    "unexpected date with the calendar box: %s" % output)
-            date = [ int(s) for s in mo.group("day", "month", "year") ]
+        if code == self.HELP:
+            # The output does not depend on whether --help-status was passed
+            # (dialog 1.2-20130902).
+            help_data = self._parse_help(output, kwargs, raw_format=True)
+            return (code, self._calendar_parse_date(help_data))
+        elif code == self.OK:
+            return (code, self._calendar_parse_date(output))
         else:
-            date = None
-        return (code, date)
+            return (code, None)
 
     @widget
     def checklist(self, text, height=15, width=54, list_height=7,
@@ -1732,7 +2060,8 @@ class Dialog:
         """
         cmd = ["--checklist", text, str(height), str(width), str(list_height)]
         for t in choices:
-            cmd.extend((t[0], t[1], _to_onoff(t[2])))
+            t = [ t[0], t[1], _to_onoff(t[2]) ] + list(t[3:])
+            cmd.extend(t)
 
         # The dialog output cannot be parsed reliably (at least in dialog
         # 0.9b-20040301) without --separate-output (because double quotes in
@@ -1743,45 +2072,109 @@ class Dialog:
         kwargs["separate_output"] = True
 
         (code, output) = self._perform(cmd, **kwargs)
-
         # Since we used --separate-output, the tags are separated by a newline
         # in the output. There is also a final newline after the last tag.
-        if output:
+
+        if code == self.HELP:
+            help_data = self._parse_help(output, kwargs, multival=True)
+            if self._help_status_on(kwargs):
+                help_id, selected_tags = help_data
+                choices = [ [ tag, item, tag in selected_tags ] + rest
+                            for (tag, item, status, *rest) in choices ]
+                return (code, (help_id, selected_tags, choices))
+            else:
+                return (code, help_data)
+        else:
             return (code, output.split('\n')[:-1])
-        else:                           # empty selection
-            return (code, [])
+
+    def _form_updated_items(self, status, elements):
+        """Return a complete list with up-to-date items from 'status'.
+
+        Return a new list of same length as 'elements'. Items are
+        taken from 'status', except when data inside 'elements'
+        indicates a read-only field: such items are not output by
+        dialog ... --help-status ..., and therefore have to be
+        extracted from 'elements' instead of 'status'.
+
+        Actually, for 'mixedform', the elements that are defined as
+        read-only using the attribute instead of a non-positive
+        field_length are not concerned by this function, since they
+        are included in the --help-status output.
+
+        """
+        res = []
+        for i, (label, yl, xl, item, yi, xi, field_length, *rest) \
+                in enumerate(elements):
+            res.append(status[i] if field_length > 0 else item)
+
+        return res
 
     def _generic_form(self, widget_name, method_name, text, elements, height=0,
                       width=0, form_height=0, **kwargs):
         cmd = ["--%s" % widget_name, text, str(height), str(width),
                str(form_height)]
 
-        for elt in elements:
+        if not elements:
+            raise BadPythonDialogUsage(
+                "{0}.{1}.{2}: empty ELEMENTS sequence: {3!r}".format(
+                    __name__, type(self).__name__, method_name, elements))
+
+        elt_len = len(elements[0]) # for consistency checking
+        for i, elt in enumerate(elements):
+            if len(elt) != elt_len:
+                raise BadPythonDialogUsage(
+                    "{0}.{1}.{2}: ELEMENTS[0] has length {3}, whereas "
+                    "ELEMENTS[{4}] has length {5}".format(
+                        __name__, type(self).__name__, method_name,
+                        elt_len, i, len(elt)))
+
             # Give names to make the code more readable
-            if len(elt) == 8:   # code path for --form and --passwordform
-                label, yl, xl, item, yi, xi, field_length, input_length = elt
-            elif len(elt) == 9: # code path for --mixedform
+            if widget_name in ("form", "passwordform"):
+                label, yl, xl, item, yi, xi, field_length, input_length = \
+                    elt[:8]
+                rest = elt[8:]  # optional "item_help" string
+            elif widget_name == "mixedform":
                 label, yl, xl, item, yi, xi, field_length, input_length, \
-                    attributes = elt
+                    attributes = elt[:9]
+                rest = elt[9:]  # optional "item_help" string
             else:
                 raise PythonDialogBug(
-                    "unexpected length for 'elt': {0} (expected 8 or 9); "
-                    "elt = {1!r}".format(len(elt), elt))
+                    "unexpected widget name in {0}.{1}._generic_form(): "
+                    "{2!r}".format(__name__, type(self).__name__, widget_name))
 
             for name, value in (("LABEL", label), ("ITEM", item)):
                 if not isinstance(value, str):
                     raise BadPythonDialogUsage(
-                        "Dialog.{0}: {1} element not a string: {2!r}".format(
+                        "{0}.{1}.{2}: {3} element not a string: {4!r}".format(
+                            __name__, type(self).__name__,
                             method_name, name, value))
 
             cmd.extend((label, str(yl), str(xl), item, str(yi), str(xi),
                         str(field_length), str(input_length)))
-            if len(elt) == 9:
+            if widget_name == "mixedform":
                 cmd.append(str(attributes))
+            # "item help" string when using --item-help, nothing otherwise
+            cmd.extend(rest)
 
         (code, output) = self._perform(cmd, **kwargs)
 
-        return (code, output.split('\n')[:-1])
+        if code == self.HELP:
+            help_data = self._parse_help(output, kwargs, multival=True)
+            if self._help_status_on(kwargs):
+                help_id, status = help_data
+                # 'status' does not contain the fields marked as read-only in
+                # 'elements'. Build a list containing all up-to-date items.
+                updated_items = self._form_updated_items(status, elements)
+                # Reconstruct 'elements' with the updated items taken from
+                # 'status'.
+                elements = [ [ label, yl, xl, updated_item ] + rest for
+                             ((label, yl, xl, item, *rest), updated_item) in
+                             zip(elements, updated_items) ]
+                return (code, (help_id, status, elements))
+            else:
+                return (code, help_data)
+        else:
+            return (code, output.split('\n')[:-1])
 
     @widget
     def form(self, text, elements, height=0, width=0, form_height=0, **kwargs):
@@ -1940,11 +2333,11 @@ class Dialog:
             any exception raised by self._perform()
 
         """
-        (code, output) = self._perform(
+        # The help output does not depend on whether --help-status was passed
+        # (dialog 1.2-20130902).
+        return self._widget_with_string_output(
             ["--dselect", filepath, str(height), str(width)],
-            **kwargs)
-
-        return (code, output)
+            kwargs, raw_help=True)
 
     @widget
     def editbox(self, filepath, height=0, width=0, **kwargs):
@@ -1971,11 +2364,9 @@ class Dialog:
             any exception raised by self._perform()
 
         """
-        (code, output) = self._perform(
+        return self._widget_with_string_output(
             ["--editbox", filepath, str(height), str(width)],
-            **kwargs)
-
-        return (code, output)
+            kwargs)
 
     @widget
     def fselect(self, filepath, height=0, width=0, **kwargs):
@@ -2016,13 +2407,11 @@ class Dialog:
             any exception raised by self._perform()
 
         """
-        (code, output) = self._perform(
+        # The help output does not depend on whether --help-status was passed
+        # (dialog 1.2-20130902).
+        return self._widget_with_string_output(
             ["--fselect", filepath, str(height), str(width)],
-            **kwargs)
-
-        output = self._strip_xdialog_newline(output)
-
-        return (code, output)
+            kwargs, strip_xdialog_newline=True, raw_help=True)
 
     def gauge_start(self, text="", height=8, width=54, percent=0, **kwargs):
         """Display gauge box.
@@ -2182,9 +2571,10 @@ class Dialog:
             any exception raised by self._perform()
 
         """
-        return self._perform(
+        return self._widget_with_no_output(
+            "infobox",
             ["--infobox", text, str(height), str(width)],
-            **kwargs)[0]
+            kwargs)
 
     @widget
     def inputbox(self, text, height=10, width=30, init='', **kwargs):
@@ -2211,13 +2601,11 @@ class Dialog:
             any exception raised by self._perform()
 
         """
-        (code, string_) = self._perform(
+        # The help output does not depend on whether --help-status was passed
+        # (dialog 1.2-20130902).
+        return self._widget_with_string_output(
             ["--inputbox", text, str(height), str(width), init],
-            **kwargs)
-
-        string_ = self._strip_xdialog_newline(string_)
-
-        return (code, string_)
+            kwargs, strip_xdialog_newline=True, raw_help=True)
 
     @widget
     def inputmenu(self, text, height=0, width=60, menu_height=7, choices=[],
@@ -2271,6 +2659,11 @@ class Dialog:
           "RENAMED " prefix belong to the <tag> or the new <item>
           text.
 
+        Note: there is no point in calling this method with
+              'help_status=True', because it is not possible to
+              rename several items nor is it possible to choose the
+              Help button (or any button other than Rename) once one
+              has started to rename an item.
 
         Return value
         ------------
@@ -2304,7 +2697,10 @@ class Dialog:
             cmd.extend(t)
         (code, output) = self._perform(cmd, **kwargs)
 
-        if code == self.OK:
+        if code == self.HELP:
+            help_id = self._parse_help(output, kwargs)
+            return (code, help_id, None)
+        elif code == self.OK:
             return ("accepted", output, None)
         elif code == self.EXTRA:
             if not output.startswith("RENAMED "):
@@ -2326,9 +2722,7 @@ class Dialog:
         width       -- width of the box
         menu_height -- number of entries displayed in the box (which
                        can be scrolled) at a given time
-        choices     -- a sequence of (tag, item) or (tag, item, help)
-                       tuples (the meaning of each 'tag', 'item' and
-                       'help' is explained below)
+        choices     -- a sequence of (tag, item) tuples (see below)
 
 
         Overview
@@ -2351,50 +2745,12 @@ class Dialog:
         scrolled if there are more entries than that.
 
 
-        Providing on-line help facilities
-        ---------------------------------
-
-        If this function is called with item_help=True (keyword
-        argument), the option --item-help is passed to dialog and the
-        tuples contained in 'choices' must contain 3 elements each:
-        (tag, item, help). The help string for the highlighted item
-        is displayed in the bottom line of the screen and updated as
-        the user highlights other items.
-
-        If item_help=False or if this keyword argument is not passed
-        to this function, the tuples contained in 'choices' must
-        contain 2 elements each: (tag, item).
-
-        If this function is called with help_button=True, it must also
-        be called with item_help=True (this is a limitation of dialog),
-        therefore the tuples contained in 'choices' must contain 3
-        elements each as explained in the previous paragraphs. This
-        will cause a Help button to be added to the right of the
-        Cancel button (by passing --help-button to dialog).
-
-
         Return value
         ------------
 
-        XXX This is a bit confusing and will be fixed soon with
-        general help and Extra button support for all widgets.
-
-        Return a tuple of the form (exit_info, string).
-
-        'exit_info' is either:
-          - the Dialog exit code from the backend
-          - or the string "help", meaning that help_button=True was
-            passed and that the user chose the Help button instead of
-            OK or Cancel.
-
-        The meaning of 'string' depends on the value of exit_info:
-          - if 'exit_info' is 0, 'string' is the tag chosen by the
-            user
-          - if 'exit_info' is "help", 'string' is the 'help' string
-            from the 'choices' argument corresponding to the item
-            that was highlighted when the user chose the Help button
-          - otherwise (the user chose Cancel or pressed Esc, or there
-            was a dialog error), the value of 'string' is undefined.
+        Return a tuple of the form (code, tag) where 'code' is the
+        Dialog exit code and 'tag' the tag string of the item that
+        the user chose.
 
         Notable exceptions:
 
@@ -2404,14 +2760,9 @@ class Dialog:
         cmd = ["--menu", text, str(height), str(width), str(menu_height)]
         for t in choices:
             cmd.extend(t)
-        (code, output) = self._perform(cmd, **kwargs)
 
-        output = self._strip_xdialog_newline(output)
-
-        if kwargs.get("help_button", False) and output.startswith("HELP "):
-            return ("help", output[5:])
-        else:
-            return (code, output)
+        return self._widget_with_string_output(
+            cmd, kwargs, strip_xdialog_newline=True)
 
     @widget
     @retval_is_code
@@ -2472,7 +2823,7 @@ class Dialog:
         cmd = ["--mixedgauge", text, str(height), str(width), str(percent)]
         for t in elements:
             cmd.extend( (t[0], str(t[1])) )
-        return self._perform(cmd, **kwargs)[0]
+        return self._widget_with_no_output("mixedgauge", cmd, kwargs)
 
     @widget
     @retval_is_code
@@ -2510,9 +2861,10 @@ class Dialog:
             any exception raised by self._perform()
 
         """
-        return self._perform(
+        return self._widget_with_no_output(
+            "msgbox",
             ["--msgbox", text, str(height), str(width)],
-            **kwargs)[0]
+            kwargs)
 
     @widget
     @retval_is_code
@@ -2540,9 +2892,10 @@ class Dialog:
             any exception raised by self._perform()
 
         """
-        return self._perform(
+        return self._widget_with_no_output(
+            "pause",
             ["--pause", text, str(height), str(width), str(seconds)],
-            **kwargs)[0]
+            kwargs)
 
     @widget
     def passwordbox(self, text, height=10, width=60, init='', **kwargs):
@@ -2576,13 +2929,11 @@ class Dialog:
             any exception raised by self._perform()
 
         """
-        (code, password) = self._perform(
+        # The help output does not depend on whether --help-status was passed
+        # (dialog 1.2-20130902).
+        return self._widget_with_string_output(
             ["--passwordbox", text, str(height), str(width), init],
-            **kwargs)
-
-        password = self._strip_xdialog_newline(password)
-
-        return (code, password)
+            kwargs, strip_xdialog_newline=True, raw_help=True)
 
     def _progressboxoid(self, widget, file_path=None, file_flags=os.O_RDONLY,
                         fd=None, text=None, height=20, width=78, **kwargs):
@@ -2608,8 +2959,8 @@ class Dialog:
                     args.append(text)
                 args.extend([str(height), str(width)])
 
-                code = self._perform(args, redir_child_stdin_from_fd=fd,
-                                     **kwargs)[0]
+                kwargs["redir_child_stdin_from_fd"] = fd
+                code = self._widget_with_no_output(widget, args, kwargs)
             finally:
                 with _OSErrorHandling():
                     if file_path is not None:
@@ -2728,12 +3079,24 @@ class Dialog:
         """
         cmd = ["--radiolist", text, str(height), str(width), str(list_height)]
         for t in choices:
-            cmd.extend((t[0], t[1], _to_onoff(t[2])))
-        (code, tag) = self._perform(cmd, **kwargs)
+            cmd.extend([ t[0], t[1], _to_onoff(t[2]) ] + list(t[3:]))
+        (code, output) = self._perform(cmd, **kwargs)
 
-        tag = self._strip_xdialog_newline(tag)
+        output = self._strip_xdialog_newline(output)
 
-        return (code, tag)
+        if code == self.HELP:
+            help_data = self._parse_help(output, kwargs)
+            if self._help_status_on(kwargs):
+                help_id, selected_tag = help_data
+                # Reconstruct 'choices' with the selected item inferred from
+                # 'selected_tag'.
+                choices = [ [ tag, item, tag == selected_tag ] + rest for
+                            (tag, item, status, *rest) in choices ]
+                return (code, (help_id, selected_tag, choices))
+            else:
+                return (code, help_data)
+        else:
+            return (code, output)
 
     @widget
     def rangebox(self, text, height=0, width=0, min=None, max=None, init=None,
@@ -2788,13 +3151,18 @@ class Dialog:
                 raise BadPythonDialogUsage(
                     "{0!r} argument not an int: {1!r}".format(name,
                                                               locals()[name]))
-        (code, value) = self._perform(
+        (code, output) = self._perform(
             ["--rangebox", text] + [ str(i) for i in
                                      (height, width, min, max, init) ],
             **kwargs)
 
-        if code == self.OK:
-            return (code, int(value))
+        if code == self.HELP:
+            help_data = self._parse_help(output, kwargs, raw_format=True)
+            # The help output does not depend on whether --help-status was
+            # passed (dialog 1.2-20130902).
+            return (code, int(help_data))
+        elif code == self.OK:
+            return (code, int(output))
         else:
             return (code, None)
 
@@ -2857,9 +3225,10 @@ class Dialog:
                 if kwargs.get("title", None) is None:
                     kwargs["title"] = ""
 
-                return self._perform(
+                return self._widget_with_no_output(
+                    "textbox",
                     ["--textbox", fName, str(height), str(width)],
-                    **kwargs)[0]
+                    kwargs)
             finally:
                 if os.path.exists(fName):
                     os.unlink(fName)
@@ -2886,9 +3255,10 @@ class Dialog:
             any exception raised by self._perform()
 
         """
-        return self._perform(
+        return self._widget_with_no_output(
+            "tailbox",
             ["--tailbox", filename, str(height), str(width)],
-            **kwargs)[0]
+            kwargs)
     # No tailboxbg widget, at least for now.
 
     @widget
@@ -2921,9 +3291,24 @@ class Dialog:
         # stupid, but I prefer explicit programming.
         if kwargs.get("title", None) is None:
             kwargs["title"] = filename
-        return self._perform(
+        return self._widget_with_no_output(
+            "textbox",
             ["--textbox", filename, str(height), str(width)],
-            **kwargs)[0]
+            kwargs)
+
+    def _timebox_parse_time(self, time_str):
+        try:
+            mo = _timebox_time_cre.match(time_str)
+        except re.error as e:
+            raise PythonDialogReModuleError(str(e)) from e
+
+        if not mo:
+            raise UnexpectedDialogOutput(
+                "the dialog-like program returned the following "
+                "unexpected output (a time string was expected) with the "
+                "--timebox option: {0!r}".format(time_str))
+
+        return [ int(s) for s in mo.group("hour", "minute", "second") ]
 
     @widget
     def timebox(self, text, height=3, width=30, hour=-1, minute=-1,
@@ -2962,19 +3347,16 @@ class Dialog:
             ["--timebox", text, str(height), str(width),
                str(hour), str(minute), str(second)],
             **kwargs)
-        if code == self.OK:
-            try:
-                mo = _timebox_time_cre.match(output)
-                if mo is None:
-                    raise UnexpectedDialogOutput(
-                        "the dialog-like program returned the following "
-                        "unexpected time with the --timebox option: %s" % output)
-                time = [ int(s) for s in mo.group("hour", "minute", "second") ]
-            except re.error as e:
-                raise PythonDialogReModuleError(str(e)) from e
+
+        if code == self.HELP:
+            help_data = self._parse_help(output, kwargs, raw_format=True)
+            # The help output does not depend on whether --help-status was
+            # passed (dialog 1.2-20130902).
+            return (code, self._timebox_parse_time(help_data))
+        elif code == self.OK:
+            return (code, self._timebox_parse_time(output))
         else:
-            time = None
-        return (code, time)
+            return (code, None)
 
     @widget
     def treeview(self, text, height=0, width=0, list_height=0,
@@ -3032,7 +3414,7 @@ class Dialog:
             if status == "on":
                 nselected += 1
 
-            cmd.extend((t[0], t[1], status, str(t[3])))
+            cmd.extend([ t[0], t[1], status, str(t[3]) ] + list(t[4:]))
 
         if nselected != 1:
             raise BadPythonDialogUsage(
@@ -3040,7 +3422,18 @@ class Dialog:
 
         (code, output) = self._perform(cmd, **kwargs)
 
-        if code == self.OK:
+        if code == self.HELP:
+            help_data = self._parse_help(output, kwargs)
+            if self._help_status_on(kwargs):
+                help_id, selected_tag = help_data
+                # Reconstruct 'nodes' with the selected item inferred from
+                # 'selected_tag'.
+                nodes = [ [ tag, item, tag == selected_tag ] + rest for
+                          (tag, item, status, *rest) in nodes ]
+                return (code, (help_id, selected_tag, nodes))
+            else:
+                return (code, help_data)
+        elif code == self.OK:
             return (code, output)
         else:
             return (code, None)
@@ -3073,6 +3466,7 @@ class Dialog:
             any exception raised by self._perform()
 
         """
-        return self._perform(
+        return self._widget_with_no_output(
+            "yesno",
             ["--yesno", text, str(height), str(width)],
-            **kwargs)[0]
+            kwargs)

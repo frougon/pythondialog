@@ -72,12 +72,13 @@ simple_example.py.
 
 
 import sys, os, locale, stat, time, getopt, subprocess, traceback, textwrap
+import pprint
 import contextlib               # Not really indispensable here
 import dialog
 from dialog import DialogBackendVersion
 
 progname = os.path.basename(sys.argv[0])
-progversion = "0.7"
+progversion = "0.8"
 version_blurb = """Demonstration program and cheap test suite for pythondialog.
 
 Copyright (C) 2002-2010  Florent Rougon
@@ -253,12 +254,13 @@ class MyDialog:
         self.msgbox(msg)
         return False
 
-    def Yesno(self, *args, **kwargs):
+    def _Yesno(self, *args, **kwargs):
         """Convenience wrapper around dialog.Dialog.yesno().
 
-        Return True if "Yes" was chosen, False if "No" was chosen,
-        and handle ESC as in the rest of the demo, i.e. make it spawn
-        the "confirm quit" dialog.
+        Return the same exit code as would return
+        dialog.Dialog.yesno(), except for ESC which is handled as in
+        the rest of the demo, i.e. make it spawn the "confirm quit"
+        dialog.
 
         """
         # self.yesno() automatically spawns the "confirm quit" dialog if ESC or
@@ -272,7 +274,35 @@ class MyDialog:
             if self.check_exit_request(code, ignore_Cancel=True):
                 break
 
-        return code == self.dlg.OK
+        return code
+
+    def Yesno(self, *args, **kwargs):
+        """Convenience wrapper around dialog.Dialog.yesno().
+
+        Return True if "Yes" was chosen, False if "No" was chosen,
+        and handle ESC as in the rest of the demo, i.e. make it spawn
+        the "confirm quit" dialog.
+
+        """
+        return self._Yesno(*args, **kwargs) == self.dlg.OK
+
+    def Yesnohelp(self, *args, **kwargs):
+        """Convenience wrapper around dialog.Dialog.yesno().
+
+        Return "yes", "no", "extra" or "help" depending on the button
+        that was pressed to close the dialog. ESC is handled as in
+        the rest of the demo, i.e. it spawns the "confirm quit"
+        dialog.
+
+        """
+        kwargs["help_button"] = True
+        code = self._Yesno(*args, **kwargs)
+        d = { self.dlg.OK:     "yes",
+              self.dlg.CANCEL: "no",
+              self.dlg.EXTRA:  "extra",
+              self.dlg.HELP:   "help" }
+
+        return d[code]
 
 
 # Dummy context manager to make sure the debug file is closed on exit, be it
@@ -377,16 +407,28 @@ The dialog-like program displaying this message box reports version \
         self.progressbox_demo_with_file_descriptor()
         self.infobox_demo()
         self.gauge_demo()
-        answer = self.yesno_demo()
+        answer = self.yesno_demo(with_help=True)
         self.msgbox_demo(answer)
         self.textbox_demo()
-        name = self.inputbox_demo()
+        name = self.inputbox_demo_with_help()
         size, weight, city, state, country, last_will1, last_will2, \
             last_will3, last_will4, secret_code = self.mixedform_demo()
+        self.form_demo_with_help()
         favorite_day = self.menu_demo(name, city, state, country, size, weight,
                                       secret_code, last_will1, last_will2,
                                       last_will3, last_will4)
+
+        if self.dialog_version_check("1.2-20130902",
+                                     "the menu demo with help facilities",
+                                     explain=True):
+            self.menu_demo_with_help()
+
         toppings = self.checklist_demo()
+        if self.dialog_version_check("1.2-20130902",
+                                     "the checklist demo with help facilities",
+                                     explain=True):
+            self.checklist_demo_with_help()
+
         sandwich = self.radiolist_demo()
 
         if self.dialog_version_check("1.2", "the rangebox demo", explain=True):
@@ -394,7 +436,7 @@ The dialog-like program displaying this message box reports version \
         else:
             nb_engineers = None
 
-        date = self.calendar_demo()
+        date = self.calendar_demo_with_help()
         time_ = self.timebox_demo()
 
         password = self.passwordbox_demo()
@@ -402,7 +444,10 @@ The dialog-like program displaying this message box reports version \
                             nb_engineers, date, time_, password)
 
         if self.dialog_version_check("1.2", "the treeview demo", explain=True):
-            self.treeview_demo()
+            if self.dialog_version_check("1.2-20130902"):
+                self.treeview_demo_with_help()
+            else:
+                self.treeview_demo()
 
         self.mixedgauge_demo()
         self.editbox_demo("/etc/passwd")
@@ -444,12 +489,14 @@ Now, please select a file you would like to see growing (or not...).""",
         # best to keep programbox_demo out of the main demo.
         if self.dialog_version_check("1.1", "the programbox demo", explain=True):
             self.programbox_demo()
-        # Almost identical to mixedform (mixedform being more powerful)
+        # Almost identical to mixedform (mixedform being more powerful). Also,
+        # there is now form_demo_with_help() which uses the form widget.
         self.form_demo()
         # Almost identical to passwordbox
         self.passwordform_demo()
 
-    def dialog_version_check(self, version_string, feature=None, explain=False):
+    def dialog_version_check(self, version_string, feature="", *, start="",
+                             explain=False):
         if d.compat != "dialog":
             # non-dialog implementations are not affected by
             # 'dialog_version_check'.
@@ -459,16 +506,21 @@ Now, please select a file you would like to see growing (or not...).""",
         res = (d.cached_backend_version >= minimum_version)
 
         if explain and not res:
-            assert feature, feature
-            self.too_old_dialog_version(feature, min=version_string)
+            self.too_old_dialog_version(feature=feature, start=start,
+                                        min=version_string)
 
         return res
 
-    def too_old_dialog_version(self, feature, *, min=None):
+    def too_old_dialog_version(self, feature="", *, start="", min=None):
+        assert (feature and not start) or (not feature and start), \
+            (feature, start)
+        if not start:
+            start = "Skipping {0},".format(feature)
+
         d.msgbox(
-            "Skipping {feature}, because it requires dialog {min} or later; "
+            "{start} because it requires dialog {min} or later; "
             "however, it appears that you are using version {used}.".format(
-                feature=feature, min=min, used=d.cached_backend_version),
+                start=start, min=min, used=d.cached_backend_version),
             width=60, height=9, title="Demo skipped")
 
     def progressbox_demo_with_filepath(self):
@@ -698,9 +750,37 @@ and the output to be displayed, via a pipe, in a 'programbox' widget.\n"""
                                    ("Task 10", -i)])
             time.sleep(0.5 if params["fast_mode"] else 2)
 
-    def yesno_demo(self):
-        return d.Yesno("Do you like this demo?", yes_label="Yes, I do",
-                       no_label="No, I do not", width=40)
+    def yesno_demo(self, with_help=True):
+        if not with_help:
+            # Simple version, without the "Help" button (the return value is
+            # True or False):
+            return d.Yesno("\nDo you like this demo?", yes_label="Yes, I do",
+                           no_label="No, I do not", height=10, width=40,
+                           title="An Important Question")
+
+        # 'yesno' dialog box with custom Yes, No and Help buttons
+        while True:
+            reply = d.Yesnohelp("\nDo you like this demo?",
+                                yes_label="Yes, I do", no_label="No, I do not",
+                                help_label="Please help me!", height=10,
+                                width=60, title="An Important Question")
+            if reply == "yes":
+                return True
+            elif reply == "no":
+                return False
+            elif reply == "help":
+                d.msgbox("""\
+I can hear your cry for help, and would really like to help you. However, I \
+am afraid there is not much I can do for you here; you will have to decide \
+for yourself on this matter.
+
+Keep in mind that you can always rely on me. \
+You have all my support, be brave!""",
+                         height=15, width=60,
+                         title="From Your Faithful Servant")
+            else:
+                assert False, "Unexpected reply from MyDialog.Yesnohelp(): " \
+                    + repr(reply)
 
     def msgbox_demo(self, answer):
         if answer:
@@ -721,6 +801,22 @@ and the output to be displayed, via a pipe, in a 'programbox' widget.\n"""
         code, answer = d.inputbox("What's your name?", init="Snow White")
         return answer
 
+    def inputbox_demo_with_help(self):
+        init_str = "Snow White"
+        while True:
+            code, answer = d.inputbox("What's your name?", init=init_str,
+                                      title="'inputbox' demo", help_button=True)
+
+            if code == "help":
+                d.msgbox("Help from the 'inputbox' demo. The string entered "
+                         "so far is {0!r}.".format(answer),
+                         title="'inputbox' demo")
+                init_str = answer
+            else:
+                break
+
+        return answer
+
     def form_demo(self):
         elements = [
             ("Size (cm)", 1, 1, "175", 1, 20, 4, 3),
@@ -737,10 +833,74 @@ and the output to be displayed, via a pipe, in a 'programbox' widget.\n"""
             ("Will", 9, 1, "Cantonale Vaudoise, Lausanne, Switzerland.",
              9, 20, 0, 0) ]
 
-        code, fields = d.form(
-            "Please fill in some personal information:", elements, width=77)
-
+        code, fields = d.form("Please fill in some personal information:",
+                              elements, width=77)
         return fields
+
+    def form_demo_with_help(self, item_help=True):
+        # This function is slightly complex because it provides help support
+        # with 'help_status=True', and optionally also with 'item_help=True'
+        # together with 'help_tags=True'. For a very simple version (without
+        # any help support), see form_demo() above.
+        minver_for_helptags = "1.2-20130902"
+
+        if item_help:
+            if self.dialog_version_check(minver_for_helptags):
+                complement = """'item_help=True' is also used in conjunction \
+with 'help_tags=True' in order to display per-item help at the bottom of the \
+widget."""
+            else:
+                item_help = False
+                complement = """'item_help=True' is not used, because to make \
+it consistent with the 'item_help=False' case, dialog {min} or later is \
+required (for the --help-tags option); however, it appears that you are using \
+version {used}.""".format(min=minver_for_helptags,
+                          used=d.cached_backend_version)
+        else:
+            complement = """'item_help=True' is not used, because it has \
+been disabled; therefore, there is no per-item help at the bottom of the \
+widget."""
+
+        text = """\
+This is a demo for the 'form' widget, which is similar to 'mixedform' but \
+a bit simpler in that it has no notion of field type (to hide contents such \
+as passwords).
+
+This demo uses 'help_button=True' to provide a Help button \
+and 'help_status=True' to allow redisplaying the widget in the same state \
+when leaving the help dialog. {complement}""".format(complement=complement)
+
+        elements = [ ("Fruit",  1, 8, "mirabelle plum",  1, 20, 18, 30),
+                     ("Color",  2, 8, "yellowish",       2, 20, 18, 30),
+                     ("Flavor", 3, 8, "sweet when ripe", 3, 20, 18, 30),
+                     ("Origin", 4, 8, "Lorraine",        4, 20, 18, 30) ]
+
+        more_kwargs = {}
+
+        if item_help:
+            more_kwargs.update({ "item_help": True,
+                                 "help_tags": True })
+            elements = [ list(l) + [ "Help text for item {0}".format(i+1) ]
+                         for i, l in enumerate(elements) ]
+
+        while True:
+            code, t = d.form(text, elements, height=20, width=65,
+                             title="'form' demo with help facilities",
+                             help_button=True, help_status=True, **more_kwargs)
+
+            if code == "help":
+                label, status, elements = t
+                d.msgbox("You asked for help concerning the field labelled "
+                         "{0!r}.".format(label), width=50)
+            else:
+                # 't' contains the list of items as filled by the user
+                break
+
+        answers = '\n'.join(t)
+        d.msgbox("Your answers:\n\n{0}".format(indent(answers, "  ")),
+                 width=0, height=0,
+                 title="'form' demo with help facilities", no_collapse=True)
+        return t
 
     def mixedform_demo(self):
         HIDDEN    = 0x1
@@ -817,6 +977,32 @@ preference below.""" \
 
         return tag
 
+    def menu_demo_with_help(self):
+        text = """Sample 'menu' dialog box with help_button=True and \
+item_help=True."""
+
+        while True:
+            code, tag = d.menu(text, height=16, width=60,
+                choices=[("Tag 1", "Item 1", "Help text for item 1"),
+                         ("Tag 2", "Item 2", "Help text for item 2"),
+                         ("Tag 3", "Item 3", "Help text for item 3"),
+                         ("Tag 4", "Item 4", "Help text for item 4"),
+                         ("Tag 5", "Item 5", "Help text for item 5"),
+                         ("Tag 6", "Item 6", "Help text for item 6"),
+                         ("Tag 7", "Item 7", "Help text for item 7"),
+                         ("Tag 8", "Item 8", "Help text for item 8")],
+                               title="A menu with help facilities",
+                               help_button=True, item_help=True, help_tags=True)
+
+            if code == "help":
+                d.msgbox("You asked for help concerning the item identified by "
+                         "tag {0!r}.".format(tag), height=8, width=40)
+            else:
+                break
+
+        d.msgbox("You have chosen the item identified by tag "
+                 "{0!r}.".format(tag), height=8, width=40)
+
     def checklist_demo(self):
         # We could put non-empty items here (not only the tag for each entry)
         code, tags = d.checklist(text="What sandwich toppings do you like?",
@@ -832,22 +1018,70 @@ preference below.""" \
                                  "completely different...")
         return tags
 
+    def checklist_demo_with_help(self):
+        text = """Sample 'checklist' dialog box with help_button=True, \
+item_help=True and help_status=True."""
+        choices = [("Tag 1", "Item 1", True,  "Help text for item 1"),
+                   ("Tag 2", "Item 2", False, "Help text for item 2"),
+                   ("Tag 3", "Item 3", False, "Help text for item 3"),
+                   ("Tag 4", "Item 4", True,  "Help text for item 4"),
+                   ("Tag 5", "Item 5", True,  "Help text for item 5"),
+                   ("Tag 6", "Item 6", False, "Help text for item 6"),
+                   ("Tag 7", "Item 7", True,  "Help text for item 7"),
+                   ("Tag 8", "Item 8", False, "Help text for item 8")]
+
+        while True:
+            code, t = d.checklist(text, height=0, width=0, list_height=0,
+                                  choices=choices,
+                                  title="A checklist with help facilities",
+                                  help_button=True, item_help=True,
+                                  help_tags=True, help_status=True)
+            if code == "help":
+                tag, selected_tags, choices = t
+                d.msgbox("You asked for help concerning the item identified "
+                         "by tag {0!r}.".format(tag), height=7, width=60)
+            else:
+                # 't' contains the list of tags corresponding to checked items
+                break
+
+        s = '\n'.join(t)
+        d.msgbox("The tags corresponding to checked items are:\n\n"
+                 "{0}".format(indent(s, "  ")), height=16, width=60,
+                 title="'checklist' demo with help facilities",
+                 no_collapse=True)
+
     def radiolist_demo(self):
-        code, tag = d.radiolist(
-            "What's your favorite kind of sandwich?", width=65,
-            choices=[("Hamburger", "2 slices of bread, a steak...", False),
-                     ("Hotdog", "doesn't bite any more", False),
-                     ("Burrito", "no se lo que es", False),
-                     ("Doener", "Huh?", False),
-                     ("Falafel", "Erm...", False),
-                     ("Bagel", "Of course!", False),
-                     ("Big Mac", "Ah, that's easy!", True),
-                     ("Whopper", "Erm, sorry", False),
-                     ("Quarter Pounder", 'called "le Big Mac" in France', False),
-                     ("Peanut Butter and Jelly", "Well, that's your own "
-                      "business...", False),
-                     ("Grilled cheese", "And nothing more?", False)])
-        return tag
+        choices = [
+            ("Hamburger",       "2 slices of bread, a steak...", False),
+            ("Hotdog",          "doesn't bite any more",         False),
+            ("Burrito",         "no se lo que es",               False),
+            ("Doener",          "Huh?",                          False),
+            ("Falafel",         "Erm...",                        False),
+            ("Bagel",           "Of course!",                    False),
+            ("Big Mac",         "Ah, that's easy!",              True),
+            ("Whopper",         "Erm, sorry",                    False),
+            ("Quarter Pounder", 'called "le Big Mac" in France', False),
+            ("Peanut Butter and Jelly", "Well, that's your own business...",
+                                                                 False),
+            ("Grilled cheese",  "And nothing more?",             False) ]
+
+        while True:
+            code, t = d.radiolist(
+                "What's your favorite kind of sandwich?", width=68,
+                choices=choices, help_button=True, help_status=True)
+
+            if code == "help":
+                # Prepare to redisplay the radiolist in the same state as it
+                # was before the user pressed the Help button.
+                tag, selected, choices = t
+                d.msgbox("You asked for help about something called {0!r}. "
+                         "Sorry, but I am quite incompetent in this matter."
+                         .format(tag))
+            else:
+                # 't' is the chosen tag
+                break
+
+        return t
 
     def rangebox_demo(self):
         code, nb = d.rangebox("""\
@@ -860,8 +1094,25 @@ and any of the 0-9 keys to change a digit of the value.""",
         return nb
 
     def calendar_demo(self):
-        code, date = d.calendar("When do you think Georg Cantor was born?",
-                                year=0)
+        code, date = d.calendar("When do you think Georg Cantor was born?")
+        return date
+
+    def calendar_demo_with_help(self):
+        # Start with the current date
+        day, month, year = 0, 0, 0
+
+        while True:
+            code, date = d.calendar("When do you think Georg Cantor was born?",
+                                    day=day, month=month, year=year,
+                                    title="'calendar' demo",
+                                    help_button=True)
+            if code == "help":
+                day, month, year = date
+                d.msgbox("Help dialog for date {0:04d}-{1:02d}-{2:02d}.".format(
+                        year, month, day), title="'calendar' demo")
+            else:
+                break
+
         return date
 
     def comment_on_Cantor_date_of_birth(self, day, month, year):
@@ -944,14 +1195,16 @@ Your root password is: ************************** (looks good!)""".format(
               self.comment_on_Cantor_date_of_birth(day, month, year)))
         d.scrollbox(msg, height=20, width=75, title="Great Report of the Year")
 
-    def treeview_demo(self):
-        code, tag = d.treeview("""\
-This is an example of the 'treeview' widget. Nodes are labelled in a way \
-that reflects their position in the tree, but this is not a requirement: \
+    TREEVIEW_BASE_TEXT = """\
+This is an example of the 'treeview' widget{options}. Nodes are labelled in a \
+way that reflects their position in the tree, but this is not a requirement: \
 you are free to name them the way you like.
 
 Node 0 is the root node. It has 3 children tagged 0.1, 0.2 and 0.3. \
-You should now select a node with the space bar.""",
+You should now select a node with the space bar."""
+
+    def treeview_demo(self):
+        code, tag = d.treeview(self.TREEVIEW_BASE_TEXT.format(options=""),
                                nodes=[ ("0", "node 0", False, 0),
                                        ("0.1", "node 0.1", False, 1),
                                        ("0.2", "node 0.2", False, 1),
@@ -966,6 +1219,41 @@ You should now select a node with the space bar.""",
         d.msgbox("You selected the node tagged {0!r}.".format(tag),
                  title="treeview demo")
         return tag
+
+    def treeview_demo_with_help(self):
+        text = self.TREEVIEW_BASE_TEXT.format(
+            options=" with help_button=True, item_help=True and "
+            "help_status=True")
+
+        nodes = [ ("0",       "node 0",       False, 0, "Help text 1"),
+                  ("0.1",     "node 0.1",     False, 1, "Help text 2"),
+                  ("0.2",     "node 0.2",     False, 1, "Help text 3"),
+                  ("0.2.1",   "node 0.2.1",   False, 2, "Help text 4"),
+                  ("0.2.1.1", "node 0.2.1.1", True,  3, "Help text 5"),
+                  ("0.2.2",   "node 0.2.2",   False, 2, "Help text 6"),
+                  ("0.3",     "node 0.3",     False, 1, "Help text 7"),
+                  ("0.3.1",   "node 0.3.1",   False, 2, "Help text 8"),
+                  ("0.3.2",   "node 0.3.2",   False, 2, "Help text 9") ]
+
+        while True:
+            code, t = d.treeview(text, nodes=nodes,
+                                 title="'treeview' demo with help facilities",
+                                 help_button=True, item_help=True,
+                                 help_tags=True, help_status=True)
+
+            if code == "help":
+                # Prepare to redisplay the treeview in the same state as it
+                # was before the user pressed the Help button.
+                tag, selected_tag, nodes = t
+                d.msgbox("You asked for help about the node with tag {0!r}."
+                         .format(tag))
+            else:
+                # 't' is the chosen tag
+                break
+
+        d.msgbox("You selected the node tagged {0!r}.".format(t),
+                 title="'treeview' demo")
+        return t
 
     def editbox_demo(self, filepath):
         if os.path.isfile(filepath):
@@ -982,19 +1270,28 @@ You should now select a node with the space bar.""",
         for i in range(4, 21):
             choices.append(("%dth_tag" % i, "Item %d text" % i))
 
-        exit_info, tag, new_item_text = d.inputmenu(
-            "Demonstration of inputmenu. Any item can be either accepted as is, "
-            "or renamed.", height=0, width=60, menu_height=10, choices=choices,
-            title="Simple 'inputmenu' demo")
+        while True:
+            code, tag, new_item_text = d.inputmenu(
+                "Demonstration of 'inputmenu'. Any single item can be either "
+                "accepted as is, or renamed.",
+                height=0, width=60, menu_height=10, choices=choices,
+                help_button=True, title="'inputmenu' demo")
 
-        if exit_info == "accepted":
-            text = "The item corresponding to tag '%s' was accepted." % tag
-        elif exit_info == "renamed":
-            text = "The item corresponding to tag '%s' was renamed to '%s'." \
-                % (tag, new_item_text)
-        else:
-            text = "The 'inputmenu' widget returned exit code {0}.".format(
-                exit_info)
+            if code == "help":
+                d.msgbox("You asked for help about the item with tag {0!r}."
+                         .format(tag))
+                continue
+            elif code == "accepted":
+                text = "The item corresponding to tag {0!r} was " \
+                    "accepted.".format(tag)
+            elif code == "renamed":
+                text = "The item corresponding to tag {0!r} was renamed to " \
+                    "{1!r}.".format(tag, new_item_text)
+            else:
+                text = "Unexpected exit code from 'inputmenu': {0!r}.\n\n" \
+                    "It may be a bug. Please report.".format(code)
+
+            break
 
         d.msgbox(text, width=60, title="Outcome of the 'inputmenu' demo")
 
@@ -1033,12 +1330,12 @@ Then, you can cat(1) data to the FIFO like this:
 You can end the input to cat(1) by typing Ctrl-D at the beginning of a \
 line.""".format(widget=widget)
 
-    def fselect_demo(self, widget, init_dir=None, allow_FIFOs=False, **kwargs):
-        init_dir = init_dir or params["home_dir"]
+    def fselect_demo(self, widget, init_path=None, allow_FIFOs=False, **kwargs):
+        init_path = init_path or params["home_dir"]
         # Make sure the directory we chose ends with os.sep so that dialog
         # shows its contents right away
-        if not init_dir.endswith(os.sep):
-            init_dir += os.sep
+        if not init_path.endswith(os.sep):
+            init_path += os.sep
 
         while True:
             # We want to let the user quit this particular dialog with Cancel
@@ -1047,8 +1344,8 @@ line.""".format(widget=widget)
             # code manually. (By default, the MyDialog class defined in this
             # file intercepts the CANCEL and ESC exit codes and causes them to
             # spawn the "confirm quit" dialog.)
-            code, path = self.Dialog_instance.fselect(init_dir, height=10,
-                                                      width=60, **kwargs)
+            code, path = self.Dialog_instance.fselect(
+                init_path, height=10, width=60, help_button=True, **kwargs)
 
             # Display the "confirm quit" dialog if the user pressed ESC.
             if not d.check_exit_request(code, ignore_Cancel=True):
@@ -1058,6 +1355,10 @@ line.""".format(widget=widget)
             if code == d.CANCEL:
                 path = None
                 break
+            elif code == "help":
+                d.msgbox("Help about {0!r} from the 'fselect' dialog.".format(
+                        path), title="'fselect' demo")
+                init_path = path
             elif code == d.OK:
                 # Of course, one can use os.path.isfile(path) here, but we want
                 # to allow regular files *and* possibly FIFOs. Since there is
@@ -1100,12 +1401,18 @@ Cancel button.\n\n%s""" % (self.FSELECT_HELP,)
 
         while True:
             code, path = d.dselect(init_dir, 10, 50,
-                                   title="Please choose a directory")
+                                   title="Please choose a directory",
+                                   help_button=True)
+            if code == "help":
+                d.msgbox("Help about {0!r} from the 'dselect' dialog.".format(
+                        path), title="'dselect' demo")
+                init_dir = path
             # When Python 3.2 is old enough, we'll be able to check if
             # path.endswith(os.sep) and remove the trailing os.sep if this
             # does not change the path according to os.path.samefile().
-            if not os.path.isdir(path):
-                d.msgbox("Hmm. It seems that '%s' is not a directory" % path)
+            elif not os.path.isdir(path):
+                d.msgbox("Hmm. It seems that {0!r} is not a directory".format(
+                        path), title="'dselect' demo")
             else:
                 break
 

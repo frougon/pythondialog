@@ -1,6 +1,3 @@
-* Support --help-status and --item-help for more widgets. Good --item-help
-  handling requires IMO the --help-tags option added in dialog 1.2-20130902.
-
 * Use height=0 and width=0 for automatic size everywhere? Well, it seems to
   work with recent versions of dialog (yay!), but changing the default values
   for 'width' and 'height' in pythondialog widgets would break backward
