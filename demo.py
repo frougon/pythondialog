@@ -795,7 +795,14 @@ You have all my support, be brave!""",
     def textbox_demo(self):
         # Better use the absolute path for displaying in the dialog title
         filepath = os.path.abspath(__file__)
-        d.textbox(filepath, width=76, title="Contents of %s" % filepath)
+        code = d.textbox(filepath, width=76,
+                         title="Contents of {0}".format(filepath),
+                         extra_button=True, extra_label="Stop it now!")
+
+        if code == "extra":
+            d.msgbox("Your wish is my command, Master.", width=40,
+                     title="Exiting")
+            sys.exit(0)
 
     def inputbox_demo(self):
         code, answer = d.inputbox("What's your name?", init="Snow White")
@@ -1084,13 +1091,25 @@ item_help=True and help_status=True."""
         return t
 
     def rangebox_demo(self):
-        code, nb = d.rangebox("""\
+        nb = 10                 # initial value
+
+        while True:
+            code, nb = d.rangebox("""\
 How many Microsoft(TM) engineers are needed to prepare such a sandwich?
 
 You can use the Up and Down arrows, Page Up and Page Down, Home and End keys \
 to change the value; you may also use the Tab key, Left and Right arrows \
 and any of the 0-9 keys to change a digit of the value.""",
-                                min=1, max=20, init=10)
+                                  min=1, max=20, init=nb,
+                                  extra_button=True, extra_label="Joker")
+            if code == "ok":
+                break
+            elif code == "extra":
+                d.msgbox("Well, {0} may be enough. Or not, depending on the "
+                         "phase of the moon...".format(nb))
+            else:
+                assert False, "Unexpected Dialog exit code: {0!r}".format(code)
+
         return nb
 
     def calendar_demo(self):

@@ -947,6 +947,23 @@ class Dialog:
     their use is deprecated as of pythondialog 3.0.
 
 
+    Adding a Extra button
+    =====================
+
+    With most widgets, it is possible to add a supplementary button
+    called "Extra button". To do that, you simply have to use
+    'extra_button=True' (keyword argument) in the widget call.
+    By default, the button text is "Extra", but you can specify
+    another string with the 'extra_label' keyword argument.
+
+    When the widget exits, you know if the Extra button was pressed
+    if the Dialog exit code is Dialog.EXTRA ("extra"). Normally, the
+    rest of the return value is the same as if the widget had been
+    closed with OK. Therefore, if the widget normally returns a list
+    of three integers, for instance, you can expect to get the same
+    information if Extra is pressed instead of OK.
+
+
     Providing on-line help facilities
     =================================
 
@@ -1122,7 +1139,7 @@ class Dialog:
 
     It is also worth noting that the docstrings of the various
     widgets are written, in most cases, under the assumption that the
-    widget was closed "normally" (i.e., typically, with the OK
+    widget was closed "normally" (typically, with the OK or Extra
     button). For instance, a docstring may state that the method
     returns a tuple of the form (code, tag) where 'tag' is ..., but
     actually, if using 'item_help=True' with 'help_tags=False', the
@@ -2002,12 +2019,11 @@ class Dialog:
         move between windows. If the year is given as zero, the
         current date is used as an initial value.
 
-        Return a tuple of the form (code, date) where 'code' is the
-        Dialog exit code and 'date' is a list of the form
-        [day, month, year] (where 'day', 'month' and 'year' are
-        integers corresponding to the date chosen by the user) if the
-        box was closed with OK, or None if it was closed with the
-        Cancel button.
+        Return a tuple of the form (code, date) where:
+          - 'code' is the Dialog exit code;
+          - 'date' is a list of the form [day, month, year], where
+            'day', 'month' and 'year' are integers corresponding to
+            the date chosen by the user.
 
         Notable exceptions:
             - any exception raised by self._perform()
@@ -2025,7 +2041,7 @@ class Dialog:
             # (dialog 1.2-20130902).
             help_data = self._parse_help(output, kwargs, raw_format=True)
             return (code, self._calendar_parse_date(help_data))
-        elif code == self.OK:
+        elif code in (self.OK, self.EXTRA):
             return (code, self._calendar_parse_date(output))
         else:
             return (code, None)
@@ -3161,7 +3177,7 @@ class Dialog:
             # The help output does not depend on whether --help-status was
             # passed (dialog 1.2-20130902).
             return (code, int(help_data))
-        elif code == self.OK:
+        elif code in (self.OK, self.EXTRA):
             return (code, int(output))
         else:
             return (code, None)
@@ -3330,12 +3346,11 @@ class Dialog:
         right- and down-arrows. Use tab or backtab to move between
         windows.
 
-        Return a tuple of the form (code, time) where 'code' is the
-        Dialog exit code and 'time' is a list of the form
-        [hour, minute, second] (where 'hour', 'minute' and 'second'
-        are integers corresponding to the time chosen by the user) if
-        the box was closed with OK, or None if it was closed with the
-        Cancel button.
+        Return a tuple of the form (code, time) where:
+          - 'code' is the Dialog exit code;
+          - 'time' is a list of the form [hour, minute, second],
+            where 'hour', 'minute' and 'second' are integers
+            corresponding to the time chosen by the user.
 
         Notable exceptions:
             - any exception raised by self._perform()
@@ -3353,7 +3368,7 @@ class Dialog:
             # The help output does not depend on whether --help-status was
             # passed (dialog 1.2-20130902).
             return (code, self._timebox_parse_time(help_data))
-        elif code == self.OK:
+        elif code in (self.OK, self.EXTRA):
             return (code, self._timebox_parse_time(output))
         else:
             return (code, None)
@@ -3389,9 +3404,8 @@ class Dialog:
         selected at a given time, as for the radiolist widget.
 
         Return a tuple of the form (code, tag) where:
-          - 'tag' is the tag of the selected node when the user chose
-            OK, or None if Cancel was pressed instead;
-          - 'code' is the Dialog exit code from the backend.
+          - 'code' is the Dialog exit code from the backend;
+          - 'tag' is the tag of the selected node.
 
         This widget requires dialog >= 1.2 (2012-12-30).
 
@@ -3433,7 +3447,7 @@ class Dialog:
                 return (code, (help_id, selected_tag, nodes))
             else:
                 return (code, help_data)
-        elif code == self.OK:
+        elif code in (self.OK, self.EXTRA):
             return (code, output)
         else:
             return (code, None)
