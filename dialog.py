@@ -1770,14 +1770,14 @@ class Dialog:
         return ("--help-status" in self.dialog_persistent_arglist
                 or kwargs.get("help_status", False))
 
-    def _parse_quoted_string(self, s):
+    def _parse_quoted_string(self, s, start=0):
         """Parse a quoted string from a dialog help output."""
-        if not s.startswith('"'):
+        if start >= len(s) or s[start] != '"':
             raise PythonDialogBug("quoted string does not start with a double "
                                   "quote: {0!r}".format(s))
 
         l = []
-        i = 1
+        i = start + 1
 
         while i < len(s) and s[i] != '"':
             if s[i] == "\\":
@@ -1794,7 +1794,52 @@ class Dialog:
 
         return (''.join(l), i+1)
 
-    def _parse_help(self, output, kwargs, multival=False, raw_format=False):
+    def _split_shellstyle_arglist(self, s):
+        """Split an argument list with shell-style quoting performed by dialog.
+
+        Any argument in 's' may or may not be quoted. Quoted
+        arguments are always expected to be enclosed in double quotes
+        (more restrictive than what the POSIX shell allows).
+
+        This function could maybe be replaced with shlex.split(),
+        however:
+          - shlex only handles Unicode strings in Python 2.7.3 and
+            above;
+          - the bulk of the work is done by _parse_quoted_string(),
+            which is probably still needed in _parse_help(), where
+            one needs to parse things such as 'HELP <id> <status>' in
+            which <id> may be quoted but <status> is never quoted,
+            even if it contains spaces or quotes.
+
+        """
+        s = s.rstrip()
+        l = []
+        i = 0
+
+        while i < len(s):
+            if s[i] == '"':
+                arg, i = self._parse_quoted_string(s, start=i)
+                if i < len(s) and s[i] != ' ':
+                    raise PythonDialogBug(
+                        "expected a space or end-of-string after quoted "
+                        "string in {0!r}, but found {1!r}".format(s, s[i]))
+                # Start of the next argument, or after the end of the string
+                i += 1
+                l.append(arg)
+            else:
+                try:
+                    end = s.index(' ', i)
+                except ValueError:
+                    end = len(s)
+
+                l.append(s[i:end])
+                # Start of the next argument, or after the end of the string
+                i = end + 1
+
+        return l
+
+    def _parse_help(self, output, kwargs, *, multival=False,
+                    multival_on_single_line=False, raw_format=False):
         """Parse the dialog help output from a widget.
 
         'kwargs' should contain the keyword arguments used in the
@@ -1842,7 +1887,16 @@ class Dialog:
             return s
 
         if multival:
-            return (s, l[1:])
+            if multival_on_single_line:
+                args = self._split_shellstyle_arglist(s)
+                if not args:
+                    raise PythonDialogBug(
+                        "expected a non-empty space-separated list of "
+                        "possibly-quoted strings in this help output: {0!r}"
+                        .format(output))
+                return (args[0], args[1:])
+            else:
+                return (s, l[1:])
         else:
             if not s:
                 raise PythonDialogBug(
