@@ -58,18 +58,32 @@ Requirements
   3.x series. pythondialog 2.14.1 has been tested with Python 3.2 and
   3.3.
 
-* I will probably provide a Python 2 backport with release 3.0 (which is
-  in preparation), but this will not be regular, and probably not of the
-  same quality as the Python 3 version. In the meantime, users who
-  really want to stick to Python 2 should use version 2.11 (which can be
-  found from the home page, or directly from the `SourceForge download
-  page
+* I will probably provide a Python 2 backport soon, but this will not be
+  regular and probably not of the same quality as the Python 3 version.
+  In the meantime, users who really want to stick to Python 2 should use
+  version 2.11 (which can be found from the home page, or directly from
+  the `SourceForge download page
   <http://sourceforge.net/projects/pythondialog/files/pythondialog/>`_).
 
 * Apart from that, pythondialog requires the dialog_ program (or a
   drop-in replacement for dialog). You can download dialog from:
 
     http://invisible-island.net/dialog/dialog.html
+
+
+Quick installation instructions
+-------------------------------
+
+If you have `pip <https://pypi.python.org/pypi/pip>`_ installed, you
+should be able to install pythondialog with a simple::
+
+  pip install pythondialog
+
+(which should be run with appropriate privileges)
+
+For more details, you can download a release tarball and read the
+INSTALL file. You may also want to consult the `pip documentation
+<http://www.pip-installer.org/>`_.
 
 
 Documentation

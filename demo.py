@@ -1067,7 +1067,7 @@ item_help=True and help_status=True."""
 
         s = '\n'.join(t)
         d.msgbox("The tags corresponding to checked items are:\n\n"
-                 "{0}".format(indent(s, "  ")), height=16, width=60,
+                 "{0}".format(indent(s, "  ")), height=15, width=60,
                  title="'checklist' demo with help facilities",
                  no_collapse=True)
 

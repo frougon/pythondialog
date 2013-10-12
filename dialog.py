@@ -800,15 +800,6 @@ class Dialog:
     parameters (such as the background title) if you have a need
     for this.
 
-    Note: although this class does all it can to allow the caller to
-          differentiate between the various reasons that caused a
-          dialog box to be closed, its backend, dialog 0.9a-20020309a
-          for my tests, doesn't always return DIALOG_ESC when the
-          user presses the ESC key, but often returns DIALOG_ERROR
-          instead. The exit codes returned by the corresponding
-          Dialog methods are of course just as wrong in these cases.
-          You've been warned.
-
 
     Public methods of the Dialog class (mainly widgets)
     ===================================================
@@ -2703,10 +2694,10 @@ class Dialog:
         An info box is basically a message box. However, in this
         case, dialog will exit immediately after displaying the
         message to the user. The screen is not cleared when dialog
-        exits, so that the message will remain on the screen until
-        the calling shell script clears it later. This is useful
-        when you want to inform the user that some operations are
-        carrying on that may require some time to finish.
+        exits, so that the message will remain on the screen after
+        the method returns. This is useful when you want to inform
+        the user that some operations are carrying on that may
+        require some time to finish.
 
         Return the Dialog exit code from the backend.
 
@@ -2769,7 +2760,7 @@ class Dialog:
 
         An inputmenu box is a dialog box that can be used to present
         a list of choices in the form of a menu for the user to
-        choose. Choices are displayed in the order given. The main
+        choose. Choices are displayed in the given order. The main
         differences with the menu dialog box are:
 
           * entries are not automatically centered, but
@@ -2874,7 +2865,7 @@ class Dialog:
 
         As its name suggests, a menu box is a dialog box that can be
         used to present a list of choices in the form of a menu for
-        the user to choose. Choices are displayed in the order given.
+        the user to choose. Choices are displayed in the given order.
 
         Each menu entry consists of a 'tag' string and an 'item'
         string. The tag gives the entry a name to distinguish it from
@@ -2941,7 +2932,7 @@ class Dialog:
 
         A progress bar for an element is obtained by supplying a
         negative number for the 'item'. For instance, "-75" will
-        cause a progress bar indicating 75 %% to be displayed on the
+        cause a progress bar indicating 75 % to be displayed on the
         corresponding line.
 
         For your convenience, if an 'item' appears to be an integer
@@ -3043,7 +3034,7 @@ class Dialog:
 
     @widget
     def passwordbox(self, text, height=10, width=60, init='', **kwargs):
-        """Display an password input dialog box.
+        """Display a password input dialog box.
 
         text   -- text to display in the box
         height -- height of the box
