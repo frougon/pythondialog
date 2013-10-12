@@ -55,7 +55,7 @@ Requirements
 ------------
 
 * As of version 2.12, pythondialog requires Python 3.0 or later in the
-  3.x series. pythondialog 2.14.1 has been tested with Python 3.2 and
+  3.x series. pythondialog 3.0.0 has been tested with Python 3.2 and
   3.3.
 
 * I will probably provide a Python 2 backport soon, but this will not be
