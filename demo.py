@@ -436,12 +436,23 @@ The dialog-like program displaying this message box reports version \
         else:
             nb_engineers = None
 
+        if self.dialog_version_check("1.2", "the buildlist demo", explain=True):
+            desert_island_stuff = self.buildlist_demo()
+        else:
+            desert_island_stuff = None
+
+        if self.dialog_version_check("1.2-20130902",
+                                     "the buildlist demo with help facilities",
+                                     explain=True):
+            self.buildlist_demo_with_help()
+
         date = self.calendar_demo_with_help()
         time_ = self.timebox_demo()
 
         password = self.passwordbox_demo()
         self.scrollbox_demo(name, favorite_day, toppings, sandwich,
-                            nb_engineers, date, time_, password)
+                            nb_engineers, desert_island_stuff, date, time_,
+                            password)
 
         if self.dialog_version_check("1.2", "the treeview demo", explain=True):
             if self.dialog_version_check("1.2-20130902"):
@@ -1025,17 +1036,20 @@ item_help=True."""
                                  "completely different...")
         return tags
 
+    SAMPLE_DATA_FOR_BUILDLIST_AND_CHECKLIST = [
+        ("Tag 1", "Item 1", True,  "Help text for item 1"),
+        ("Tag 2", "Item 2", False, "Help text for item 2"),
+        ("Tag 3", "Item 3", False, "Help text for item 3"),
+        ("Tag 4", "Item 4", True,  "Help text for item 4"),
+        ("Tag 5", "Item 5", True,  "Help text for item 5"),
+        ("Tag 6", "Item 6", False, "Help text for item 6"),
+        ("Tag 7", "Item 7", True,  "Help text for item 7"),
+        ("Tag 8", "Item 8", False, "Help text for item 8") ]
+
     def checklist_demo_with_help(self):
         text = """Sample 'checklist' dialog box with help_button=True, \
 item_help=True and help_status=True."""
-        choices = [("Tag 1", "Item 1", True,  "Help text for item 1"),
-                   ("Tag 2", "Item 2", False, "Help text for item 2"),
-                   ("Tag 3", "Item 3", False, "Help text for item 3"),
-                   ("Tag 4", "Item 4", True,  "Help text for item 4"),
-                   ("Tag 5", "Item 5", True,  "Help text for item 5"),
-                   ("Tag 6", "Item 6", False, "Help text for item 6"),
-                   ("Tag 7", "Item 7", True,  "Help text for item 7"),
-                   ("Tag 8", "Item 8", False, "Help text for item 8")]
+        choices = self.SAMPLE_DATA_FOR_BUILDLIST_AND_CHECKLIST
 
         while True:
             code, t = d.checklist(text, height=0, width=0, list_height=0,
@@ -1112,6 +1126,81 @@ and any of the 0-9 keys to change a digit of the value.""",
 
         return nb
 
+    def buildlist_demo(self):
+        items0 = [("A Monty Python DVD",                             False),
+                  ("A Monty Python script",                          False),
+                  ("A Barry Lyndon DVD",                             False),
+                  ('A DVD of "The Good, the Bad and the Ugly"',      False),
+                  ('A DVD of "The Trial" by Orson Welles',           False),
+                  ('The Trial, by Franz Kafka',                      False),
+                  ('Animal Farm, by George Orwell',                  False),
+                  ('Notre-Dame de Paris, by Victor Hugo',            False),
+                  ('Les Misérables, by Victor Hugo',                 False),
+                  ('Le Lys dans la Vallée, by Honoré de Balzac',     False),
+                  ('Les Rois Maudits, by Maurice Druon',             False),
+                  ('A Georges Brassens CD',                          False),
+                  ("A book of Georges Brassens' songs",              False),
+                  ('A Nina Simone CD',                               False),
+                  ('Javier Vazquez y su Salsa - La Verdad',          False),
+                  ('The last Justin Bieber album',                   False),
+                  ('A printed copy of the Linux kernel source code', False),
+                  ('A CD player',                                    False),
+                  ('A DVD player',                                   False),
+                  ('An MP3 player',                                  False)]
+
+        # Use the name as tag, item string and item-help string; the item-help
+        # will be useful for long names because it is displayed in a place
+        # that is large enough to avoid truncation. If not using
+        # item_help=True, then the last element of eash tuple must be omitted.
+        items = [ (tag, tag, status, tag) for (tag, status) in items0 ]
+
+        text = """If you were stranded on a desert island, what would you \
+take?
+
+Press the space bar to toggle the status of an item between selected (on \
+the left) and unselected (on the right). You can use the TAB key or \
+^ and $ to change the focus between the different parts of the widget.
+
+(this widget is called with item_help=True and visit_items=True)"""
+
+        code, l = d.buildlist(text, items=items, visit_items=True,
+                              item_help=True,
+                              title="A simple 'buildlist' demo")
+        return l
+
+    def buildlist_demo_with_help(self):
+        text = """Sample 'buildlist' dialog box with help_button=True, \
+item_help=True, help_status=True, and visit_items=False.
+
+Keys: SPACE   select or deselect the highlighted item, i.e.,
+              move it between the left and right lists
+      ^       move the focus to the left list
+      $       move the focus to the right list
+      TAB     move focus
+      ENTER   press the focused button"""
+        items = self.SAMPLE_DATA_FOR_BUILDLIST_AND_CHECKLIST
+
+        while True:
+            code, t = d.buildlist(text, height=0, width=0, list_height=0,
+                                  items=items,
+                                  title="A 'buildlist' with help facilities",
+                                  help_button=True, item_help=True,
+                                  help_tags=True, help_status=True,
+                                  no_collapse=True)
+            if code == "help":
+                tag, selected_tags, items = t
+                d.msgbox("You asked for help concerning the item identified "
+                         "by tag {0!r}.".format(tag), height=7, width=60)
+            else:
+                # 't' contains the list of tags corresponding to selected items
+                break
+
+        s = '\n'.join(t)
+        d.msgbox("The tags corresponding to selected items are:\n\n"
+                 "{0}".format(indent(s, "  ")), height=15, width=60,
+                 title="'buildlist' demo with help facilities",
+                 no_collapse=True)
+
     def calendar_demo(self):
         code, date = d.calendar("When do you think Georg Cantor was born?")
         return date
@@ -1173,7 +1262,8 @@ and was the first person to give a rigorous definition of real numbers."""
         return password
 
     def scrollbox_demo(self, name, favorite_day, toppings, sandwich,
-                       nb_engineers, date, time_, password):
+                       nb_engineers, desert_island_stuff, date, time_,
+                       password):
         tw71 = textwrap.TextWrapper(width=71, break_long_words=False,
                                     break_on_hyphens=True)
 
@@ -1188,6 +1278,11 @@ and was the first person to give a rigorous definition of real numbers."""
         sandwich_report = "Favorite sandwich: {sandwich}{comment}".format(
             sandwich=sandwich, comment=sandwich_comment)
 
+        if len(desert_island_stuff) == 0:
+            desert_island_string = " nothing!"
+        else:
+            desert_island_string = "\n\n  " + "\n  ".join(desert_island_stuff)
+
         day, month, year = date
         hour, minute, second = time_
         msg = """\
@@ -1197,6 +1292,8 @@ Name: {name}
 Favorite day of the week: {favday}
 Favorite sandwich toppings:{toppings}
 {sandwich_report}
+
+On a desert island, you would take:{desert_island_string}
 
 Your answer about Georg Cantor's date of birth: \
 {year:04d}-{month:02d}-{day:02d}
@@ -1208,6 +1305,7 @@ Your root password is: ************************** (looks good!)""".format(
             name=name, favday=favorite_day,
             toppings="\n    ".join([''] + toppings),
             sandwich_report=tw71.fill(sandwich_report),
+            desert_island_string=desert_island_string,
             year=year, month=month, day=day,
             hour=hour, min=minute, sec=second,
             comment=tw71.fill(

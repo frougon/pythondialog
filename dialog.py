@@ -816,6 +816,7 @@ class Dialog:
     The Dialog class has the following methods that produce or update
     widgets:
 
+      buildlist
       calendar
       checklist
       dselect
@@ -2037,6 +2038,79 @@ class Dialog:
                 raise PythonDialogReModuleError(str(e)) from e
         else:
             return None
+
+    @widget
+    def buildlist(self, text, height=0, width=0, list_height=0, items=[],
+                  **kwargs):
+        """Display a buildlist box.
+
+        text        -- text to display in the box
+        height      -- height of the box
+        width       -- width of the box
+        list_height -- height of the selected and unselected list
+                       boxes
+        items       -- a list of (tag, item, status) tuples where
+                       'status' specifies the initial
+                       selected/unselected state of each entry; can
+                       be True or False, 1 or 0, "on" or "off" (True,
+                       1 and "on" meaning selected), or any case
+                       variation of these two strings.
+
+        A buildlist dialog is similar in logic to the checklist but
+        differs in presentation. In this widget, two lists are
+        displayed, side by side. The list on the left shows
+        unselected items. The list on the right shows selected items.
+        As items are selected or unselected, they move between the
+        two lists. The 'status' component of 'items' specifies which
+        items are initially selected.
+
+        Return a tuple of the form (code, tags) where:
+          - 'code' is the Dialog exit code;
+          - 'tags' is a list of the tags corresponding to the
+            selected items, in the order they have in the list on the
+            right.
+
+        Keys: SPACE   select or deselect the highlighted item, i.e.,
+                      move it between the left and right lists
+              ^       move the focus to the left list
+              $       move the focus to the right list
+              TAB     move focus (see 'visit_items' below)
+              ENTER   press the focused button
+
+        If called with 'visit_items=True', the TAB key can move the
+        focus to the left and right lists, which is probably more
+        intuitive for users than the default behavior that requires
+        using ^ and $ for this purpose.
+
+        This widget requires dialog >= 1.2 (2012-12-30).
+
+        Notable exceptions:
+
+            any exception raised by self._perform() or _to_onoff()
+
+        """
+        self._dialog_version_check("1.2", "the buildlist widget")
+
+        cmd = ["--buildlist", text, str(height), str(width), str(list_height)]
+        for t in items:
+            cmd.extend([ t[0], t[1], _to_onoff(t[2]) ] + list(t[3:]))
+
+        code, output = self._perform(cmd, **kwargs)
+
+        if code == self.HELP:
+            help_data = self._parse_help(output, kwargs, multival=True,
+                                         multival_on_single_line=True)
+            if self._help_status_on(kwargs):
+                help_id, selected_tags = help_data
+                items = [ [ tag, item, tag in selected_tags ] + rest
+                            for (tag, item, status, *rest) in items ]
+                return (code, (help_id, selected_tags, items))
+            else:
+                return (code, help_data)
+        elif code in (self.OK, self.EXTRA):
+            return (code, self._split_shellstyle_arglist(output))
+        else:
+            return (code, None)
 
     def _calendar_parse_date(self, date_str):
         try:
