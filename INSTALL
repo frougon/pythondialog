@@ -4,9 +4,9 @@ INSTALLATION
 pythondialog is packaged with Distutils (the still-current standard
 framework for packaging simple Python extensions). With the current
 state of Python packaging and installation tools, there are several ways
-to perform the installation of pythondialog from source.
+to install pythondialog from source.
 
-Probably, the easiest and cleanest method at this date (September 2013)
+Probably, the easiest and cleanest method at this date (October 2013)
 is to use pip (optionally in a virtualenv). Typically, you just have to
 run one of the following commands with the appropriate privileges:
 
@@ -55,6 +55,10 @@ Here are the steps:
 
             python3 ./setup.py build
 
+          (depending on your system and the Python version you want to
+          install for, you may have to replace "python3" with, for
+          instance, "python3.2" or "python3.3")
+
        2) then, as root (after replacing /usr/local with the actual
           installation prefix you want to use):
 
@@ -102,7 +106,7 @@ put on your system. Great! All you have to do is:
    while read file; do rm -f "$file"; done < /path/to/foo
 
 under a Bourne-compatible shell and with the appropriate privileges
-(maybe root, depending on where you installed pythondialog).
+(maybe root, depending on how you installed pythondialog).
 
 Note: this will handle file names with spaces correctly, unlike the
 simpler "rm -f $(cat /path/to/foo)".

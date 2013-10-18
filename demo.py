@@ -1129,8 +1129,9 @@ and any of the 0-9 keys to change a digit of the value.""",
     def buildlist_demo(self):
         items0 = [("A Monty Python DVD",                             False),
                   ("A Monty Python script",                          False),
-                  ("A Barry Lyndon DVD",                             False),
-                  ('A DVD of "The Good, the Bad and the Ugly"',      False),
+                  ('A DVD of "Barry Lyndon" by Stanley Kubrick',     False),
+                  ('A DVD of "The Good, the Bad and the Ugly" by Sergio Leone',
+                                                                     False),
                   ('A DVD of "The Trial" by Orson Welles',           False),
                   ('The Trial, by Franz Kafka',                      False),
                   ('Animal Farm, by George Orwell',                  False),
@@ -1575,8 +1576,8 @@ def process_command_line():
                                     "debug-file=",
                                     "help",
                                     "version"])
-    except getopt.GetoptError as message:
-        sys.stderr.write(usage + "\n")
+    except getopt.GetoptError:
+        print(usage, file=sys.stderr)
         return ("exit", 1)
 
     # Let's start with the options that don't require any non-option argument
@@ -1591,7 +1592,7 @@ def process_command_line():
 
     # Now, require a correct invocation.
     if len(args) != 0:
-        sys.stderr.write(usage + "\n")
+        print(usage, file=sys.stderr)
         return ("exit", 1)
 
     # Default values for parameters

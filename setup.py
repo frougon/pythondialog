@@ -100,6 +100,9 @@ clone of the Git repository (no .git directory); therefore, it is impossible to
 generate the {cl!r} file from the Git log. Aborting.""".format(cl=ch_name)
         sys.exit(msg)
 
+    with open("README.rst", "r", encoding="utf-8") as f:
+        long_description = f.read()
+
     setup(name=PACKAGE,
           version=VERSION,
           description="A Python interface to the UNIX dialog utility and "
@@ -120,8 +123,9 @@ pythondialog/{version}/python3-{pkg}-{version}.tar.bz2".format(
           # Note: using the "Unix" case instead of "UNIX", because it is
           # spelled this way in Trove classifiers.
           platforms=["Unix"],
-          long_description=open("README.rst", "r", encoding="utf-8").read(),
-          keywords=["dialog", "Xdialog", "text-mode interface"],
+          long_description=long_description,
+          keywords=["dialog", "ncurses", "Xdialog", "text-mode interface",
+                    "terminal"],
           classifiers=[
             "Programming Language :: Python :: 3",
             "Development Status :: 5 - Production/Stable",

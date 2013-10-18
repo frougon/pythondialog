@@ -1996,7 +1996,7 @@ class Dialog:
                 raise PythonDialogReModuleError(str(e)) from e
         else:
             raise UnableToRetrieveBackendVersion(
-                "exit code {0} from the backend".format(code))
+                "exit code {0!r} from the backend".format(code))
 
     def maxsize(self, **kwargs):
         """Get the maximum size of dialog boxes.

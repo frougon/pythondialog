@@ -20,16 +20,18 @@ General Public License). Its home page is located at:
   http://pythondialog.sourceforge.net/
 
 and contains a `short example`_, screenshots_, a `summary of the recent
-changes <http://pythondialog.sourceforge.net/#news>`_, links to the
-documentation_, the `Git repository
-<http://sourceforge.net/p/pythondialog/code/>`_, the `mailing list`_,
-the `issue tracker`_, etc.
+changes`_, links to the `pydoc3-generated documentation`_, the `Git
+repository`_, the `mailing list`_, the `issue tracker`_, etc.
 
-.. _short example: http://pythondialog.sourceforge.net/#example
-.. _screenshots: http://pythondialog.sourceforge.net/gallery.html
-.. _documentation: http://pythondialog.sourceforge.net/doc/pythondialog.html
-.. _mailing list: http://sourceforge.net/p/pythondialog/mailman/
-.. _issue tracker: http://sourceforge.net/p/pythondialog/_list/tickets
+.. _short example:  http://pythondialog.sourceforge.net/#example
+.. _screenshots:    http://pythondialog.sourceforge.net/gallery.html
+.. _summary of the recent changes:
+                    http://pythondialog.sourceforge.net/news.html
+.. _pydoc3-generated documentation:
+                    http://pythondialog.sourceforge.net/doc/pythondialog.html
+.. _Git repository: https://sourceforge.net/p/pythondialog/code/
+.. _mailing list:   https://sourceforge.net/p/pythondialog/mailman/
+.. _issue tracker:  https://sourceforge.net/p/pythondialog/_list/tickets
 
 If you want to get a quick idea of what this module allows one to do,
 you can download a release tarball and run demo.py::
@@ -54,35 +56,42 @@ library`_ looks rather interesting, too.
 Requirements
 ------------
 
-* As of version 2.12, pythondialog requires Python 3.0 or later in the
-  3.x series. pythondialog 3.0.0 has been tested with Python 3.2 and
-  3.3.
+* As of version 2.12, the reference implementation of pythondialog
+  (which this file belongs to) requires Python 3.0 or later in the 3.x
+  series. pythondialog 3.0.0 has been tested with Python 3.2 and 3.3.
 
-* I will probably provide a Python 2 backport soon, but this will not be
-  regular and probably not of the same quality as the Python 3 version.
-  In the meantime, users who really want to stick to Python 2 should use
-  version 2.11 (which can be found from the home page, or directly from
-  the `SourceForge download page
-  <http://sourceforge.net/projects/pythondialog/files/pythondialog/>`_).
+* However, in order to help users who are somehow forced to still use
+  Python 2 (even though Python 3.0 was released on December 3, 2008), a
+  backport of the reference implementation to Python 2 has been
+  prepared. At the time of this writing, the latest pythondialog version
+  backported this way is 3.0.1. For up-to-date information about this
+  backport, please visit the `pythondialog home page`_.
+
+  .. _pythondialog home page: http://pythondialog.sourceforge.net/
 
 * Apart from that, pythondialog requires the dialog_ program (or a
   drop-in replacement for dialog). You can download dialog from:
 
     http://invisible-island.net/dialog/dialog.html
 
+  Note that some features of pythondialog may require recent versions of
+  dialog.
+
 
 Quick installation instructions
 -------------------------------
 
 If you have `pip <https://pypi.python.org/pypi/pip>`_ installed, you
-should be able to install pythondialog with a simple::
+should be able to install pythondialog with::
 
   pip install pythondialog
 
-(which should be run with appropriate privileges)
+(which should be run with appropriate privileges; also make sure that
+your 'pip' invocation runs with the Python 3 installation you want to
+install pythondialog for)
 
-For more details, you can download a release tarball and read the
-INSTALL file. You may also want to consult the `pip documentation
+For more detailed instructions, you can read the INSTALL file from a
+release tarball. You may also want to consult the `pip documentation
 <http://www.pip-installer.org/>`_.
 
 
@@ -102,7 +111,8 @@ or "pydoc3 /path/to/dialog.py". Alternatively, you can type::
 
    >>> import dialog; help(dialog)
 
-at a Python 3 command prompt.
+at a Python command prompt (corresponding to the Python version you
+installed pythondialog for, of course).
 
 You can extract the documentation from dialog.py to an HTML file with
 "pydoc3 -w dialog" or "pydoc3 -w /path/to/dialog.py". This will generate
@@ -138,10 +148,20 @@ can do::
    python3 -Wd demo.py 2>/path/to/file
 
 and examine /path/to/file. This can also help you to find files that are
-still open when your program exits. For more explanations and other
-methods to enable the warnings, please refer to:
+still open when your program exits.
 
-  http://docs.python.org/3.3/whatsnew/2.7.html
+**Note:**
+
+  If your program is terminated by an unhandled exception while stderr
+  is redirected as in the preceding command, you won't see the traceback
+  until you examine the file stderr was redirected to. This can be
+  disturbing, as your program may exit with no apparent reason in such
+  conditions.
+
+For more explanations and other methods to enable deprecation warnings,
+please refer to:
+
+  http://docs.python.org/3/whatsnew/2.7.html
 
 
 Troubleshooting
