@@ -52,7 +52,8 @@ should:
 
   - run 'setup.py sdist' to generate the ChangeLog and prepare a source
     distribution. Alternatively, if you only want to generate the ChangeLog,
-    you can use a command such as the following:
+    you can use a command such as the following, which writes its output in
+    the UTF-8 encoding:
 
       python3 -c \
    'import setup; setup.generate_changelog("ChangeLog", write_to_stdout=True)' \

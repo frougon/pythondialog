@@ -66,16 +66,17 @@ def generate_changelog(ch_name, write_to_stdout=False):
     if write_to_stdout:
         run_gitlog_to_changelog(last_commit_in_ch_init)
 
-        with open(orig_ch_name, "r") as orig_ch:
-            sys.stdout.write("\n" + orig_ch.read())
+        with open(orig_ch_name, "r", encoding="utf-8") as orig_ch:
+            # Make sure the output is encoded in UTF-8
+            sys.stdout.buffer.write(("\n" + orig_ch.read()).encode("utf-8"))
     else:
         tmp_ch_name = "{0}.new".format(ch_name)
 
         try:
-            with open(tmp_ch_name, "w") as tmp_ch:
+            with open(tmp_ch_name, "w", encoding="utf-8") as tmp_ch:
                 run_gitlog_to_changelog(last_commit_in_ch_init, output=tmp_ch)
 
-                with open(orig_ch_name, "r") as orig_ch:
+                with open(orig_ch_name, "r", encoding="utf-8") as orig_ch:
                     tmp_ch.write("\n" + orig_ch.read())
 
             os.rename(tmp_ch_name, ch_name)
