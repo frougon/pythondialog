@@ -350,7 +350,7 @@ def _simple_option(option, enable):
 # since they affect the parsing of dialog's output:
 _common_args_syntax = {
     "ascii_lines": lambda enable: _simple_option("--ascii-lines", enable),
-    "aspect": lambda ratio: _dash_escape_nf(("--aspect", str(ratio))),
+    "aspect": lambda ratio: _dash_escape_nf(("--aspect", unicode(ratio))),
     "backtitle": lambda backtitle: _dash_escape_nf(("--backtitle", backtitle)),
     # Obsolete according to dialog(1)
     "beep": lambda enable: _simple_option("--beep", enable),
@@ -358,7 +358,7 @@ _common_args_syntax = {
     "beep_after": lambda enable: _simple_option("--beep-after", enable),
     # Warning: order = y, x!
     "begin": lambda coords: _dash_escape_nf(
-        ("--begin", str(coords[0]), str(coords[1]))),
+        ("--begin", unicode(coords[0]), unicode(coords[1]))),
     "cancel_label": lambda s: _dash_escape_nf(("--cancel-label", s)),
     # Old, unfortunate choice of key, kept for backward compatibility
     "cancel": lambda s: _dash_escape_nf(("--cancel-label", s)),
@@ -386,7 +386,7 @@ _common_args_syntax = {
     "item_help": lambda enable: _simple_option("--item-help", enable),
     "keep_tite": lambda enable: _simple_option("--keep-tite", enable),
     "keep_window": lambda enable: _simple_option("--keep-window", enable),
-    "max_input": lambda size: _dash_escape_nf(("--max-input", str(size))),
+    "max_input": lambda size: _dash_escape_nf(("--max-input", unicode(size))),
     "no_cancel": lambda enable: _simple_option("--no-cancel", enable),
     "nocancel": lambda enable: _simple_option("--nocancel", enable),
     "no_collapse": lambda enable: _simple_option("--no-collapse", enable),
@@ -413,13 +413,13 @@ _common_args_syntax = {
     "shadow": lambda enable: _simple_option("--shadow", enable),
     # Obsolete according to dialog(1)
     "size_err": lambda enable: _simple_option("--size-err", enable),
-    "sleep": lambda secs: _dash_escape_nf(("--sleep", str(secs))),
+    "sleep": lambda secs: _dash_escape_nf(("--sleep", unicode(secs))),
     "stderr": lambda enable: _simple_option("--stderr", enable),
     "stdout": lambda enable: _simple_option("--stdout", enable),
     "tab_correct": lambda enable: _simple_option("--tab-correct", enable),
-    "tab_len": lambda n: _dash_escape_nf(("--tab-len", str(n))),
+    "tab_len": lambda n: _dash_escape_nf(("--tab-len", unicode(n))),
     "time_format": lambda s: _dash_escape_nf(("--time-format", s)),
-    "timeout": lambda secs: _dash_escape_nf(("--timeout", str(secs))),
+    "timeout": lambda secs: _dash_escape_nf(("--timeout", unicode(secs))),
     "title": lambda title: _dash_escape_nf(("--title", title)),
     "trace": lambda filename: _dash_escape_nf(("--trace", filename)),
     "trim": lambda enable: _simple_option("--trim", enable),
@@ -651,7 +651,7 @@ class DialogBackendVersion(BackendVersion):
       DialogBackendVersion("1.2-20130902")
       DialogBackendVersion.fromstring("1.2-20130902")
 
-    If 'bv' is a DialogBackendVersion instance, str(bv) is a string
+    If 'bv' is a DialogBackendVersion instance, unicode(bv) is a string
     representing the same version (for instance, "1.2-20130902").
 
     Two DialogBackendVersion instances can be compared with the usual
@@ -1555,7 +1555,7 @@ class Dialog(object):
         new_environ.update(os.environ)
         for var, value in self._lowlevel_exit_codes.items():
             varname = "DIALOG_" + var
-            new_environ[varname] = str(value)
+            new_environ[varname] = unicode(value)
         if hasattr(self, "DIALOGRC"):
             new_environ["DIALOGRC"] = self.DIALOGRC
 
@@ -2006,7 +2006,7 @@ class Dialog(object):
             between versions;
           - the version string corresponding to a BackendVersion
             instance (or instance of a subclass) can be obtained with
-            str().
+            unicode().
 
         Notable exceptions:
 
@@ -2116,7 +2116,7 @@ class Dialog(object):
         """
         self._dialog_version_check("1.2", "the buildlist widget")
 
-        cmd = ["--buildlist", text, str(height), str(width), str(list_height)]
+        cmd = ["--buildlist", text, unicode(height), unicode(width), unicode(list_height)]
         for t in items:
             cmd.extend([ t[0], t[1], _to_onoff(t[2]) ] + list(t[3:]))
 
@@ -2190,8 +2190,8 @@ class Dialog(object):
 
         """
         (code, output) = self._perform(
-            ["--calendar", text, str(height), str(width), str(day),
-               str(month), str(year)],
+            ["--calendar", text, unicode(height), unicode(width), unicode(day),
+               unicode(month), unicode(year)],
             **kwargs)
 
         if code == self.HELP:
@@ -2232,7 +2232,7 @@ class Dialog(object):
             any exception raised by self._perform() or _to_onoff()
 
         """
-        cmd = ["--checklist", text, str(height), str(width), str(list_height)]
+        cmd = ["--checklist", text, unicode(height), unicode(width), unicode(list_height)]
         for t in choices:
             t = [ t[0], t[1], _to_onoff(t[2]) ] + list(t[3:])
             cmd.extend(t)
@@ -2291,8 +2291,8 @@ class Dialog(object):
 
     def _generic_form(self, widget_name, method_name, text, elements, height=0,
                       width=0, form_height=0, **kwargs):
-        cmd = ["--%s" % widget_name, text, str(height), str(width),
-               str(form_height)]
+        cmd = ["--%s" % widget_name, text, unicode(height), unicode(width),
+               unicode(form_height)]
 
         if not elements:
             raise BadPythonDialogUsage(
@@ -2329,10 +2329,10 @@ class Dialog(object):
                             __name__, type(self).__name__,
                             method_name, name, value))
 
-            cmd.extend((label, str(yl), str(xl), item, str(yi), str(xi),
-                        str(field_length), str(input_length)))
+            cmd.extend((label, unicode(yl), unicode(xl), item, unicode(yi), unicode(xi),
+                        unicode(field_length), unicode(input_length)))
             if widget_name == "mixedform":
-                cmd.append(str(attributes))
+                cmd.append(unicode(attributes))
             # "item help" string when using --item-help, nothing otherwise
             cmd.extend(rest)
 
@@ -2520,7 +2520,7 @@ class Dialog(object):
         # The help output does not depend on whether --help-status was passed
         # (dialog 1.2-20130902).
         return self._widget_with_string_output(
-            ["--dselect", filepath, str(height), str(width)],
+            ["--dselect", filepath, unicode(height), unicode(width)],
             kwargs, raw_help=True)
 
     @widget
@@ -2549,7 +2549,7 @@ class Dialog(object):
 
         """
         return self._widget_with_string_output(
-            ["--editbox", filepath, str(height), str(width)],
+            ["--editbox", filepath, unicode(height), unicode(width)],
             kwargs)
 
     @widget
@@ -2594,7 +2594,7 @@ class Dialog(object):
         # The help output does not depend on whether --help-status was passed
         # (dialog 1.2-20130902).
         return self._widget_with_string_output(
-            ["--fselect", filepath, str(height), str(width)],
+            ["--fselect", filepath, unicode(height), unicode(width)],
             kwargs, strip_xdialog_newline=True, raw_help=True)
 
     def gauge_start(self, text="", height=8, width=54, percent=0, **kwargs):
@@ -2641,7 +2641,7 @@ class Dialog(object):
             (child_stdin_rfd, child_stdin_wfd)  = os.pipe()
 
             (child_pid, child_output_rfd) = self._call_program(
-                ["--gauge", text, str(height), str(width), str(percent)],
+                ["--gauge", text, unicode(height), unicode(width), unicode(percent)],
                 redir_child_stdin_from_fd=child_stdin_rfd,
                 close_fds=(child_stdin_wfd,), **kwargs)
 
@@ -2757,7 +2757,7 @@ class Dialog(object):
         """
         return self._widget_with_no_output(
             "infobox",
-            ["--infobox", text, str(height), str(width)],
+            ["--infobox", text, unicode(height), unicode(width)],
             kwargs)
 
     @widget
@@ -2788,7 +2788,7 @@ class Dialog(object):
         # The help output does not depend on whether --help-status was passed
         # (dialog 1.2-20130902).
         return self._widget_with_string_output(
-            ["--inputbox", text, str(height), str(width), init],
+            ["--inputbox", text, unicode(height), unicode(width), init],
             kwargs, strip_xdialog_newline=True, raw_help=True)
 
     @widget
@@ -2876,7 +2876,7 @@ class Dialog(object):
             any exception raised by self._perform()
 
         """
-        cmd = ["--inputmenu", text, str(height), str(width), str(menu_height)]
+        cmd = ["--inputmenu", text, unicode(height), unicode(width), unicode(menu_height)]
         for t in choices:
             cmd.extend(t)
         (code, output) = self._perform(cmd, **kwargs)
@@ -2941,7 +2941,7 @@ class Dialog(object):
             any exception raised by self._perform()
 
         """
-        cmd = ["--menu", text, str(height), str(width), str(menu_height)]
+        cmd = ["--menu", text, unicode(height), unicode(width), unicode(menu_height)]
         for t in choices:
             cmd.extend(t)
 
@@ -3004,9 +3004,9 @@ class Dialog(object):
             any exception raised by self._perform()
 
         """
-        cmd = ["--mixedgauge", text, str(height), str(width), str(percent)]
+        cmd = ["--mixedgauge", text, unicode(height), unicode(width), unicode(percent)]
         for t in elements:
-            cmd.extend( (t[0], str(t[1])) )
+            cmd.extend( (t[0], unicode(t[1])) )
         return self._widget_with_no_output("mixedgauge", cmd, kwargs)
 
     @widget
@@ -3047,7 +3047,7 @@ class Dialog(object):
         """
         return self._widget_with_no_output(
             "msgbox",
-            ["--msgbox", text, str(height), str(width)],
+            ["--msgbox", text, unicode(height), unicode(width)],
             kwargs)
 
     @widget
@@ -3078,7 +3078,7 @@ class Dialog(object):
         """
         return self._widget_with_no_output(
             "pause",
-            ["--pause", text, str(height), str(width), str(seconds)],
+            ["--pause", text, unicode(height), unicode(width), unicode(seconds)],
             kwargs)
 
     @widget
@@ -3116,7 +3116,7 @@ class Dialog(object):
         # The help output does not depend on whether --help-status was passed
         # (dialog 1.2-20130902).
         return self._widget_with_string_output(
-            ["--passwordbox", text, str(height), str(width), init],
+            ["--passwordbox", text, unicode(height), unicode(width), init],
             kwargs, strip_xdialog_newline=True, raw_help=True)
 
     def _progressboxoid(self, widget, file_path=None, file_flags=os.O_RDONLY,
@@ -3141,7 +3141,7 @@ class Dialog(object):
                 args = [ "--{0}".format(widget) ]
                 if text is not None:
                     args.append(text)
-                args.extend([str(height), str(width)])
+                args.extend([unicode(height), unicode(width)])
 
                 kwargs["redir_child_stdin_from_fd"] = fd
                 code = self._widget_with_no_output(widget, args, kwargs)
@@ -3261,7 +3261,7 @@ class Dialog(object):
             any exception raised by self._perform() or _to_onoff()
 
         """
-        cmd = ["--radiolist", text, str(height), str(width), str(list_height)]
+        cmd = ["--radiolist", text, unicode(height), unicode(width), unicode(list_height)]
         for t in choices:
             cmd.extend([ t[0], t[1], _to_onoff(t[2]) ] + list(t[3:]))
         (code, output) = self._perform(cmd, **kwargs)
@@ -3342,7 +3342,7 @@ class Dialog(object):
                     "{0!r} argument not an int: {1!r}".format(name,
                                                               locals()[name]))
         (code, output) = self._perform(
-            ["--rangebox", text] + [ str(i) for i in
+            ["--rangebox", text] + [ unicode(i) for i in
                                      (height, width, min, max, init) ],
             **kwargs)
 
@@ -3417,7 +3417,7 @@ class Dialog(object):
 
                 return self._widget_with_no_output(
                     "textbox",
-                    ["--textbox", fName, str(height), str(width)],
+                    ["--textbox", fName, unicode(height), unicode(width)],
                     kwargs)
             finally:
                 if os.path.exists(fName):
@@ -3447,7 +3447,7 @@ class Dialog(object):
         """
         return self._widget_with_no_output(
             "tailbox",
-            ["--tailbox", filename, str(height), str(width)],
+            ["--tailbox", filename, unicode(height), unicode(width)],
             kwargs)
     # No tailboxbg widget, at least for now.
 
@@ -3483,7 +3483,7 @@ class Dialog(object):
             kwargs["title"] = filename
         return self._widget_with_no_output(
             "textbox",
-            ["--textbox", filename, str(height), str(width)],
+            ["--textbox", filename, unicode(height), unicode(width)],
             kwargs)
 
     def _timebox_parse_time(self, time_str):
@@ -3533,8 +3533,8 @@ class Dialog(object):
 
         """
         (code, output) = self._perform(
-            ["--timebox", text, str(height), str(width),
-               str(hour), str(minute), str(second)],
+            ["--timebox", text, unicode(height), unicode(width),
+               unicode(hour), unicode(minute), unicode(second)],
             **kwargs)
 
         if code == self.HELP:
@@ -3589,7 +3589,7 @@ class Dialog(object):
 
         """
         self._dialog_version_check("1.2", "the treeview widget")
-        cmd = ["--treeview", text, str(height), str(width), str(list_height)]
+        cmd = ["--treeview", text, unicode(height), unicode(width), unicode(list_height)]
 
         nselected = 0
         for i, t in enumerate(nodes):
@@ -3602,7 +3602,7 @@ class Dialog(object):
             if status == "on":
                 nselected += 1
 
-            cmd.extend([ t[0], t[1], status, str(t[3]) ] + list(t[4:]))
+            cmd.extend([ t[0], t[1], status, unicode(t[3]) ] + list(t[4:]))
 
         if nselected != 1:
             raise BadPythonDialogUsage(
@@ -3662,5 +3662,5 @@ class Dialog(object):
         """
         return self._widget_with_no_output(
             "yesno",
-            ["--yesno", text, str(height), str(width)],
+            ["--yesno", text, unicode(height), unicode(width)],
             kwargs)
