@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
 # demo.py --- Demonstration program and cheap test suite for pythondialog
@@ -71,14 +71,17 @@ simple_example.py.
 """
 
 
+from __future__ import division
+from __future__ import with_statement, unicode_literals, print_function
 import sys, os, locale, stat, time, getopt, subprocess, traceback, textwrap
 import pprint
-import contextlib               # Not really indispensable here
 import dialog
 from dialog import DialogBackendVersion
+from io import open
+import atexit
 
 progname = os.path.basename(sys.argv[0])
-progversion = "0.8"
+progversion = "0.8-py2"
 version_blurb = """Demonstration program and cheap test suite for pythondialog.
 
 Copyright (C) 2002-2010  Florent Rougon
@@ -103,6 +106,26 @@ Options:
     progname=progname, debug_file=default_debug_filename)
 
 # Global parameters
+
+# Set two global variables u_stdout and u_stderr referencing text streams,
+# similar to sys.stdout and sys.stderr in Python 3.
+for stream_name in ("stdout", "stderr"):
+    _bstream = getattr(sys, stream_name)
+
+    if hasattr(_bstream, b"encoding") and getattr(_bstream, b"encoding"):
+        _encoding = getattr(_bstream, b"encoding")
+    else:
+        _encoding = locale.getpreferredencoding()
+
+    _tstream = open(_bstream.fileno(), "w", encoding=_encoding, closefd=False)
+    globals()["u_" + stream_name] = _tstream
+    # Important, especially when the stream is not connected to a tty, for
+    # instance when piping the output or redirecting it to a file. Indeed,
+    # '_tstream' is fully buffered in such a case.
+    atexit.register(lambda stream: stream.close(), _tstream)
+
+    del _encoding, _bstream, _tstream
+
 params = {}
 
 # We'll use a module-level attribute 'd' ("global") to store the MyDialog
@@ -132,7 +155,7 @@ except ImportError:
         return ''.join(l)
 
 
-class MyDialog:
+class MyDialog(object):
     """Wrapper class for dialog.Dialog.
 
     This class behaves similarly to dialog.Dialog. The differences
@@ -238,7 +261,7 @@ class MyDialog:
             p = subprocess.Popen([program], shell=False, stdout=None,
                                  stderr=None, close_fds=True)
             retcode = p.wait()
-        except os.error as e:
+        except os.error, e:
             self.msgbox("Unable to execute program '%s': %s." % (program,
                                                               e.strerror),
                      title="Error")
@@ -308,7 +331,7 @@ class MyDialog:
 # Dummy context manager to make sure the debug file is closed on exit, be it
 # normal or abnormal, and to avoid having two code paths, one for normal mode
 # and one for debug mode.
-class DummyContextManager(contextlib.ContextDecorator):
+class DummyContextManager(object):
     def __enter__(self):
         return self
 
@@ -316,7 +339,7 @@ class DummyContextManager(contextlib.ContextDecorator):
         return False
 
 
-class MyApp:
+class MyApp(object):
     def __init__(self):
         # The MyDialog instance 'd' could be passed via the constructor and
         # stored here as a class or instance attribute. However, for the sake
@@ -356,8 +379,8 @@ class MyApp:
             print(tw.fill(
                   "Unable to retrieve the version of the dialog-like backend. "
                   "Not running cdialog?") + "\nPress Enter to continue.",
-                  file=sys.stderr)
-            input()
+                  file=u_stderr)
+            raw_input()
 
         term_rows, term_cols = d.maxsize(use_persistent_args=False)
         if term_rows < self.min_rows or term_cols < self.min_cols:
@@ -365,8 +388,8 @@ class MyApp:
              Your terminal has less than {0} rows or less than {1} columns;
              you may experience problems with the demo. You have been warned."""
                                  .format(self.min_rows, self.min_cols)))
-                  + "\nPress Enter to continue.")
-            input()
+                  + "\nPress Enter to continue.", file=u_stdout)
+            raw_input()
 
         return (term_rows, term_cols, backend_version)
 
@@ -506,8 +529,12 @@ Now, please select a file you would like to see growing (or not...).""",
         # Almost identical to passwordbox
         self.passwordform_demo()
 
-    def dialog_version_check(self, version_string, feature="", *, start="",
-                             explain=False):
+    def dialog_version_check(self, version_string, feature="", **_3to2kwargs):
+        if 'explain' in _3to2kwargs: explain = _3to2kwargs['explain']; del _3to2kwargs['explain']
+        else: explain = False
+        if 'start' in _3to2kwargs: start = _3to2kwargs['start']; del _3to2kwargs['start']
+        else: start = ""
+
         if d.compat != "dialog":
             # non-dialog implementations are not affected by
             # 'dialog_version_check'.
@@ -522,7 +549,12 @@ Now, please select a file you would like to see growing (or not...).""",
 
         return res
 
-    def too_old_dialog_version(self, feature="", *, start="", min=None):
+    def too_old_dialog_version(self, feature="", **_3to2kwargs):
+        if 'min' in _3to2kwargs: min = _3to2kwargs['min']; del _3to2kwargs['min']
+        else: min = None
+        if 'start' in _3to2kwargs: start = _3to2kwargs['start']; del _3to2kwargs['start']
+        else: start = ""
+
         assert (feature and not start) or (not feature and start), \
             (feature, start)
         if not start:
@@ -566,7 +598,7 @@ Now, please select a file you would like to see growing (or not...).""",
                 # For a start, you don't have to check the number of bytes
                 # actually written every time...
                 # "buffering = 1" means wfile is going to be line-buffered
-                with os.fdopen(write_fd, mode="w", buffering=1) as wfile:
+                with open(write_fd, mode="w", buffering=1) as wfile:
                     for line in text.split('\n'):
                         wfile.write(line + '\n')
                         time.sleep(0.02 if params["fast_mode"] else 1.2)
@@ -721,7 +753,7 @@ and the output to be displayed, via a pipe, in a 'programbox' widget.\n"""
     def gauge_demo(self):
         d.gauge_start("Progress: 0%", title="Still testing your patience...")
 
-        for i in range(1, 101):
+        for i in xrange(1, 101):
             if i < 50:
                 d.gauge_update(i, "Progress: {0}%".format(i), update_text=True)
             elif i == 50:
@@ -738,7 +770,7 @@ and the output to be displayed, via a pipe, in a 'programbox' widget.\n"""
         d.gauge_stop()
 
     def mixedgauge_demo(self):
-        for i in range(1, 101, 20):
+        for i in xrange(1, 101, 20):
             d.mixedgauge("This is the 'text' part of the mixedgauge\n"
                          "and this is a forced new line.",
                          title="'mixedgauge' demo",
@@ -1385,7 +1417,7 @@ You should now select a node with the space bar."""
                     ("2nd_tag", "Item 2 text"),
                     ("3rd_tag", "Item 3 text") ]
 
-        for i in range(4, 21):
+        for i in xrange(4, 21):
             choices.append(("%dth_tag" % i, "Item %d text" % i))
 
         while True:
@@ -1484,7 +1516,7 @@ line.""".format(widget=widget)
                 # with os.stat.
                 try:
                     mode = os.stat(path)[stat.ST_MODE]
-                except os.error as e:
+                except os.error, e:
                     d.msgbox("Error: {0}".format(e))
                     continue
 
@@ -1577,22 +1609,23 @@ def process_command_line():
                                     "help",
                                     "version"])
     except getopt.GetoptError:
-        print(usage, file=sys.stderr)
+        print(usage, file=u_stderr)
         return ("exit", 1)
 
     # Let's start with the options that don't require any non-option argument
     # to be present
     for option, value in opts:
         if option == "--help":
-            print(usage)
+            print(usage, file=u_stdout)
             return ("exit", 0)
         elif option == "--version":
-            print("%s %s\n%s" % (progname, progversion, version_blurb))
+            print("%s %s\n%s" % (progname, progversion, version_blurb),
+                  file=u_stdout)
             return ("exit", 0)
 
     # Now, require a correct invocation.
     if len(args) != 0:
-        print(usage, file=sys.stderr)
+        print(usage, file=u_stderr)
         return ("exit", 1)
 
     # Default values for parameters
@@ -1639,7 +1672,7 @@ def main():
     try:
         app = MyApp()
         app.run()
-    except dialog.error as exc_instance:
+    except dialog.error, exc_instance:
         # The error that causes a PythonDialogErrorBeforeExecInChildProcess to
         # be raised happens in the child process used to run the dialog-like
         # program, and the corresponding traceback is printed right away from
@@ -1647,10 +1680,11 @@ def main():
         # print a second, not very useful traceback for this kind of exception.
         if not isinstance(exc_instance,
                           dialog.PythonDialogErrorBeforeExecInChildProcess):
-            print(traceback.format_exc(), file=sys.stderr)
+            # traceback.format_exc() is a byte string in Python 2
+            print(unicode(traceback.format_exc()), file=u_stderr)
 
         print("Error (see above for a traceback):\n\n{0}".format(
-                exc_instance), file=sys.stderr)
+                exc_instance), file=u_stderr)
         sys.exit(1)
 
     sys.exit(0)

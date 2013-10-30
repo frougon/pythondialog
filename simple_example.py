@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
 # simple_example.py --- Short and straightforward example using pythondialog
@@ -6,6 +6,7 @@
 #
 # This program is in the public domain.
 
+from __future__ import unicode_literals
 import sys, locale
 from dialog import Dialog
 

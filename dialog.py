@@ -81,22 +81,30 @@ replace "except PythonDialogIOError" clauses with
 
 """
 
+from __future__ import with_statement, unicode_literals, print_function
 import collections
+from itertools import imap
+from itertools import izip
+from io import open
+import locale
+
 _VersionInfo = collections.namedtuple(
     "VersionInfo", ("major", "minor", "micro", "releasesuffix"))
 
 class VersionInfo(_VersionInfo):
-    def __str__(self):
-        res = ".".join( ( str(elt) for elt in self[:3] ) )
+    def __unicode__(self):
+        res = ".".join( ( unicode(elt) for elt in self[:3] ) )
         if self.releasesuffix:
             res += self.releasesuffix
         return res
 
     def __repr__(self):
-        return "{0}.{1}".format(__name__, _VersionInfo.__repr__(self))
+        # Unicode strings are not supported as the result of __repr__()
+        # in Python 2.x (cf. <http://bugs.python.org/issue5876>).
+        return b"{0}.{1}".format(__name__, _VersionInfo.__repr__(self))
 
 version_info = VersionInfo(3, 0, 0, None)
-__version__ = str(version_info)
+__version__ = unicode(version_info)
 
 
 import sys, os, tempfile, random, re, warnings, traceback
@@ -120,12 +128,14 @@ class error(Exception):
     def __init__(self, message=None):
         self.message = message
 
-    def __str__(self):
+    def __unicode__(self):
         return self.complete_message()
 
     def __repr__(self):
-        return "{0}.{1}({2!r})".format(__name__, self.__class__.__name__,
-                                       self.message)
+        # Unicode strings are not supported as the result of __repr__()
+        # in Python 2.x (cf. <http://bugs.python.org/issue5876>).
+        return b"{0}.{1}({2!r})".format(__name__, self.__class__.__name__,
+                                        self.message)
 
     def complete_message(self):
         if self.message:
@@ -261,10 +271,10 @@ in a given situation."""
 def _OSErrorHandling():
     try:
         yield
-    except OSError as e:
-        raise PythonDialogOSError(str(e)) from e
-    except IOError as e:
-        raise PythonDialogIOError(str(e)) from e
+    except OSError, e:
+        raise PythonDialogOSError(unicode(e))
+    except IOError, e:
+        raise PythonDialogIOError(unicode(e))
 
 
 try:
@@ -276,8 +286,8 @@ try:
         r"(?P<day>\d\d)/(?P<month>\d\d)/(?P<year>\d\d\d\d)$")
     _timebox_time_cre = re.compile(
         r"(?P<hour>\d\d):(?P<minute>\d\d):(?P<second>\d\d)$")
-except re.error as e:
-    raise PythonDialogReModuleError(str(e)) from e
+except re.error, e:
+    raise PythonDialogReModuleError(unicode(e))
 
 
 # From dialog(1):
@@ -494,14 +504,14 @@ def _to_onoff(val):
     """
     if isinstance(val, (bool, int)):
         return "on" if val else "off"
-    elif isinstance(val, str):
+    elif isinstance(val, basestring):
         try:
             if _on_cre.match(val):
                 return "on"
             elif _off_cre.match(val):
                 return "off"
-        except re.error as e:
-            raise PythonDialogReModuleError(str(e)) from e
+        except re.error, e:
+            raise PythonDialogReModuleError(unicode(e))
 
     raise BadPythonDialogUsage("invalid boolean value: {0!r}".format(val))
 
@@ -544,14 +554,14 @@ def _create_temporary_directory():
 
     """
     find_temporary_nb_attempts = 5
-    for i in range(find_temporary_nb_attempts):
+    for i in xrange(find_temporary_nb_attempts):
         with _OSErrorHandling():
             tmp_dir = os.path.join(tempfile.gettempdir(),
                                    "%s-%d" \
                                    % ("pythondialog",
                                       random.randint(0, sys.maxsize)))
         try:
-            os.mkdir(tmp_dir, 0o700)
+            os.mkdir(tmp_dir, 0700)
         except os.error:
             continue
         else:
@@ -567,9 +577,10 @@ def _create_temporary_directory():
 if sys.hexversion >= 0x030200F0:
     import abc
     # Abstract base class
-    class BackendVersion(metaclass=abc.ABCMeta):
+    class BackendVersion():
+        __metaclass__ = abc.ABCMeta
         @abc.abstractmethod
-        def __str__(self):
+        def __unicode__(self):
             raise NotImplementedError()
 
         if sys.hexversion >= 0x030300F0:
@@ -606,7 +617,7 @@ if sys.hexversion >= 0x030200F0:
         def __ge__(self, other):
             raise NotImplementedError()
 else:
-    class BackendVersion:
+    class BackendVersion(object):
         pass
 
 
@@ -660,8 +671,8 @@ class DialogBackendVersion(BackendVersion):
     try:
         _backend_version_cre = re.compile(r"""(?P<dotted> (\d+) (\.\d+)* )
                                               (?P<rest>.*)$""", re.VERBOSE)
-    except re.error as e:
-        raise PythonDialogReModuleError(str(e)) from e
+    except re.error, e:
+        raise PythonDialogReModuleError(unicode(e))
 
     def __init__(self, dotted_part_or_str, rest=""):
         """Create a DialogBackendVersion instance.
@@ -669,7 +680,7 @@ class DialogBackendVersion(BackendVersion):
         Please see the class docstring for details.
 
         """
-        if isinstance(dotted_part_or_str, str):
+        if isinstance(dotted_part_or_str, basestring):
             if rest:
                 raise BadPythonDialogUsage(
                     "non-empty 'rest' with 'dotted_part_or_str' as string: "
@@ -689,11 +700,13 @@ class DialogBackendVersion(BackendVersion):
         self.rest = rest
 
     def __repr__(self):
-        return "{0}.{1}({2!r}, rest={3!r})".format(
+        # Unicode strings are not supported as the result of __repr__()
+        # in Python 2.x (cf. <http://bugs.python.org/issue5876>).
+        return b"{0}.{1}({2!r}, rest={3!r})".format(
             __name__, self.__class__.__name__, self.dotted_part, self.rest)
 
-    def __str__(self):
-        return '.'.join(map(str, self.dotted_part)) + self.rest
+    def __unicode__(self):
+        return '.'.join(imap(unicode, self.dotted_part)) + self.rest
 
     @classmethod
     def fromstring(cls, s):
@@ -703,8 +716,8 @@ class DialogBackendVersion(BackendVersion):
                 raise UnableToParseDialogBackendVersion(s)
             dotted_part = [ int(x) for x in mo.group("dotted").split(".") ]
             rest = mo.group("rest")
-        except re.error as e:
-            raise PythonDialogReModuleError(str(e)) from e
+        except re.error, e:
+            raise PythonDialogReModuleError(unicode(e))
 
         return cls(dotted_part, rest)
 
@@ -787,7 +800,7 @@ def _obsolete_property(name, replacement=None):
 
 
 # Main class of the module
-class Dialog:
+class Dialog(object):
     """Class providing bindings for dialog-compatible programs.
 
     This class allows you to invoke dialog or a compatible program in
@@ -1181,8 +1194,8 @@ class Dialog:
                                         re.VERBOSE)
         _print_version_cre = re.compile(
             r"^Version:[ \t]+(?P<version>.+?)[ \t]*$", re.MULTILINE)
-    except re.error as e:
-        raise PythonDialogReModuleError(str(e)) from e
+    except re.error, e:
+        raise PythonDialogReModuleError(unicode(e))
 
     # DIALOG_OK, DIALOG_CANCEL, etc. are environment variables controlling
     # the dialog backend exit status in the corresponding situation ("low-level
@@ -1312,9 +1325,9 @@ class Dialog:
 
         # Mapping from "OK", "CANCEL", ... to the corresponding dialog exit
         # statuses (integers).
-        self._lowlevel_exit_codes = {
-            name: getattr(self, "_DIALOG_" + name)
-            for name in self._lowlevel_exit_code_varnames }
+        self._lowlevel_exit_codes = dict((
+            name, getattr(self, "_DIALOG_" + name))
+            for name in self._lowlevel_exit_code_varnames)
 
         # Mapping from dialog exit status (integer) to Dialog exit code ("ok",
         # "cancel", ... strings referred to by Dialog.OK, Dialog.CANCEL, ...);
@@ -1471,7 +1484,7 @@ class Dialog:
                 "{0}={1}".format(varname, _shell_quote(env[varname])))
 
         command_str = ' '.join(envvar_settings_list +
-                               list(map(_shell_quote, arglist)))
+                               list(imap(_shell_quote, arglist)))
         s = "{separator}{cmd}\n\nArgs: {args!r}\n".format(
             separator="" if self._debug_first_output else ("-" * 79) + "\n",
             cmd=command_str, args=arglist)
@@ -1482,9 +1495,7 @@ class Dialog:
 
         self._debug_first_output = False
 
-    def _call_program(self, cmdargs, *, dash_escape="non-first",
-                      use_persistent_args=True,
-                      redir_child_stdin_from_fd=None, close_fds=(), **kwargs):
+    def _call_program(self, cmdargs, **kwargs):
         """Do the actual work of invoking the dialog-like program.
 
         Communication with the dialog-like program is performed
@@ -1528,6 +1539,15 @@ class Dialog:
                            or close(2) system calls fails...)
 
         """
+        if 'close_fds' in kwargs: close_fds = kwargs['close_fds']; del kwargs['close_fds']
+        else: close_fds = ()
+        if 'redir_child_stdin_from_fd' in kwargs: redir_child_stdin_from_fd = kwargs['redir_child_stdin_from_fd']; del kwargs['redir_child_stdin_from_fd']
+        else: redir_child_stdin_from_fd = None
+        if 'use_persistent_args' in kwargs: use_persistent_args = kwargs['use_persistent_args']; del kwargs['use_persistent_args']
+        else: use_persistent_args = True
+        if 'dash_escape' in kwargs: dash_escape = kwargs['dash_escape']; del kwargs['dash_escape']
+        else: dash_escape = "non-first"
+
         # We want to define DIALOG_OK, DIALOG_CANCEL, etc. in the
         # environment of the child process so that we know (and
         # even control) the possible dialog exit statuses.
@@ -1586,7 +1606,11 @@ class Dialog:
                 #     (if not None) to go to dialog's stdin.
                 #
                 #       [*] stdout with 'use_stdout'
-                father_stderr = os.fdopen(os.dup(2), mode="w", buffering=1)
+                #
+                # We'll just print the result of traceback.format_exc() to
+                # father_stderr, which is a byte string in Python 2, hence the
+                # binary mode.
+                father_stderr = open(os.dup(2), mode="wb")
                 os.dup2(child_output_wfd, 1 if self.use_stdout else 2)
                 if redir_child_stdin_from_fd is not None:
                     os.dup2(redir_child_stdin_from_fd, 0)
@@ -1647,7 +1671,7 @@ class Dialog:
         """
         # Read dialog's output on its stderr (stdout with 'use_stdout')
         with _OSErrorHandling():
-            with os.fdopen(child_output_rfd, "r") as f:
+            with open(child_output_rfd, "r") as f:
                 child_output = f.read()
             # The closing of the file object causes the end of the pipe we used
             # to read dialog's output on its stderr to be closed too. This is
@@ -1704,8 +1728,7 @@ class Dialog:
 
         return (hl_exit_code, child_output)
 
-    def _perform(self, cmdargs, *, dash_escape="non-first",
-                 use_persistent_args=True, **kwargs):
+    def _perform(self, cmdargs, **kwargs):
         """Perform a complete dialog-like program invocation.
 
         This function invokes the dialog-like program, waits for its
@@ -1720,6 +1743,11 @@ class Dialog:
             self._wait_for_program_termination()
 
         """
+        if 'use_persistent_args' in kwargs: use_persistent_args = kwargs['use_persistent_args']; del kwargs['use_persistent_args']
+        else: use_persistent_args = True
+        if 'dash_escape' in kwargs: dash_escape = kwargs['dash_escape']; del kwargs['dash_escape']
+        else: dash_escape = "non-first"
+
         (child_pid, child_output_rfd) = \
                     self._call_program(cmdargs, dash_escape=dash_escape,
                                        use_persistent_args=use_persistent_args,
@@ -1830,8 +1858,7 @@ class Dialog:
 
         return l
 
-    def _parse_help(self, output, kwargs, *, multival=False,
-                    multival_on_single_line=False, raw_format=False):
+    def _parse_help(self, output, kwargs, **_3to2kwargs):
         """Parse the dialog help output from a widget.
 
         'kwargs' should contain the keyword arguments used in the
@@ -1844,6 +1871,13 @@ class Dialog:
         output with the string "HELP ".
 
         """
+        if 'raw_format' in _3to2kwargs: raw_format = _3to2kwargs['raw_format']; del _3to2kwargs['raw_format']
+        else: raw_format = False
+        if 'multival_on_single_line' in _3to2kwargs: multival_on_single_line = _3to2kwargs['multival_on_single_line']; del _3to2kwargs['multival_on_single_line']
+        else: multival_on_single_line = False
+        if 'multival' in _3to2kwargs: multival = _3to2kwargs['multival']; del _3to2kwargs['multival']
+        else: multival = False
+
         l = output.splitlines()
 
         if raw_format:
@@ -1992,8 +2026,8 @@ class Dialog:
                     raise UnableToRetrieveBackendVersion(
                         "unable to parse the output of '{0} --print-version': "
                         "{1!r}".format(self._dialog_prg, output))
-            except re.error as e:
-                raise PythonDialogReModuleError(str(e)) from e
+            except re.error, e:
+                raise PythonDialogReModuleError(unicode(e))
         else:
             raise UnableToRetrieveBackendVersion(
                 "exit code {0!r} from the backend".format(code))
@@ -2020,13 +2054,13 @@ class Dialog:
             try:
                 mo = self._print_maxsize_cre.match(output)
                 if mo:
-                    return tuple(map(int, mo.group("rows", "columns")))
+                    return tuple(imap(int, mo.group("rows", "columns")))
                 else:
                     raise PythonDialogBug(
                         "Unable to parse the output of '{0} --print-maxsize': "
                         "{1!r}".format(self._dialog_prg, output))
-            except re.error as e:
-                raise PythonDialogReModuleError(str(e)) from e
+            except re.error, e:
+                raise PythonDialogReModuleError(unicode(e))
         else:
             return None
 
@@ -2093,9 +2127,14 @@ class Dialog:
                                          multival_on_single_line=True)
             if self._help_status_on(kwargs):
                 help_id, selected_tags = help_data
-                items = [ [ tag, item, tag in selected_tags ] + rest
-                            for (tag, item, status, *rest) in items ]
-                return (code, (help_id, selected_tags, items))
+
+                updated_items = []
+                for elt in items:
+                    tag, item, status = elt[:3]
+                    rest = elt[3:]
+                    updated_items.append([ tag, item, tag in selected_tags ]
+                                         + list(rest))
+                return (code, (help_id, selected_tags, updated_items))
             else:
                 return (code, help_data)
         elif code in (self.OK, self.EXTRA):
@@ -2106,8 +2145,8 @@ class Dialog:
     def _calendar_parse_date(self, date_str):
         try:
             mo = _calendar_date_cre.match(date_str)
-        except re.error as e:
-            raise PythonDialogReModuleError(str(e)) from e
+        except re.error, e:
+            raise PythonDialogReModuleError(unicode(e))
 
         if not mo:
             raise UnexpectedDialogOutput(
@@ -2214,9 +2253,15 @@ class Dialog:
             help_data = self._parse_help(output, kwargs, multival=True)
             if self._help_status_on(kwargs):
                 help_id, selected_tags = help_data
-                choices = [ [ tag, item, tag in selected_tags ] + rest
-                            for (tag, item, status, *rest) in choices ]
-                return (code, (help_id, selected_tags, choices))
+
+                updated_choices = []
+                for elt in choices:
+                    tag, item, status = elt[:3]
+                    rest = elt[3:]
+                    updated_choices.append([ tag, item, tag in selected_tags ]
+                                           + list(rest))
+
+                return (code, (help_id, selected_tags, updated_choices))
             else:
                 return (code, help_data)
         else:
@@ -2238,8 +2283,8 @@ class Dialog:
 
         """
         res = []
-        for i, (label, yl, xl, item, yi, xi, field_length, *rest) \
-                in enumerate(elements):
+        for i, elt in enumerate(elements):
+            label, yl, xl, item, yi, xi, field_length = elt[:7]
             res.append(status[i] if field_length > 0 else item)
 
         return res
@@ -2278,7 +2323,7 @@ class Dialog:
                     "{2!r}".format(__name__, type(self).__name__, widget_name))
 
             for name, value in (("LABEL", label), ("ITEM", item)):
-                if not isinstance(value, str):
+                if not isinstance(value, basestring):
                     raise BadPythonDialogUsage(
                         "{0}.{1}.{2}: {3} element not a string: {4!r}".format(
                             __name__, type(self).__name__,
@@ -2300,12 +2345,16 @@ class Dialog:
                 # 'status' does not contain the fields marked as read-only in
                 # 'elements'. Build a list containing all up-to-date items.
                 updated_items = self._form_updated_items(status, elements)
+
                 # Reconstruct 'elements' with the updated items taken from
                 # 'status'.
-                elements = [ [ label, yl, xl, updated_item ] + rest for
-                             ((label, yl, xl, item, *rest), updated_item) in
-                             zip(elements, updated_items) ]
-                return (code, (help_id, status, elements))
+                updated_elements = []
+                for elt, updated_item in izip(elements, updated_items):
+                    label, yl, xl, item = elt[:4]
+                    rest = elt[4:]
+                    updated_elements.append([ label, yl, xl, updated_item ]
+                                            + list(rest))
+                return (code, (help_id, status, updated_elements))
             else:
                 return (code, help_data)
         else:
@@ -2602,7 +2651,7 @@ class Dialog:
 
             self._gauge_process = {
                 "pid": child_pid,
-                "stdin": os.fdopen(child_stdin_wfd, "w"),
+                "stdin": open(child_stdin_wfd, "w"),
                 "child_output_rfd": child_output_rfd
                 }
 
@@ -3223,11 +3272,17 @@ class Dialog:
             help_data = self._parse_help(output, kwargs)
             if self._help_status_on(kwargs):
                 help_id, selected_tag = help_data
+
                 # Reconstruct 'choices' with the selected item inferred from
                 # 'selected_tag'.
-                choices = [ [ tag, item, tag == selected_tag ] + rest for
-                            (tag, item, status, *rest) in choices ]
-                return (code, (help_id, selected_tag, choices))
+                updated_choices = []
+                for elt in choices:
+                    tag, item, status = elt[:3]
+                    rest = elt[3:]
+                    updated_choices.append([ tag, item, tag == selected_tag ]
+                                           + list(rest))
+
+                return (code, (help_id, selected_tag, updated_choices))
             else:
                 return (code, help_data)
         else:
@@ -3434,8 +3489,8 @@ class Dialog:
     def _timebox_parse_time(self, time_str):
         try:
             mo = _timebox_time_cre.match(time_str)
-        except re.error as e:
-            raise PythonDialogReModuleError(str(e)) from e
+        except re.error, e:
+            raise PythonDialogReModuleError(unicode(e))
 
         if not mo:
             raise UnexpectedDialogOutput(
@@ -3559,11 +3614,17 @@ class Dialog:
             help_data = self._parse_help(output, kwargs)
             if self._help_status_on(kwargs):
                 help_id, selected_tag = help_data
+
                 # Reconstruct 'nodes' with the selected item inferred from
                 # 'selected_tag'.
-                nodes = [ [ tag, item, tag == selected_tag ] + rest for
-                          (tag, item, status, *rest) in nodes ]
-                return (code, (help_id, selected_tag, nodes))
+                updated_nodes = []
+                for elt in nodes:
+                    tag, item, status = elt[:3]
+                    rest = elt[3:]
+                    updated_nodes.append([ tag, item, tag == selected_tag ]
+                                         + list(rest))
+
+                return (code, (help_id, selected_tag, updated_nodes))
             else:
                 return (code, help_data)
         elif code in (self.OK, self.EXTRA):
