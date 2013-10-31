@@ -3339,7 +3339,7 @@ class Dialog(object):
         for name in ("min", "max", "init"):
             if not isinstance(locals()[name], int):
                 raise BadPythonDialogUsage(
-                    "{0!r} argument not an int: {1!r}".format(name,
+                    "'{0}' argument not an int: {1!r}".format(name,
                                                               locals()[name]))
         (code, output) = self._perform(
             ["--rangebox", text] + [ unicode(i) for i in

@@ -859,7 +859,7 @@ You have all my support, be brave!""",
 
             if code == "help":
                 d.msgbox("Help from the 'inputbox' demo. The string entered "
-                         "so far is {0!r}.".format(answer),
+                         "so far is '{0}'.".format(answer),
                          title="'inputbox' demo")
                 init_str = answer
             else:
@@ -941,7 +941,7 @@ when leaving the help dialog. {complement}""".format(complement=complement)
             if code == "help":
                 label, status, elements = t
                 d.msgbox("You asked for help concerning the field labelled "
-                         "{0!r}.".format(label), width=50)
+                         "'{0}'.".format(label), width=50)
             else:
                 # 't' contains the list of items as filled by the user
                 break
@@ -1046,12 +1046,12 @@ item_help=True."""
 
             if code == "help":
                 d.msgbox("You asked for help concerning the item identified by "
-                         "tag {0!r}.".format(tag), height=8, width=40)
+                         "tag '{0}'.".format(tag), height=8, width=40)
             else:
                 break
 
         d.msgbox("You have chosen the item identified by tag "
-                 "{0!r}.".format(tag), height=8, width=40)
+                 "'{0}'.".format(tag), height=8, width=40)
 
     def checklist_demo(self):
         # We could put non-empty items here (not only the tag for each entry)
@@ -1092,7 +1092,7 @@ item_help=True and help_status=True."""
             if code == "help":
                 tag, selected_tags, choices = t
                 d.msgbox("You asked for help concerning the item identified "
-                         "by tag {0!r}.".format(tag), height=7, width=60)
+                         "by tag '{0}'.".format(tag), height=7, width=60)
             else:
                 # 't' contains the list of tags corresponding to checked items
                 break
@@ -1127,7 +1127,7 @@ item_help=True and help_status=True."""
                 # Prepare to redisplay the radiolist in the same state as it
                 # was before the user pressed the Help button.
                 tag, selected, choices = t
-                d.msgbox("You asked for help about something called {0!r}. "
+                d.msgbox("You asked for help about something called '{0}'. "
                          "Sorry, but I am quite incompetent in this matter."
                          .format(tag))
             else:
@@ -1223,7 +1223,7 @@ Keys: SPACE   select or deselect the highlighted item, i.e.,
             if code == "help":
                 tag, selected_tags, items = t
                 d.msgbox("You asked for help concerning the item identified "
-                         "by tag {0!r}.".format(tag), height=7, width=60)
+                         "by tag '{0}'.".format(tag), height=7, width=60)
             else:
                 # 't' contains the list of tags corresponding to selected items
                 break
@@ -1366,7 +1366,7 @@ You should now select a node with the space bar."""
                                        ("0.3.2", "node 0.3.2", False, 2) ],
                                title="'treeview' demo")
 
-        d.msgbox("You selected the node tagged {0!r}.".format(tag),
+        d.msgbox("You selected the node tagged '{0}'.".format(tag),
                  title="treeview demo")
         return tag
 
@@ -1395,13 +1395,13 @@ You should now select a node with the space bar."""
                 # Prepare to redisplay the treeview in the same state as it
                 # was before the user pressed the Help button.
                 tag, selected_tag, nodes = t
-                d.msgbox("You asked for help about the node with tag {0!r}."
+                d.msgbox("You asked for help about the node with tag '{0}'."
                          .format(tag))
             else:
                 # 't' is the chosen tag
                 break
 
-        d.msgbox("You selected the node tagged {0!r}.".format(t),
+        d.msgbox("You selected the node tagged '{0}'.".format(t),
                  title="'treeview' demo")
         return t
 
@@ -1428,15 +1428,15 @@ You should now select a node with the space bar."""
                 help_button=True, title="'inputmenu' demo")
 
             if code == "help":
-                d.msgbox("You asked for help about the item with tag {0!r}."
+                d.msgbox("You asked for help about the item with tag '{0}'."
                          .format(tag))
                 continue
             elif code == "accepted":
-                text = "The item corresponding to tag {0!r} was " \
+                text = "The item corresponding to tag '{0}' was " \
                     "accepted.".format(tag)
             elif code == "renamed":
-                text = "The item corresponding to tag {0!r} was renamed to " \
-                    "{1!r}.".format(tag, new_item_text)
+                text = "The item corresponding to tag '{0}' was renamed to " \
+                    "'{1}'.".format(tag, new_item_text)
             else:
                 text = "Unexpected exit code from 'inputmenu': {0!r}.\n\n" \
                     "It may be a bug. Please report.".format(code)
@@ -1506,7 +1506,7 @@ line.""".format(widget=widget)
                 path = None
                 break
             elif code == "help":
-                d.msgbox("Help about {0!r} from the 'fselect' dialog.".format(
+                d.msgbox("Help about '{0}' from the 'fselect' dialog.".format(
                         path), title="'fselect' demo")
                 init_path = path
             elif code == d.OK:
@@ -1554,14 +1554,14 @@ Cancel button.\n\n%s""" % (self.FSELECT_HELP,)
                                    title="Please choose a directory",
                                    help_button=True)
             if code == "help":
-                d.msgbox("Help about {0!r} from the 'dselect' dialog.".format(
+                d.msgbox("Help about '{0}' from the 'dselect' dialog.".format(
                         path), title="'dselect' demo")
                 init_dir = path
             # When Python 3.2 is old enough, we'll be able to check if
             # path.endswith(os.sep) and remove the trailing os.sep if this
             # does not change the path according to os.path.samefile().
             elif not os.path.isdir(path):
-                d.msgbox("Hmm. It seems that {0!r} is not a directory".format(
+                d.msgbox("Hmm. It seems that '{0}' is not a directory".format(
                         path), title="'dselect' demo")
             else:
                 break
