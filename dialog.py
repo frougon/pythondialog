@@ -103,7 +103,7 @@ class VersionInfo(_VersionInfo):
         # in Python 2.x (cf. <http://bugs.python.org/issue5876>).
         return b"{0}.{1}".format(__name__, _VersionInfo.__repr__(self))
 
-version_info = VersionInfo(3, 0, 0, None)
+version_info = VersionInfo(3, 0, 1, None)
 __version__ = unicode(version_info)
 
 
