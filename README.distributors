@@ -55,8 +55,8 @@ should:
     you can use a command such as the following, which writes its output in
     the UTF-8 encoding:
 
-      python3 -c \
-   'import setup; setup.generate_changelog("ChangeLog", write_to_stdout=True)' \
+      python2 -c \
+   'import setup; setup.generate_changelog(u"ChangeLog", write_to_stdout=True)' \
    >/path/to/generated/ChangeLog
 
     If you want to do some testing of the command by piping the output into

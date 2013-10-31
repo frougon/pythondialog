@@ -4,31 +4,31 @@ INSTALLATION
 pythondialog is packaged with Distutils (the still-current standard
 framework for packaging simple Python extensions). With the current
 state of Python packaging and installation tools, there are several ways
-to install pythondialog from source.
+to install the Python 2 backport of pythondialog from source.
 
 Probably, the easiest and cleanest method at this date (October 2013)
 is to use pip (optionally in a virtualenv). Typically, you just have to
 run one of the following commands with the appropriate privileges:
 
-  pip install pythondialog       (which installs from PyPI)
+  pip install python2-pythondialog       (which installs from PyPI)
 
 or
 
-  pip install /path/to/python3-pythondialog-X.Y.Z.tar.gz
+  pip install /path/to/python2-pythondialog-X.Y.Z.tar.gz
 
 or
 
-  pip install https://url/to/python3-pythondialog-X.Y.Z.tar.gz
+  pip install https://url/to/python2-pythondialog-X.Y.Z.tar.gz
 
 or
 
-  pip install http://url/to/python3-pythondialog-X.Y.Z.tar.gz
+  pip install http://url/to/python2-pythondialog-X.Y.Z.tar.gz
 
 Note: old versions of pip don't support https.
 
 Uninstallation is as easy as:
 
-  pip uninstall pythondialog
+  pip uninstall python2-pythondialog
 
 For more information about pip and virtualenv, you can visit:
 
@@ -53,16 +53,16 @@ Here are the steps:
 
   - a) 1) type:
 
-            python3 ./setup.py build
+            python2 ./setup.py build
 
           (depending on your system and the Python version you want to
-          install for, you may have to replace "python3" with, for
-          instance, "python3.2" or "python3.3")
+          install for, you may have to replace "python2" with "python"
+          or, for instance, "python2.7")
 
        2) then, as root (after replacing /usr/local with the actual
           installation prefix you want to use):
 
-            python3 ./setup.py install --prefix=/usr/local \
+            python2 ./setup.py install --prefix=/usr/local \
                                        --record /path/to/foo
 
           where foo is a file of your choice which will contain the list
@@ -75,7 +75,7 @@ Here are the steps:
 
     b) type, as root (after replacing the installation prefix):
 
-            python3 ./setup.py install --prefix=/usr/local \
+            python2 ./setup.py install --prefix=/usr/local \
                                        --record /path/to/foo
 
        This will automatically build the package before installing it.
@@ -91,10 +91,10 @@ base Python documentation and the chapter you'll need is most probably
 UNINSTALLATION
 ==============
 
-If you installed pythondialog with pip, you can uninstall it with the
-following command:
+If you installed the Python 2 backport of pythondialog with pip, you can
+uninstall it with the following command:
 
-  pip uninstall pythondialog
+  pip uninstall python2-pythondialog
 
 (which should be run under the same account that was used to run the
 "pip install" command)

@@ -4,6 +4,26 @@ Python wrapper for the UNIX "dialog" utility
 Easy writing of graphical interfaces for terminal-based applications
 -------------------------------------------------------------------------------
 
+WARNING
+-------
+
+This version is a backport of pythondialog to Python 2. Unless you
+*really* have to use Python 2, you should go to the `pythondialog home
+page`_ and download the reference implementation which, at the time of
+this writing (November 2013) and for the forseeable future, is targeted
+at Python 3.
+
+.. _pythondialog home page: http://pythondialog.sourceforge.net/
+
+This version is only here to help users who are somehow forced to still
+use Python 2, even though Python 3.0 was released on December 3, 2008.
+It may be the last update for Python 2. In addition, the reference
+implementation is less likely to have bugs.
+
+Before using this backport, be sure to read the `Backport-specific
+notes`_ below.
+
+
 Overview
 --------
 
@@ -36,7 +56,14 @@ repository`_, the `mailing list`_, the `issue tracker`_, etc.
 If you want to get a quick idea of what this module allows one to do,
 you can download a release tarball and run demo.py::
 
-  python3 demo.py
+  python2 demo.py
+
+Notes:
+
+  - the preceding command uses "python2" because we want to use the
+    Python 2 backport of pythondialog;
+  - depending on your system, you may have to replace "python2" with
+    "python" or "python2.7", for instance.
 
 
 What is pythondialog good for? What are its limitations?
@@ -56,18 +83,12 @@ library`_ looks rather interesting, too.
 Requirements
 ------------
 
-* As of version 2.12, the reference implementation of pythondialog
-  (which this file belongs to) requires Python 3.0 or later in the 3.x
-  series. pythondialog 3.0.0 has been tested with Python 3.2 and 3.3.
+* This backport of pythondialog requires Python 2.6 or later in the 2.x
+  series. It has been tested with Python 2.6 and 2.7.
 
-* However, in order to help users who are somehow forced to still use
-  Python 2 (even though Python 3.0 was released on December 3, 2008), a
-  backport of the reference implementation to Python 2 has been
-  prepared. At the time of this writing, the latest pythondialog version
-  backported this way is 3.0.1. For up-to-date information about this
-  backport, please visit the `pythondialog home page`_.
-
-  .. _pythondialog home page: http://pythondialog.sourceforge.net/
+* The reference implementation supports more recent versions of the
+  Python interpreter. Please visit the `pythondialog home page`_ for
+  more information.
 
 * Apart from that, pythondialog requires the dialog_ program (or a
   drop-in replacement for dialog). You can download dialog from:
@@ -82,32 +103,120 @@ Quick installation instructions
 -------------------------------
 
 If you have `pip <https://pypi.python.org/pypi/pip>`_ installed, you
-should be able to install pythondialog with::
+should be able to install this backport of pythondialog with::
 
-  pip install pythondialog
+  pip install python2-pythondialog
 
 (which should be run with appropriate privileges; also make sure that
-your 'pip' invocation runs with the Python 3 installation you want to
-install pythondialog for)
+your 'pip' invocation runs with the Python 2 installation you want to
+install the backport for)
 
 For more detailed instructions, you can read the INSTALL file from a
 release tarball. You may also want to consult the `pip documentation
 <http://www.pip-installer.org/>`_.
 
 
+Backport-specific notes
+-----------------------
+
+* The pythondialog documentation is written for the reference
+  implementation (Python 3 at the time of this writing). To be on the
+  safe side when using the Python 2 backport, you should use Unicode
+  strings every time you pass “string data” to pythondialog, and you
+  will get Unicode strings in return. Indeed, these correspond directly
+  to Python 3 strings, and modern versions of pythondialog (>= 2.12) are
+  all based on this type of string.
+
+  The pythondialog documentation consistently uses the term “string” (as
+  opposed to “Unicode string”) because it has been written for Python 3,
+  but **you should definitely use Unicode strings when using the
+  Python 2 backport**. Many things happen to work with byte strings, but
+  in most cases, this is pure coincidence; others fail, and won't be
+  fixed. This is not a bug.
+
+  The easiest way to use Unicode strings everywhere (or almost
+  everywhere) in Python 2.x with x >= 6, consists in using::
+
+    from __future__ import unicode_literals
+
+  at the beginning of your Python files. This method has the additional
+  benefit of preparing your transition to Python 3.
+
+* Don't use str() in Python 2 on objects such as pythondialog exceptions
+  or dialog.DialogBackendVersion instances; use unicode() instead, which
+  is the Python 2 equivalent of the Python 3 str() built-in. Of course,
+  using repr() on any pythondialog object should return a byte string
+  when run under Python 2, because this is how the repr() API works in
+  Python 2. The same holds true for str(), but this one is not supported
+  by the Python 2 backport of pythondialog: it is superseded, as already
+  explained, by the much more powerful unicode().
+
+* Before taking potentially expensive decisions, you should realize that
+  Unicode support is *much*, much better in Python 3 than in Python 2,
+  even though the basic types are largely the same (Unicode string in
+  Python 2, native string in Python 3). In Python 3, native strings
+  (simply called “strings” in the Python documentation) are natural and
+  ubiquitous. They can be read and written from/to the standard I/O
+  streams with sane encoding defaults. str() and repr() return native
+  strings, as do all standard library calls whenever expected (i.e.,
+  when the return value is text, as opposed to binary data). Python 3
+  strings are both powerful and easy to use.
+
+  By contrast, in Python 2, you always have to be very careful about
+  what you manipulate: byte strings or Unicode strings. Most library
+  calls in your code are a potential source of bug. Usually, this kind
+  of bug only pops up when user data or input introduces non-ASCII
+  characters in a byte string that is then either combined with an
+  Unicode string, or used in a context where the expected encoding is
+  different. This means that some users get annoyed by “crappy”
+  software, while the responsible developers are often not aware of any
+  problem---until a bug report is filed, if ever.
+
+  Want to use traceback.format_exc() for instance? What does it return,
+  byte string or Unicode string? Experiment. Answer: byte string. Then,
+  how does it deal with, e.g., accented characters in an OSError
+  exception message? Experiment. Answer: it outputs the repr()
+  representation of an Unicode string that uses backslash escapes for
+  the non-ASCII characters, all of this inside the returned byte string.
+  Conclusion: the messages seen by users will be very ugly and more or
+  less undecipherable for many of them. Does it behave this way in all
+  cases? Tough question. Use the source, Luke...
+
+  With other library calls, you might get non-ASCII characters in a byte
+  string. Then, the question would be: what encoding has been used to
+  encode them, and is there a reliable way to detect it? In many cases,
+  this is not documented and/or depends on parameters under user
+  control, such as the locale settings. Again, you have to waste time
+  figuring out the encoding, and often can't be sure whether your answer
+  is correct in all cases.
+
+  **Bottom line:**
+
+    There are good reasons why the Python developers broke compatibility
+    at such a fundamental level as string management between Python 2
+    and Python 3. Getting Unicode support completely right in Python 2
+    may require more work than porting your code to Python 3. Besides,
+    future maintainance and evolutions of your program will definitely
+    be easier once it is written in Python 3. Think about it.
+
+
 Documentation
 -------------
 
+**Important:** be sure to read the `Backport-specific notes`_ above.
+
 pythondialog is fully documented through Python docstrings. This
-documentation can be browsed with the pydoc3 standalone program or by
-simply opening dialog.py in a pager or editor. The documentation of the
-latest version as rendered by pydoc3 should be available at:
+documentation can be browsed with the pydoc standalone program (maybe
+pydoc2 or something such as pydoc2.7, depending on your Python
+installation) or by simply opening dialog.py in a pager or editor. The
+documentation of the latest version as rendered by pydoc3 should be
+available at:
 
   http://pythondialog.sourceforge.net/doc/pythondialog.html
 
 To generate the documentation yourself from dialog.py, you can type
-"pydoc3 dialog" at the command prompt in the pythondialog base directory
-or "pydoc3 /path/to/dialog.py". Alternatively, you can type::
+"pydoc dialog" at the command prompt in the pythondialog base directory
+or "pydoc /path/to/dialog.py". Alternatively, you can type::
 
    >>> import dialog; help(dialog)
 
@@ -115,12 +224,12 @@ at a Python command prompt (corresponding to the Python version you
 installed pythondialog for, of course).
 
 You can extract the documentation from dialog.py to an HTML file with
-"pydoc3 -w dialog" or "pydoc3 -w /path/to/dialog.py". This will generate
+"pydoc -w dialog" or "pydoc -w /path/to/dialog.py". This will generate
 dialog.html in the current directory.
 
-Alternatively, if pythondialog is already installed, pydoc3 can act as
+Alternatively, if pythondialog is already installed, pydoc can act as
 an HTTP server and provide the documentation to web browsers. For
-instance, launching "pydoc3 -p 1234" will make it listen on TCP
+instance, launching "pydoc -p 1234" will make it listen on TCP
 port 1234. You can then point your browser to http://localhost:1234/ and
 read the documentation.
 
@@ -145,7 +254,7 @@ you have to do two things in order to see them:
 For instance, to see the warnings produced when running the demo, you
 can do::
 
-   python3 -Wd demo.py 2>/path/to/file
+   python2 -Wd demo.py 2>/path/to/file
 
 and examine /path/to/file. This can also help you to find files that are
 still open when your program exits.
@@ -161,7 +270,7 @@ still open when your program exits.
 For more explanations and other methods to enable deprecation warnings,
 please refer to:
 
-  http://docs.python.org/3/whatsnew/2.7.html
+  http://docs.python.org/2/whatsnew/2.7.html
 
 
 Troubleshooting
