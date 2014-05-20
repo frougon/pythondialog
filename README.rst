@@ -113,7 +113,7 @@ install the backport for)
 
 For more detailed instructions, you can read the INSTALL file from a
 release tarball. You may also want to consult the `pip documentation
-<http://www.pip-installer.org/>`_.
+<https://pip.pypa.io/>`_.
 
 
 Backport-specific notes
