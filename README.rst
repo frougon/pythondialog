@@ -81,14 +81,13 @@ Requirements
 Quick installation instructions
 -------------------------------
 
-If you have `pip <https://pypi.python.org/pypi/pip>`_ installed, you
-should be able to install pythondialog with::
+If you have a working `pip <https://pypi.python.org/pypi/pip>`_ setup,
+you should be able to install pythondialog with::
 
   pip install pythondialog
 
-(which should be run with appropriate privileges; also make sure that
-your 'pip' invocation runs with the Python 3 installation you want to
-install pythondialog for)
+When doing so, make sure that your ``pip`` executable runs with the
+Python 3 installation you want to install pythondialog for.
 
 For more detailed instructions, you can read the INSTALL file from a
 release tarball. You may also want to consult the `pip documentation
