@@ -1,7 +1,7 @@
 # dialog.py --- A Python interface to the ncurses-based "dialog" utility
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2002, 2003, 2004, 2009, 2010, 2013  Florent Rougon
+# Copyright (C) 2002, 2003, 2004, 2009, 2010, 2013, 2014  Florent Rougon
 # Copyright (C) 2004  Peter Åstrand
 # Copyright (C) 2000  Robb Shecter, Sultanbek Tezadov
 #
@@ -57,7 +57,6 @@ Here is the hierarchy of notable exceptions raised by this module:
      UnexpectedDialogOutput
      DialogTerminatedBySignal
      DialogError
-     UnableToCreateTemporaryDirectory
      UnableToRetrieveBackendVersion
      UnableToParseBackendVersion
         UnableToParseDialogBackendVersion
@@ -229,10 +228,6 @@ class DialogError(error):
     """Exception raised when the dialog-like program exits with the \
 code indicating an error."""
     ExceptionShortDescription = "dialog-like terminated due to an error"
-
-class UnableToCreateTemporaryDirectory(error):
-    """Exception raised when we cannot create a temporary directory."""
-    ExceptionShortDescription = "Unable to create a temporary directory"
 
 class UnableToRetrieveBackendVersion(error):
     """Exception raised when we cannot retrieve the version string of the \
@@ -530,37 +525,6 @@ def _compute_common_args(mapping):
     for option, value in mapping.items():
         args.extend(_common_args_syntax[option](value))
     return args
-
-
-def _create_temporary_directory():
-    """Create a temporary directory (securely).
-
-    Return the directory path.
-
-    Notable exceptions:
-        - UnableToCreateTemporaryDirectory
-        - PythonDialogOSError
-        - exceptions raised by the tempfile module
-
-    """
-    find_temporary_nb_attempts = 5
-    for i in range(find_temporary_nb_attempts):
-        with _OSErrorHandling():
-            tmp_dir = os.path.join(tempfile.gettempdir(),
-                                   "%s-%d" \
-                                   % ("pythondialog",
-                                      random.randint(0, sys.maxsize)))
-        try:
-            os.mkdir(tmp_dir, 0o700)
-        except os.error:
-            continue
-        else:
-            break
-    else:
-        raise UnableToCreateTemporaryDirectory(
-            "somebody may be trying to attack us")
-
-    return tmp_dir
 
 
 # Classes for dealing with the version of dialog-like backend programs
@@ -3325,36 +3289,19 @@ class Dialog:
         Return the Dialog exit code from the backend.
 
         Notable exceptions:
-            - UnableToCreateTemporaryDirectory
             - PythonDialogIOError    if the Python version is < 3.3
             - PythonDialogOSError
-            - exceptions raised by the tempfile module (which are
-              unfortunately not mentioned in its documentation, at
-              least in Python 2.3.3...)
 
         """
-        # In Python < 2.3, the standard library does not have
-        # tempfile.mkstemp(), and unfortunately, tempfile.mktemp() is
-        # insecure. So, I create a non-world-writable temporary directory and
-        # store the temporary file in this directory.
         with _OSErrorHandling():
-            tmp_dir = _create_temporary_directory()
-            fName = os.path.join(tmp_dir, "text")
-            # If we are here, tmp_dir *is* created (no exception was raised),
-            # so chances are great that os.rmdir(tmp_dir) will succeed (as
-            # long as tmp_dir is empty).
-            #
-            # Don't move the _create_temporary_directory() call inside the
-            # following try statement, otherwise the user will always see a
-            # PythonDialogOSError instead of an
-            # UnableToCreateTemporaryDirectory because whenever
-            # UnableToCreateTemporaryDirectory is raised, the subsequent
-            # os.rmdir(tmp_dir) is bound to fail.
+            tmpfile = tempfile.NamedTemporaryFile(
+                mode="w", prefix="pythondialog.tmp", delete=False)
             try:
-                # No race condition as with the deprecated tempfile.mktemp()
-                # since tmp_dir is not world-writable.
-                with open(fName, mode="w") as f:
+                with tmpfile as f:
                     f.write(text)
+                # The temporary file is now closed. According to the tempfile
+                # module documentation, this is necessary if we want to be able
+                # to reopen it reliably regardless of the platform.
 
                 # Ask for an empty title unless otherwise specified
                 if kwargs.get("title", None) is None:
@@ -3362,12 +3309,13 @@ class Dialog:
 
                 return self._widget_with_no_output(
                     "textbox",
-                    ["--textbox", fName, str(height), str(width)],
+                    ["--textbox", tmpfile.name, str(height), str(width)],
                     kwargs)
             finally:
-                if os.path.exists(fName):
-                    os.unlink(fName)
-                os.rmdir(tmp_dir)
+                # The test should always succeed, but I prefer being on the
+                # safe side.
+                if os.path.exists(tmpfile.name):
+                    os.unlink(tmpfile.name)
 
     @widget
     @retval_is_code
