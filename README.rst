@@ -36,7 +36,7 @@ repository`_, the `mailing list`_, the `issue tracker`_, etc.
 If you want to get a quick idea of what this module allows one to do,
 you can download a release tarball and run demo.py::
 
-  python3 demo.py
+  python3 examples/demo.py
 
 
 What is pythondialog good for? What are its limitations?
@@ -144,7 +144,7 @@ you have to do two things in order to see them:
 For instance, to see the warnings produced when running the demo, you
 can do::
 
-   python3 -Wd demo.py 2>/path/to/file
+   python3 -Wd examples/demo.py 2>/path/to/file
 
 and examine /path/to/file. This can also help you to find files that are
 still open when your program exits.
@@ -171,7 +171,7 @@ documentation and the dialog(1) manual page. If this is not enough, you
 can enable logging of shell command-line equivalents of all dialog calls
 made by your program with a simple call to Dialog.setup_debug(), first
 available in pythondialog 2.12. An example of this can be found in
-demo.py.
+demo.py from the 'examples' directory.
 
 As of version 2.12, you can also enable this debugging facility for
 demo.py by calling it with the --debug flag (cf. 'demo.py --help').

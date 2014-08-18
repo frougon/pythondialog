@@ -30,9 +30,10 @@ program name and path as well as the values to pass as DIALOG*
 environment variables to the chosen program.
 
 For a quick start, you should look at the simple_example.py file that
-comes with pythondialog. It is a very simple and straightforward
-example using a few basic widgets. Then, you could study the demo.py
-file that illustrates most features of pythondialog, or more directly
+comes with pythondialog, in the 'examples' directory. It is a very
+simple and straightforward example using a few basic widgets. Then,
+you could study the demo.py file that illustrates most features of
+pythondialog (also from the 'examples' directory), or more directly
 dialog.py.
 
 See the Dialog class documentation for general usage information,
@@ -1813,12 +1814,12 @@ class Dialog:
 
         This method is obsolete. Please remove calls to it from your
         programs. You may use the clear(1) program to clear the screen.
-        cf. clear_screen() in demo.py for an example.
+        cf. clear_screen() in examples/demo.py for an example.
 
         """
         warnings.warn("Dialog.clear() has been obsolete for many years.\n"
                       "You may use the clear(1) program to clear the screen.\n"
-                      "cf. clear_screen() in demo.py for an example",
+                      "cf. clear_screen() in examples/demo.py for an example",
                       DeprecationWarning)
         self._perform_no_options('--clear')
 
