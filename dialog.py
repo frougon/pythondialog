@@ -39,12 +39,13 @@ See the Dialog class documentation for general usage information,
 list of available widgets and ways to pass options to dialog.
 
 
-The 'features' concept
-----------------------
+The 'features' concept and 'autowidgetsize' feature
+---------------------------------------------------
 
 pythondialog 3.1 introduced a concept called 'features' that is
-similar to Python's __future__ statement. The general idea is that
-users can globally modify pythondialog's behavior by calling:
+similar to Python's __future__ statement. For now, it is only used
+for an experimental feature called 'autowidgetsize'. The general idea
+is that users can globally modify pythondialog's behavior by calling:
 
   dialog.enable_feature(FEATURE)
 
@@ -56,6 +57,34 @@ the standard library in Python 3.4, this should not be a big problem.
 
 Note: the Python 3.4 'enum' module has been backported to older
       Python versions under the name 'enum34'.
+
+In pythondialog 3.1, the only feature defined with this mechanism is
+called 'autowidgetsize'. This feature allows one to take advantage of
+the ability of the 'dialog' backend to automatically compute a
+suitable widget size when parameters such as 'width' and 'height' are
+given the value 0. Actually, this is always possible in pythondialog
+by passing 'width=0', 'height=0', etc. to widget-producing methods.
+However, after:
+
+  import dialog
+  dialog.enable_feature(dialog.Feature.autowidgetsize)
+
+all pythondialog widget-producing methods will behave as if width=0,
+height=0, etc. had been passed, except where these parameters are
+explicitely specified with different values.
+
+This should be convenient in situations where figuring out suitable
+widget size parameters is a burden, for instance when developping
+little scripts that don't need too much visual polishing, or when a
+widget is used to display data, the size of which is not easily
+predictable.
+
+Notes:
+  - the 'autowidgetsize' feature is currently marked as experimental,
+    please give some feedback;
+  - you may encounter questionable results if you only set one of the
+    'width' and 'height' parameters to 0 for a given widget (seen in
+    dialog 1.2-20140219).
 
 
 Notable exceptions
@@ -904,6 +933,20 @@ class Dialog:
          keyword argument. Therefore, "--no-shadow" is passed by
          giving a "no_shadow=True" keyword argument to a Dialog method
          (the leading two dashes are also consistently removed).
+
+
+    Automatic size for widgets
+    ==========================
+
+    In many cases, it is possible to have the 'dialog' backend
+    automatically determine a suitable size for the widgets it
+    displays. This can be done by passing 'width=0' and 'height=0' to
+    the widget-producing methods (some widgets also have parameters
+    such as 'list_height' or 'menu_height'). Instead of writing this
+    in every widget call or so, you may try the 'autowidgetsize'
+    experimental feature, which sets the effective default value of
+    such parameters to 0. Please refer to the dialog module docstring
+    for details.
 
 
     Return value of widget-producing methods
@@ -2051,6 +2094,18 @@ class Dialog:
         else:
             return None
 
+    def _default_size(self, values, defaults):
+        # If 'autowidgetsize' is enabled, set the default values for the
+        # width/height/... parameters of widget-producing methods to 0 (this
+        # will actually be done by the caller, this function is only a helper).
+        if _HAS_ENUM and Feature.autowidgetsize in _features:
+            defaults = (0,) * len(defaults)
+
+        # For every element of 'values': keep it if different from None,
+        # otherwise replace it with the corresponding value from 'defaults'.
+        return [ v if v is not None else defaults[i]
+                 for i, v in enumerate(values) ]
+
     @widget
     def buildlist(self, text, height=0, width=0, list_height=0, items=[],
                   **kwargs):
@@ -2139,7 +2194,7 @@ class Dialog:
         return [ int(s) for s in mo.group("day", "month", "year") ]
 
     @widget
-    def calendar(self, text, height=6, width=0, day=0, month=0, year=0,
+    def calendar(self, text, height=None, width=0, day=0, month=0, year=0,
                  **kwargs):
         """Display a calendar dialog box.
 
@@ -2165,12 +2220,16 @@ class Dialog:
             'day', 'month' and 'year' are integers corresponding to
             the date chosen by the user.
 
+        Default values for the size parameters when the
+        'autowidgetsize' feature is disabled: height=6.
+
         Notable exceptions:
             - any exception raised by self._perform()
             - UnexpectedDialogOutput
             - PythonDialogReModuleError
 
         """
+        (height,) = self._default_size((height, ), (6,))
         (code, output) = self._perform(
             ["--calendar", text, str(height), str(width), str(day),
                str(month), str(year)],
@@ -2187,7 +2246,7 @@ class Dialog:
             return (code, None)
 
     @widget
-    def checklist(self, text, height=15, width=54, list_height=7,
+    def checklist(self, text, height=None, width=None, list_height=None,
                   choices=[], **kwargs):
         """Display a checklist box.
 
@@ -2209,11 +2268,17 @@ class Dialog:
         If the user exits with ESC or CANCEL, the returned tag list
         is empty.
 
+        Default values for the size parameters when the
+        'autowidgetsize' feature is disabled: height=15, width=54,
+        list_height=7.
+
         Notable exceptions:
 
             any exception raised by self._perform() or _to_onoff()
 
         """
+        height, width, list_height = self._default_size(
+            (height, width, list_height), (15, 54, 7))
         cmd = ["--checklist", text, str(height), str(width), str(list_height)]
         for t in choices:
             t = [ t[0], t[1], _to_onoff(t[2]) ] + list(t[3:])
@@ -2569,7 +2634,8 @@ class Dialog:
             ["--fselect", filepath, str(height), str(width)],
             kwargs, strip_xdialog_newline=True, raw_help=True)
 
-    def gauge_start(self, text="", height=8, width=54, percent=0, **kwargs):
+    def gauge_start(self, text="", height=None, width=None, percent=0,
+                    **kwargs):
         """Display gauge box.
 
         text    -- text to display in the box
@@ -2600,11 +2666,15 @@ class Dialog:
             exit_code = d.gauge_stop()           # cleanup actions
 
 
+        Default values for the size parameters when the
+        'autowidgetsize' feature is disabled: height=8, width=54.
+
         Notable exceptions:
             - any exception raised by self._call_program()
             - PythonDialogOSError
 
         """
+        height, width = self._default_size((height, width), (8, 54))
         with _OSErrorHandling():
             # We need a pipe to send data to the child (dialog) process's
             # stdin while it is running.
@@ -2705,7 +2775,7 @@ class Dialog:
 
     @widget
     @retval_is_code
-    def infobox(self, text, height=10, width=30, **kwargs):
+    def infobox(self, text, height=None, width=None, **kwargs):
         """Display an information dialog box.
 
         text   -- text to display in the box
@@ -2722,18 +2792,22 @@ class Dialog:
 
         Return the Dialog exit code from the backend.
 
+        Default values for the size parameters when the
+        'autowidgetsize' feature is disabled: height=10, width=30.
+
         Notable exceptions:
 
             any exception raised by self._perform()
 
         """
+        height, width = self._default_size((height, width), (10, 30))
         return self._widget_with_no_output(
             "infobox",
             ["--infobox", text, str(height), str(width)],
             kwargs)
 
     @widget
-    def inputbox(self, text, height=10, width=30, init='', **kwargs):
+    def inputbox(self, text, height=None, width=None, init='', **kwargs):
         """Display an input dialog box.
 
         text   -- text to display in the box
@@ -2752,11 +2826,15 @@ class Dialog:
         Dialog exit code and 'string' is the string entered by the
         user.
 
+        Default values for the size parameters when the
+        'autowidgetsize' feature is disabled: height=10, width=30.
+
         Notable exceptions:
 
             any exception raised by self._perform()
 
         """
+        height, width = self._default_size((height, width), (10, 30))
         # The help output does not depend on whether --help-status was passed
         # (dialog 1.2-20130902).
         return self._widget_with_string_output(
@@ -2764,8 +2842,8 @@ class Dialog:
             kwargs, strip_xdialog_newline=True, raw_help=True)
 
     @widget
-    def inputmenu(self, text, height=0, width=60, menu_height=7, choices=[],
-             **kwargs):
+    def inputmenu(self, text, height=0, width=None, menu_height=None,
+                  choices=[], **kwargs):
         """Display an inputmenu dialog box.
 
         text        -- text to display in the box
@@ -2843,11 +2921,16 @@ class Dialog:
         'new_item_text' gives the new 'item' part of the renamed
         entry if 'exit_info' is "renamed", otherwise it is None.
 
+        Default values for the size parameters when the
+        'autowidgetsize' feature is disabled: width=60,
+        menu_height=7.
+
         Notable exceptions:
 
             any exception raised by self._perform()
 
         """
+        width, menu_height = self._default_size((width, menu_height), (60, 7))
         cmd = ["--inputmenu", text, str(height), str(width), str(menu_height)]
         for t in choices:
             cmd.extend(t)
@@ -2869,7 +2952,7 @@ class Dialog:
             return (code, None, None)
 
     @widget
-    def menu(self, text, height=15, width=54, menu_height=7, choices=[],
+    def menu(self, text, height=None, width=None, menu_height=None, choices=[],
              **kwargs):
         """Display a menu dialog box.
 
@@ -2908,11 +2991,17 @@ class Dialog:
         Dialog exit code and 'tag' the tag string of the item that
         the user chose.
 
+        Default values for the size parameters when the
+        'autowidgetsize' feature is disabled: height=15, width=54,
+        menu_height=7.
+
         Notable exceptions:
 
             any exception raised by self._perform()
 
         """
+        height, width, menu_height = self._default_size(
+            (height, width, menu_height), (15, 54, 7))
         cmd = ["--menu", text, str(height), str(width), str(menu_height)]
         for t in choices:
             cmd.extend(t)
@@ -2983,7 +3072,7 @@ class Dialog:
 
     @widget
     @retval_is_code
-    def msgbox(self, text, height=10, width=30, **kwargs):
+    def msgbox(self, text, height=None, width=None, **kwargs):
         """Display a message dialog box, with scrolling and line wrapping.
 
         text   -- text to display in the box
@@ -3012,11 +3101,15 @@ class Dialog:
 
         Return the Dialog exit code from the backend.
 
+        Default values for the size parameters when the
+        'autowidgetsize' feature is disabled: height=10, width=30.
+
         Notable exceptions:
 
             any exception raised by self._perform()
 
         """
+        height, width = self._default_size((height, width), (10, 30))
         return self._widget_with_no_output(
             "msgbox",
             ["--msgbox", text, str(height), str(width)],
@@ -3024,7 +3117,7 @@ class Dialog:
 
     @widget
     @retval_is_code
-    def pause(self, text, height=15, width=60, seconds=5, **kwargs):
+    def pause(self, text, height=None, width=None, seconds=5, **kwargs):
         """Display a pause dialog box.
 
         text       -- text to display in the box
@@ -3043,18 +3136,22 @@ class Dialog:
         ended automatically after 'seconds' seconds or if the user
         pressed the OK button.
 
+        Default values for the size parameters when the
+        'autowidgetsize' feature is disabled: height=15, width=60.
+
         Notable exceptions:
 
             any exception raised by self._perform()
 
         """
+        height, width = self._default_size((height, width), (15, 60))
         return self._widget_with_no_output(
             "pause",
             ["--pause", text, str(height), str(width), str(seconds)],
             kwargs)
 
     @widget
-    def passwordbox(self, text, height=10, width=60, init='', **kwargs):
+    def passwordbox(self, text, height=None, width=None, init='', **kwargs):
         """Display a password input dialog box.
 
         text   -- text to display in the box
@@ -3080,11 +3177,15 @@ class Dialog:
         the Dialog exit code and 'password' is the password entered
         by the user.
 
+        Default values for the size parameters when the
+        'autowidgetsize' feature is disabled: height=10, width=60.
+
         Notable exceptions:
 
             any exception raised by self._perform()
 
         """
+        height, width = self._default_size((height, width), (10, 60))
         # The help output does not depend on whether --help-status was passed
         # (dialog 1.2-20130902).
         return self._widget_with_string_output(
@@ -3128,7 +3229,7 @@ class Dialog:
     @widget
     @retval_is_code
     def progressbox(self, file_path=None, file_flags=os.O_RDONLY,
-                    fd=None, text=None, height=20, width=78, **kwargs):
+                    fd=None, text=None, height=None, width=None, **kwargs):
         """Display a possibly growing stream in a dialog box, as with "tail -f".
 
           file_path  -- path to the file that is going to be displayed
@@ -3159,6 +3260,9 @@ class Dialog:
 
         Return the Dialog exit code from the backend.
 
+        Default values for the size parameters when the
+        'autowidgetsize' feature is disabled: height=20, width=78.
+
         Notable exceptions:
 
             PythonDialogIOError    if the Python version is < 3.3
@@ -3166,6 +3270,7 @@ class Dialog:
             any exception raised by self._perform()
 
         """
+        height, width = self._default_size((height, width), (20, 78))
         return self._progressboxoid(
             "progressbox", file_path=file_path, file_flags=file_flags,
             fd=fd, text=text, height=height, width=width, **kwargs)
@@ -3173,7 +3278,7 @@ class Dialog:
     @widget
     @retval_is_code
     def programbox(self, file_path=None, file_flags=os.O_RDONLY,
-                   fd=None, text=None, height=20, width=78, **kwargs):
+                   fd=None, text=None, height=None, width=None, **kwargs):
         """Display a possibly growing stream in a dialog box, as with "tail -f".
 
         A programbox is very similar to a progressbox. The only
@@ -3191,16 +3296,21 @@ class Dialog:
         'progressbox'. Please refer to the corresponding
         documentation.
 
+        Default values for the size parameters when the
+        'autowidgetsize' feature is disabled: height=20, width=78.
+
         This widget requires dialog >= 1.1 (2011-03-02).
 
         """
         self._dialog_version_check("1.1", "the programbox widget")
+
+        height, width = self._default_size((height, width), (20, 78))
         return self._progressboxoid(
             "programbox", file_path=file_path, file_flags=file_flags,
             fd=fd, text=text, height=height, width=width, **kwargs)
 
     @widget
-    def radiolist(self, text, height=15, width=54, list_height=7,
+    def radiolist(self, text, height=None, width=None, list_height=None,
                   choices=[], **kwargs):
         """Display a radiolist box.
 
@@ -3228,11 +3338,18 @@ class Dialog:
         initially set to False and not altered before the user chose
         OK, the returned tag is the empty string.
 
+        Default values for the size parameters when the
+        'autowidgetsize' feature is disabled: height=15, width=54,
+        list_height=7.
+
         Notable exceptions:
 
             any exception raised by self._perform() or _to_onoff()
 
         """
+        height, width, list_height = self._default_size(
+            (height, width, list_height), (15, 54, 7))
+
         cmd = ["--radiolist", text, str(height), str(width), str(list_height)]
         for t in choices:
             cmd.extend([ t[0], t[1], _to_onoff(t[2]) ] + list(t[3:]))
@@ -3324,7 +3441,7 @@ class Dialog:
 
     @widget
     @retval_is_code
-    def scrollbox(self, text, height=20, width=78, **kwargs):
+    def scrollbox(self, text, height=None, width=None, **kwargs):
         """Display a string in a scrollable box, with no line wrapping.
 
         text   -- string to display in the box
@@ -3345,11 +3462,16 @@ class Dialog:
 
         Return the Dialog exit code from the backend.
 
+        Default values for the size parameters when the
+        'autowidgetsize' feature is disabled: height=20, width=78.
+
         Notable exceptions:
             - PythonDialogIOError    if the Python version is < 3.3
             - PythonDialogOSError
 
         """
+        height, width = self._default_size((height, width), (20, 78))
+
         with _OSErrorHandling():
             tmpfile = tempfile.NamedTemporaryFile(
                 mode="w", prefix="pythondialog.tmp", delete=False)
@@ -3376,7 +3498,7 @@ class Dialog:
 
     @widget
     @retval_is_code
-    def tailbox(self, filename, height=20, width=60, **kwargs):
+    def tailbox(self, filename, height=None, width=None, **kwargs):
         """Display the contents of a file in a dialog box, as with "tail -f".
 
         filename -- name of the file, the contents of which is to be
@@ -3390,11 +3512,15 @@ class Dialog:
 
         Return the Dialog exit code from the backend.
 
+        Default values for the size parameters when the
+        'autowidgetsize' feature is disabled: height=20, width=60.
+
         Notable exceptions:
 
             any exception raised by self._perform()
 
         """
+        height, width = self._default_size((height, width), (20, 60))
         return self._widget_with_no_output(
             "tailbox",
             ["--tailbox", filename, str(height), str(width)],
@@ -3403,7 +3529,7 @@ class Dialog:
 
     @widget
     @retval_is_code
-    def textbox(self, filename, height=20, width=60, **kwargs):
+    def textbox(self, filename, height=None, width=None, **kwargs):
         """Display the contents of a file in a dialog box.
 
         filename -- name of the file whose contents is to be
@@ -3422,15 +3548,20 @@ class Dialog:
 
         Return the Dialog exit code from the backend.
 
+        Default values for the size parameters when the
+        'autowidgetsize' feature is disabled: height=20, width=60.
+
         Notable exceptions:
 
             any exception raised by self._perform()
 
         """
+        height, width = self._default_size((height, width), (20, 60))
         # This is for backward compatibility... not that it is
         # stupid, but I prefer explicit programming.
         if kwargs.get("title", None) is None:
             kwargs["title"] = filename
+
         return self._widget_with_no_output(
             "textbox",
             ["--textbox", filename, str(height), str(width)],
@@ -3451,7 +3582,7 @@ class Dialog:
         return [ int(s) for s in mo.group("hour", "minute", "second") ]
 
     @widget
-    def timebox(self, text, height=3, width=30, hour=-1, minute=-1,
+    def timebox(self, text, height=None, width=None, hour=-1, minute=-1,
                 second=-1, **kwargs):
         """Display a time dialog box.
 
@@ -3476,12 +3607,16 @@ class Dialog:
             where 'hour', 'minute' and 'second' are integers
             corresponding to the time chosen by the user.
 
+        Default values for the size parameters when the
+        'autowidgetsize' feature is disabled: height=3, width=30.
+
         Notable exceptions:
             - any exception raised by self._perform()
             - PythonDialogReModuleError
             - UnexpectedDialogOutput
 
         """
+        height, width = self._default_size((height, width), (3, 30))
         (code, output) = self._perform(
             ["--timebox", text, str(height), str(width),
                str(hour), str(minute), str(second)],
@@ -3578,7 +3713,7 @@ class Dialog:
 
     @widget
     @retval_is_code
-    def yesno(self, text, height=10, width=30, **kwargs):
+    def yesno(self, text, height=None, width=None, **kwargs):
         """Display a yes/no dialog box.
 
         text   -- text to display in the box
@@ -3599,11 +3734,15 @@ class Dialog:
 
         Return the Dialog exit code from the backend.
 
+        Default values for the size parameters when the
+        'autowidgetsize' feature is disabled: height=10, width=30.
+
         Notable exceptions:
 
             any exception raised by self._perform()
 
         """
+        height, width = self._default_size((height, width), (10, 30))
         return self._widget_with_no_output(
             "yesno",
             ["--yesno", text, str(height), str(width)],
