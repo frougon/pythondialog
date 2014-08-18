@@ -3,7 +3,7 @@
 
 # demo.py --- Demonstration program and cheap test suite for pythondialog
 #
-# Copyright (C) 2002-2010, 2013  Florent Rougon
+# Copyright (C) 2002-2010, 2013, 2014  Florent Rougon
 # Copyright (C) 2000  Robb Shecter, Sultanbek Tezadov
 #
 # This program is in the public domain.
@@ -78,10 +78,10 @@ import dialog
 from dialog import DialogBackendVersion
 
 progname = os.path.basename(sys.argv[0])
-progversion = "0.8"
+progversion = "0.9"
 version_blurb = """Demonstration program and cheap test suite for pythondialog.
 
-Copyright (C) 2002-2010  Florent Rougon
+Copyright (C) 2002-2010, 2013, 2014  Florent Rougon
 Copyright (C) 2000  Robb Shecter, Sultanbek Tezadov
 
 This is free software; see the source for copying conditions.  There is NO
@@ -405,6 +405,9 @@ The dialog-like program displaying this message box reports version \
                  width=60, height=17)
 
         self.progressbox_demo_with_file_descriptor()
+        # First dialog version where the programbox widget works fine
+        if self.dialog_version_check("1.2-20140112"):
+            self.programbox_demo()
         self.infobox_demo()
         self.gauge_demo()
         answer = self.yesno_demo(with_help=True)
@@ -493,13 +496,16 @@ Now, please select a file you would like to see growing (or not...).""",
         # regular file.
         time.sleep(1 if params["fast_mode"] else 2)
 
-        # programbox_demo would be fine right after
-        # progressbox_demo_with_file_descriptor in demo(), but there is a
-        # little bug in dialog 1.2-20130902 that makes the first two lines
-        # disappear too early. Until the fix is widely deployed, it is probably
-        # best to keep programbox_demo out of the main demo.
+        # programbox_demo is fine right after
+        # progressbox_demo_with_file_descriptor in demo(), but there was a
+        # little bug in dialog that made the first two lines disappear too
+        # early. This bug has been fixed in version 1.2-20140112, therefore
+        # we'll run the programbox_demo as part of the main demo if the dialog
+        # version is >= than this one, otherwise we'll keep it here.
         if self.dialog_version_check("1.1", "the programbox demo", explain=True):
-            self.programbox_demo()
+            # First dialog version where the programbox widget works fine
+            if not self.dialog_version_check("1.2-20140112"):
+                self.programbox_demo()
         # Almost identical to mixedform (mixedform being more powerful). Also,
         # there is now form_demo_with_help() which uses the form widget.
         self.form_demo()
@@ -550,7 +556,7 @@ Now, please select a file you would like to see growing (or not...).""",
                           text="You can put some header text here",
                           title="Progressbox example with a file path")
 
-    def progressboxoid(self, widget, func_name, text):
+    def progressboxoid(self, widget, func_name, text, **kwargs):
         # Since this is just a demo, I will not try to catch os.error exceptions
         # in this function, for the sake of readability.
         read_fd, write_fd = os.pipe()
@@ -582,7 +588,8 @@ Now, please select a file you would like to see growing (or not...).""",
         # etc.
         getattr(d, widget)(
             fd=read_fd,
-            title="{0} example with a file descriptor".format(widget))
+            title="{0} example with a file descriptor".format(widget),
+            **kwargs)
 
         # Now that the progressbox is over (second child process, running the
         # dialog-like program), we can wait() for the first child process.
@@ -683,7 +690,7 @@ of some external program.
 
 This will be done right away if you choose "Yes" in the next dialog.
 This choice will cause 'find /usr/bin' to be run with subprocess.Popen()
-and the output to be displayed, via a pipe, in a 'programbox' widget.\n"""
+and the output to be displayed, via a pipe, in a 'programbox' widget."""
         self.progressboxoid("programbox", func_name, text)
 
         if d.Yesno("Do you want to run 'find /usr/bin' in a programbox widget?"):
