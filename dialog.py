@@ -39,6 +39,25 @@ See the Dialog class documentation for general usage information,
 list of available widgets and ways to pass options to dialog.
 
 
+The 'features' concept
+----------------------
+
+pythondialog 3.1 introduced a concept called 'features' that is
+similar to Python's __future__ statement. The general idea is that
+users can globally modify pythondialog's behavior by calling:
+
+  dialog.enable_feature(FEATURE)
+
+right after importing the 'dialog' module, in order to ensure
+consistent behavior. In this call, FEATURE must be a member of the
+'dialog.Feature' enum. Using this mechanism therefore requires a
+Python installation containing the 'enum' module. Since it is part of
+the standard library in Python 3.4, this should not be a big problem.
+
+Note: the Python 3.4 'enum' module has been backported to older
+      Python versions under the name 'enum34'.
+
+
 Notable exceptions
 ------------------
 
@@ -109,6 +128,44 @@ try:
 except ImportError:
     def _shell_quote(s):
         return "'%s'" % s.replace("'", "'\"'\"'")
+
+try:
+    import enum
+except ImportError:
+    _HAS_ENUM = False
+else:
+    _HAS_ENUM = True
+
+    @enum.unique
+    class Feature(enum.Enum):
+        autowidgetsize = 1      # The value has no particular meaning
+
+    _features = set()
+
+    def enable_feature(feature):
+        if isinstance(feature, Feature):
+            _features.add(feature)
+        else:
+            raise BadPythonDialogUsage("'feature' argument {0!r} is not of "
+                                       "type dialog.Feature".format(feature))
+
+    def disable_feature(feature):
+        if isinstance(feature, Feature):
+            _features.remove(feature)
+        else:
+            raise BadPythonDialogUsage("'feature' argument {0!r} is not of "
+                                       "type dialog.Feature".format(feature))
+
+    def feature_enabled_p(feature):
+        """Predicate to test if a given feature is enabled in the dialog module.
+
+        Return a boolean indicating whether the specified feature is enabled."""
+        if isinstance(feature, Feature):
+            return feature in _features
+        else:
+            raise BadPythonDialogUsage("'feature' argument {0!r} is not of "
+                                       "type dialog.Feature".format(feature))
+
 
 # Exceptions raised by this module
 #
