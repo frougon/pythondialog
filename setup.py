@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # setup.py --- Setup script for pythondialog
-# Copyright (c) 2002, 2003, 2004, 2009, 2010, 2013  Florent Rougon
+# Copyright (c) 2002, 2003, 2004, 2009, 2010, 2013, 2014  Florent Rougon
 #
 # This file is part of pythondialog.
 #
@@ -91,10 +91,7 @@ def main():
     ch_name = "ChangeLog"
     if os.path.isdir(".git"):
         generate_changelog(ch_name)
-    elif os.path.isfile(ch_name):
-        print("No .git directory, using the {0!r} file as is.".format(ch_name),
-              file=sys.stderr)
-    else:
+    elif not os.path.isfile(ch_name):
         msg = """\
 There is no {cl!r} file here and it seems you are not operating from a
 clone of the Git repository (no .git directory); therefore, it is impossible to

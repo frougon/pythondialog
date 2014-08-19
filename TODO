@@ -1,11 +1,5 @@
-* Use height=0 and width=0 for automatic size everywhere? Well, it seems to
-  work with recent versions of dialog (yay!), but changing the default values
-  for 'width' and 'height' in pythondialog widgets would break backward
-  compatibility. -> major version bump? API versioning?
+* Support for --output-separator
 
-* Support for --output-separator.
-
-* Try detecting the terminal window size in order to make reasonable height
-  and width defaults. Hmmm---should also then check for terminal resizing...
+* Check for terminal resizing?..
 
 * Support --tailboxbg
