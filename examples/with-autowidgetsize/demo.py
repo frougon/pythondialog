@@ -77,10 +77,6 @@ import contextlib               # Not really indispensable here
 
 import dialog
 from dialog import DialogBackendVersion
-# With the 'autowidgetsize' feature enabled, pythondialog's widget-producing
-# methods behave as if width=0, height=0, etc. had been passed, except where
-# these parameters are explicitely specified with different values.
-dialog.enable_feature(dialog.Feature.autowidgetsize)
 
 progname = os.path.basename(sys.argv[0])
 progversion = "0.9-autowidgetsize"
@@ -330,8 +326,14 @@ class MyApp:
         global d
         # If you want to use Xdialog (pathnames are also OK for the 'dialog'
         # argument), you can use:
-        #   dialog.Dialog(dialog="Xdialog", compat="Xdialog")
-        self.Dialog_instance = dialog.Dialog(dialog="dialog")
+        #   dialog.Dialog(dialog="Xdialog", compat="Xdialog", ...)
+        #
+        # With the 'autowidgetsize' option enabled, pythondialog's
+        # widget-producing methods behave as if width=0, height=0, etc. had
+        # been passed, except where these parameters are explicitely specified
+        # with different values.
+        self.Dialog_instance = dialog.Dialog(dialog="dialog",
+                                             autowidgetsize=True)
         # See the module docstring at the top of the file to understand the
         # purpose of MyDialog.
         d = MyDialog(self.Dialog_instance)

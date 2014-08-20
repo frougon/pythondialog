@@ -7,19 +7,17 @@
 # This program is in the public domain.
 
 import sys, locale
+from dialog import Dialog
 
 # This is almost always a good thing to do at the beginning of your programs.
 locale.setlocale(locale.LC_ALL, '')
 
-from dialog import Dialog
-import dialog
-# With the 'autowidgetsize' feature enabled, pythondialog's widget-producing
+# Initialize a dialog.Dialog instance
+#
+# With the 'autowidgetsize' option enabled, pythondialog's widget-producing
 # methods behave as if width=0, height=0, etc. had been passed, except where
 # these parameters are explicitely specified with different values.
-dialog.enable_feature(dialog.Feature.autowidgetsize)
-
-# Initialize a dialog.Dialog instance
-d = Dialog(dialog="dialog")
+d = Dialog(dialog="dialog", autowidgetsize=True)
 d.set_background_title("A Simple Example")
 
 

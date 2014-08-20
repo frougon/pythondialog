@@ -40,54 +40,6 @@ See the Dialog class documentation for general usage information,
 list of available widgets and ways to pass options to dialog.
 
 
-The 'features' concept and 'autowidgetsize' feature
----------------------------------------------------
-
-pythondialog 3.1 introduced a concept called 'features' that is
-similar to Python's __future__ statement. For now, it is only used
-for an experimental feature called 'autowidgetsize'. The general idea
-is that users can globally modify pythondialog's behavior by calling:
-
-  dialog.enable_feature(FEATURE)
-
-right after importing the 'dialog' module, in order to ensure
-consistent behavior. In this call, FEATURE must be a member of the
-'dialog.Feature' enum. Using this mechanism therefore requires a
-Python installation containing the 'enum' module. Since it is part of
-the standard library in Python 3.4, this should not be a big problem.
-
-Note: the Python 3.4 'enum' module has been backported to older
-      Python versions under the name 'enum34'.
-
-In pythondialog 3.1, the only feature defined with this mechanism is
-called 'autowidgetsize'. This feature allows one to take advantage of
-the ability of the 'dialog' backend to automatically compute a
-suitable widget size when parameters such as 'width' and 'height' are
-given the value 0. Actually, this is always possible in pythondialog
-by passing 'width=0', 'height=0', etc. to widget-producing methods.
-However, after:
-
-  import dialog
-  dialog.enable_feature(dialog.Feature.autowidgetsize)
-
-all pythondialog widget-producing methods will behave as if width=0,
-height=0, etc. had been passed, except where these parameters are
-explicitely specified with different values.
-
-This should be convenient in situations where figuring out suitable
-widget size parameters is a burden, for instance when developping
-little scripts that don't need too much visual polishing, or when a
-widget is used to display data, the size of which is not easily
-predictable.
-
-Notes:
-  - the 'autowidgetsize' feature is currently marked as experimental,
-    please give some feedback;
-  - you may encounter questionable results if you only set one of the
-    'width' and 'height' parameters to 0 for a given widget (seen in
-    dialog 1.2-20140219).
-
-
 Notable exceptions
 ------------------
 
@@ -158,43 +110,6 @@ try:
 except ImportError:
     def _shell_quote(s):
         return "'%s'" % s.replace("'", "'\"'\"'")
-
-try:
-    import enum
-except ImportError:
-    _HAS_ENUM = False
-else:
-    _HAS_ENUM = True
-
-    @enum.unique
-    class Feature(enum.Enum):
-        autowidgetsize = 1      # The value has no particular meaning
-
-    _features = set()
-
-    def enable_feature(feature):
-        if isinstance(feature, Feature):
-            _features.add(feature)
-        else:
-            raise BadPythonDialogUsage("'feature' argument {0!r} is not of "
-                                       "type dialog.Feature".format(feature))
-
-    def disable_feature(feature):
-        if isinstance(feature, Feature):
-            _features.remove(feature)
-        else:
-            raise BadPythonDialogUsage("'feature' argument {0!r} is not of "
-                                       "type dialog.Feature".format(feature))
-
-    def feature_enabled_p(feature):
-        """Predicate to test if a given feature is enabled in the dialog module.
-
-        Return a boolean indicating whether the specified feature is enabled."""
-        if isinstance(feature, Feature):
-            return feature in _features
-        else:
-            raise BadPythonDialogUsage("'feature' argument {0!r} is not of "
-                                       "type dialog.Feature".format(feature))
 
 
 # Exceptions raised by this module
@@ -944,10 +859,10 @@ class Dialog:
     displays. This can be done by passing 'width=0' and 'height=0' to
     the widget-producing methods (some widgets also have parameters
     such as 'list_height' or 'menu_height'). Instead of writing this
-    in every widget call or so, you may try the 'autowidgetsize'
-    experimental feature, which sets the effective default value of
-    such parameters to 0. Please refer to the dialog module docstring
-    for details.
+    in every widget call or so, you may want to initialize the Dialog
+    instance with 'autowidgetsize=True' (experimental setting), which
+    sets the effective default value of such size parameters to 0.
+    Please refer to the Dialog constructor docstring for details.
 
 
     Return value of widget-producing methods
@@ -1313,7 +1228,7 @@ class Dialog:
         return self._DIALOG_ERROR
 
     def __init__(self, dialog="dialog", DIALOGRC=None,
-                 compat="dialog", use_stdout=None):
+                 compat="dialog", use_stdout=None, *, autowidgetsize=False):
         """Constructor for Dialog instances.
 
         dialog     -- name of (or path to) the dialog-like program to
@@ -1335,7 +1250,16 @@ class Dialog:
                       status). This is for compatibility with Xdialog
                       and should only be used if you have a good
                       reason to do so.
-
+        autowidgetsize -- boolean indicating whether to enable
+                      'autowidgetsize' mode. When enabled, all
+                      pythondialog widget-producing methods will
+                      behave as if width=0, height=0, etc. had been
+                      passed, except where these parameters are
+                      explicitely specified with different values.
+                      This has the effect that, by default, the
+                      'dialog' backend will automatically compute a
+                      suitable size for the widgets. More details
+                      about this option are given below.
 
         The officially supported dialog-like program in pythondialog
         is the well-known dialog program written in C, based on the
@@ -1359,6 +1283,34 @@ class Dialog:
         you to report bugs to the relevant maintainers when you find
         incompatibilities with dialog. This is for the benefit of
         pretty much everyone that relies on the dialog interface.
+
+        Notes about the 'autowidgetsize' option
+        ---------------------------------------
+
+        The 'autowidgetsize' option should be convenient in
+        situations where figuring out suitable widget size parameters
+        is a burden, for instance when developing little scripts that
+        don't need too much visual polishing, or when a widget is
+        used to display data, the size of which is not easily
+        predictable.
+
+        This option is implemented in the following way: for a given
+        size parameter (for instance, width) of a given widget, the
+        default value in the widget-producing method is now None if
+        it previously had a non-zero default. At runtime, if the
+        value seen by the widget-producing method is not None, it is
+        used as is; on the contrary, if that value is None, it is
+        automatically replaced with:
+          - 0 if the Dialog instance has been initialized with
+           'autowidgetsize' set to True;
+          - the old default otherwise.
+
+        Notes:
+          - the 'autowidgetsize' option is currently marked as
+            experimental, please give some feedback;
+          - you may encounter questionable results if you only set
+            one of the 'width' and 'height' parameters to 0 for a
+            given widget (seen in dialog 1.2-20140219).
 
         Notable exceptions:
 
@@ -1397,6 +1349,7 @@ class Dialog:
 
         self._dialog_prg = _path_to_executable(dialog)
         self.compat = compat
+        self.autowidgetsize = autowidgetsize
         self.dialog_persistent_arglist = []
 
         # Use stderr or stdout for reading dialog's output?
@@ -2099,7 +2052,7 @@ class Dialog:
         # If 'autowidgetsize' is enabled, set the default values for the
         # width/height/... parameters of widget-producing methods to 0 (this
         # will actually be done by the caller, this function is only a helper).
-        if _HAS_ENUM and Feature.autowidgetsize in _features:
+        if self.autowidgetsize:
             defaults = (0,) * len(defaults)
 
         # For every element of 'values': keep it if different from None,
@@ -2222,7 +2175,7 @@ class Dialog:
             the date chosen by the user.
 
         Default values for the size parameters when the
-        'autowidgetsize' feature is disabled: height=6.
+        'autowidgetsize' option is disabled: height=6.
 
         Notable exceptions:
             - any exception raised by self._perform()
@@ -2270,7 +2223,7 @@ class Dialog:
         is empty.
 
         Default values for the size parameters when the
-        'autowidgetsize' feature is disabled: height=15, width=54,
+        'autowidgetsize' option is disabled: height=15, width=54,
         list_height=7.
 
         Notable exceptions:
@@ -2668,7 +2621,7 @@ class Dialog:
 
 
         Default values for the size parameters when the
-        'autowidgetsize' feature is disabled: height=8, width=54.
+        'autowidgetsize' option is disabled: height=8, width=54.
 
         Notable exceptions:
             - any exception raised by self._call_program()
@@ -2794,7 +2747,7 @@ class Dialog:
         Return the Dialog exit code from the backend.
 
         Default values for the size parameters when the
-        'autowidgetsize' feature is disabled: height=10, width=30.
+        'autowidgetsize' option is disabled: height=10, width=30.
 
         Notable exceptions:
 
@@ -2828,7 +2781,7 @@ class Dialog:
         user.
 
         Default values for the size parameters when the
-        'autowidgetsize' feature is disabled: height=10, width=30.
+        'autowidgetsize' option is disabled: height=10, width=30.
 
         Notable exceptions:
 
@@ -2923,8 +2876,7 @@ class Dialog:
         entry if 'exit_info' is "renamed", otherwise it is None.
 
         Default values for the size parameters when the
-        'autowidgetsize' feature is disabled: width=60,
-        menu_height=7.
+        'autowidgetsize' option is disabled: width=60, menu_height=7.
 
         Notable exceptions:
 
@@ -2993,7 +2945,7 @@ class Dialog:
         the user chose.
 
         Default values for the size parameters when the
-        'autowidgetsize' feature is disabled: height=15, width=54,
+        'autowidgetsize' option is disabled: height=15, width=54,
         menu_height=7.
 
         Notable exceptions:
@@ -3103,7 +3055,7 @@ class Dialog:
         Return the Dialog exit code from the backend.
 
         Default values for the size parameters when the
-        'autowidgetsize' feature is disabled: height=10, width=30.
+        'autowidgetsize' option is disabled: height=10, width=30.
 
         Notable exceptions:
 
@@ -3138,7 +3090,7 @@ class Dialog:
         pressed the OK button.
 
         Default values for the size parameters when the
-        'autowidgetsize' feature is disabled: height=15, width=60.
+        'autowidgetsize' option is disabled: height=15, width=60.
 
         Notable exceptions:
 
@@ -3179,7 +3131,7 @@ class Dialog:
         by the user.
 
         Default values for the size parameters when the
-        'autowidgetsize' feature is disabled: height=10, width=60.
+        'autowidgetsize' option is disabled: height=10, width=60.
 
         Notable exceptions:
 
@@ -3262,7 +3214,7 @@ class Dialog:
         Return the Dialog exit code from the backend.
 
         Default values for the size parameters when the
-        'autowidgetsize' feature is disabled: height=20, width=78.
+        'autowidgetsize' option is disabled: height=20, width=78.
 
         Notable exceptions:
 
@@ -3298,7 +3250,7 @@ class Dialog:
         documentation.
 
         Default values for the size parameters when the
-        'autowidgetsize' feature is disabled: height=20, width=78.
+        'autowidgetsize' option is disabled: height=20, width=78.
 
         This widget requires dialog >= 1.1 (2011-03-02).
 
@@ -3340,7 +3292,7 @@ class Dialog:
         OK, the returned tag is the empty string.
 
         Default values for the size parameters when the
-        'autowidgetsize' feature is disabled: height=15, width=54,
+        'autowidgetsize' option is disabled: height=15, width=54,
         list_height=7.
 
         Notable exceptions:
@@ -3464,7 +3416,7 @@ class Dialog:
         Return the Dialog exit code from the backend.
 
         Default values for the size parameters when the
-        'autowidgetsize' feature is disabled: height=20, width=78.
+        'autowidgetsize' option is disabled: height=20, width=78.
 
         Notable exceptions:
             - PythonDialogIOError    if the Python version is < 3.3
@@ -3514,7 +3466,7 @@ class Dialog:
         Return the Dialog exit code from the backend.
 
         Default values for the size parameters when the
-        'autowidgetsize' feature is disabled: height=20, width=60.
+        'autowidgetsize' option is disabled: height=20, width=60.
 
         Notable exceptions:
 
@@ -3550,7 +3502,7 @@ class Dialog:
         Return the Dialog exit code from the backend.
 
         Default values for the size parameters when the
-        'autowidgetsize' feature is disabled: height=20, width=60.
+        'autowidgetsize' option is disabled: height=20, width=60.
 
         Notable exceptions:
 
@@ -3609,7 +3561,7 @@ class Dialog:
             corresponding to the time chosen by the user.
 
         Default values for the size parameters when the
-        'autowidgetsize' feature is disabled: height=3, width=30.
+        'autowidgetsize' option is disabled: height=3, width=30.
 
         Notable exceptions:
             - any exception raised by self._perform()
@@ -3736,7 +3688,7 @@ class Dialog:
         Return the Dialog exit code from the backend.
 
         Default values for the size parameters when the
-        'autowidgetsize' feature is disabled: height=10, width=30.
+        'autowidgetsize' option is disabled: height=10, width=30.
 
         Notable exceptions:
 
