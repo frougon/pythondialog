@@ -1220,7 +1220,7 @@ Keys: SPACE   select or deselect the highlighted item, i.e.,
 
     def calendar_demo_with_help(self):
         # Start with the current date
-        day, month, year = 0, 0, 0
+        day, month, year = -1, -1, -1
 
         while True:
             code, date = d.calendar("When do you think Georg Cantor was born?",

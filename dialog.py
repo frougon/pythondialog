@@ -2148,7 +2148,7 @@ class Dialog:
         return [ int(s) for s in mo.group("day", "month", "year") ]
 
     @widget
-    def calendar(self, text, height=None, width=0, day=0, month=0, year=0,
+    def calendar(self, text, height=None, width=0, day=-1, month=-1, year=-1,
                  **kwargs):
         """Display a calendar dialog box.
 
@@ -2157,16 +2157,15 @@ class Dialog:
         width  -- width of the box
         day    -- inititial day highlighted
         month  -- inititial month displayed
-        year   -- inititial year selected (0 causes the current date
-                  to be used as the initial date)
+        year   -- inititial year selected
 
-        A calendar box displays month, day and year in separately
-        adjustable windows. If the values for day, month or year are
-        missing or negative, the current date's corresponding values
-        are used. You can increment or decrement any of those using
-        the left, up, right and down arrows. Use tab or backtab to
-        move between windows. If the year is given as zero, the
-        current date is used as an initial value.
+        A calendar box displays day, month and year in separately
+        adjustable windows. If the year is given as zero, the current
+        date is used as an initial value; otherwise, if any of the
+        values for day, month and year is negative, the current
+        date's corresponding value is used. You can increment or
+        decrement any of those using the left, up, right and down
+        arrows. Use tab or backtab to move between windows.
 
         Return a tuple of the form (code, date) where:
           - 'code' is the Dialog exit code;
@@ -2175,7 +2174,7 @@ class Dialog:
             the date chosen by the user.
 
         Default values for the size parameters when the
-        'autowidgetsize' option is disabled: height=6.
+        'autowidgetsize' option is disabled: height=6, width=0.
 
         Notable exceptions:
             - any exception raised by self._perform()
