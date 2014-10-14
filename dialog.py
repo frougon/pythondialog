@@ -20,64 +20,16 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
 # MA  02110-1301 USA.
 
-"""Python interface to dialog-like programs.
+"""Python interface to :program:`dialog`-like programs.
 
-This module provides a Python interface to dialog-like programs such
-as 'dialog' and 'Xdialog'.
+This module provides a Python interface to :program:`dialog`-like
+programs such as :program:`dialog` and :program:`Xdialog`.
 
-It provides a Dialog class that retains some parameters such as the
-program name and path as well as the values to pass as DIALOG*
+It provides a :class:`Dialog` class that retains some parameters such as
+the program name and path as well as the values to pass as DIALOG*
 environment variables to the chosen program.
 
-For a quick start, you should look at the simple_example.py file that
-comes with pythondialog, in the 'examples' directory. It is a very
-simple and straightforward example using a few basic widgets. Then,
-you could study the demo.py file that illustrates most features of
-pythondialog (also from the 'examples' directory), or more directly
-dialog.py.
-
-See the Dialog class documentation for general usage information,
-list of available widgets and ways to pass options to dialog.
-
-
-Notable exceptions
-------------------
-
-Here is the hierarchy of notable exceptions raised by this module:
-
-  error
-     ExecutableNotFound
-     BadPythonDialogUsage
-     PythonDialogSystemError
-        PythonDialogOSError
-           PythonDialogIOError  (should not be raised starting from
-                                Python 3.3, as IOError becomes an
-                                alias of OSError)
-        PythonDialogErrorBeforeExecInChildProcess
-        PythonDialogReModuleError
-     UnexpectedDialogOutput
-     DialogTerminatedBySignal
-     DialogError
-     UnableToRetrieveBackendVersion
-     UnableToParseBackendVersion
-        UnableToParseDialogBackendVersion
-     InadequateBackendVersion
-     PythonDialogBug
-     ProbablyPythonBug
-
-As you can see, every exception 'exc' among them verifies:
-
-  issubclass(exc, error)
-
-so if you don't need fine-grained error handling, simply catch
-'error' (which will probably be accessible as dialog.error from your
-program) and you should be safe.
-
-Changed in version 2.12: PythonDialogIOError is now a subclass of
-PythonDialogOSError in order to help with the transition from IOError
-to OSError in the Python language. With this change, you can safely
-replace "except PythonDialogIOError" clauses with
-"except PythonDialogOSError" even if running under Python < 3.3.
+See the pythondialog manual for detailed documentation.
 
 """
 
@@ -86,7 +38,16 @@ _VersionInfo = collections.namedtuple(
     "VersionInfo", ("major", "minor", "micro", "releasesuffix"))
 
 class VersionInfo(_VersionInfo):
+    """Class used to represent the version of pythondialog.
+
+    This class is based on :func:`collections.namedtuple` and has the
+    following field names: ``major``, ``minor``, ``micro``,
+    ``releasesuffix``.
+
+    .. versionadded:: 2.14
+    """
     def __str__(self):
+        """Return a string representation of the version."""
         res = ".".join( ( str(elt) for elt in self[:3] ) )
         if self.releasesuffix:
             res += self.releasesuffix
@@ -95,7 +56,13 @@ class VersionInfo(_VersionInfo):
     def __repr__(self):
         return "{0}.{1}".format(__name__, _VersionInfo.__repr__(self))
 
+#: Version of pythondialog as a :class:`VersionInfo` instance.
+#:
+#: .. versionadded:: 2.14
 version_info = VersionInfo(3, 1, 0, None)
+#: Version of pythondialog as a string.
+#:
+#: .. versionadded:: 2.12
 __version__ = str(version_info)
 
 
@@ -144,7 +111,7 @@ class error(Exception):
 PythonDialogException = error
 
 class ExecutableNotFound(error):
-    """Exception raised when the dialog executable can't be found."""
+    """Exception raised when the :program:`dialog` executable can't be found."""
     ExceptionShortDescription = "Executable not found"
 
 class PythonDialogBug(error):
@@ -168,29 +135,40 @@ class PythonDialogSystemError(error):
     """Exception raised when pythondialog cannot perform a "system \
 operation" (e.g., a system call) that should work in "normal" situations.
 
-    This is a convenience exception: PythonDialogIOError, PythonDialogOSError
-    and PythonDialogErrorBeforeExecInChildProcess all derive from this
-    exception. As a consequence, watching for PythonDialogSystemError instead
-    of the aformentioned exceptions is enough if you don't need precise
-    details about these kinds of errors.
+    This is a convenience exception: :exc:`PythonDialogIOError`,
+    :exc:`PythonDialogOSError` and
+    :exc:`PythonDialogErrorBeforeExecInChildProcess` all derive from
+    this exception. As a consequence, watching for
+    :exc:`PythonDialogSystemError` instead of the aformentioned
+    exceptions is enough if you don't need precise details about these
+    kinds of errors.
 
-    Don't confuse this exception with Python's builtin SystemError
-    exception.
+    Don't confuse this exception with Python's builtin
+    :exc:`SystemError` exception.
 
     """
     ExceptionShortDescription = "System error"
 
 class PythonDialogOSError(PythonDialogSystemError):
-    """Exception raised when pythondialog catches an OSError exception that \
-should be passed to the calling program."""
+    """Exception raised when pythondialog catches an :exc:`OSError` exception \
+that should be passed to the calling program."""
     ExceptionShortDescription = "OS error"
 
 class PythonDialogIOError(PythonDialogOSError):
-    """Exception raised when pythondialog catches an IOError exception that \
-should be passed to the calling program.
+    """Exception raised when pythondialog catches an :exc:`IOError` exception \
+that should be passed to the calling program.
 
-    This exception should not be raised starting from Python 3.3, as
-    the built-in exception IOError becomes an alias of OSError.
+    This exception should not be raised starting from Python 3.3, as the
+    built-in exception :exc:`IOError` becomes an alias of
+    :exc:`OSError`.
+
+    .. versionchanged:: 2.12
+       :exc:`PythonDialogIOError` is now a subclass of
+       :exc:`PythonDialogOSError` in order to help with the transition
+       from :exc:`IOError` to :exc:`OSError` in the Python language.
+       With this change, you can safely replace ``except
+       PythonDialogIOError`` clauses with ``except PythonDialogOSError``
+       even if running under Python < 3.3.
 
     """
     ExceptionShortDescription = "IO error"
@@ -200,57 +178,72 @@ class PythonDialogErrorBeforeExecInChildProcess(PythonDialogSystemError):
 before the exec sytem call (included).
 
     This can happen in uncomfortable situations such as:
+
       - the system being out of memory;
       - the maximum number of open file descriptors being reached;
-      - the dialog-like program being removed (or made
+      - the :program:`dialog`-like program being removed (or made
         non-executable) between the time we found it with
-        _find_in_path and the time the exec system call attempted to
-        execute it;
-      - the Python program trying to call the dialog-like program
-        with arguments that cannot be represented in the user's
-        locale (LC_CTYPE)."""
+        :func:`_find_in_path` and the time the exec system call
+        attempted to execute it;
+      - the Python program trying to call the :program:`dialog`-like
+        program with arguments that cannot be represented in the user's
+        locale (:envvar:`LC_CTYPE`).
+
+    """
     ExceptionShortDescription = "Error in a child process before the exec " \
                                 "system call"
 
 class PythonDialogReModuleError(PythonDialogSystemError):
-    """Exception raised when pythondialog catches a re.error exception."""
+    """Exception raised when pythondialog catches a :exc:`re.error` exception."""
     ExceptionShortDescription = "'re' module error"
 
 class UnexpectedDialogOutput(error):
-    """Exception raised when the dialog-like program returns something not \
-expected by pythondialog."""
+    """Exception raised when the :program:`dialog`-like program returns \
+something not expected by pythondialog."""
     ExceptionShortDescription = "Unexpected dialog output"
 
 class DialogTerminatedBySignal(error):
-    """Exception raised when the dialog-like program is terminated by a \
-signal."""
+    """Exception raised when the :program:`dialog`-like program is \
+terminated by a signal."""
     ExceptionShortDescription = "dialog-like terminated by a signal"
 
 class DialogError(error):
-    """Exception raised when the dialog-like program exits with the \
-code indicating an error."""
+    """Exception raised when the :program:`dialog`-like program exits \
+with the code indicating an error."""
     ExceptionShortDescription = "dialog-like terminated due to an error"
 
 class UnableToRetrieveBackendVersion(error):
     """Exception raised when we cannot retrieve the version string of the \
-dialog-like backend."""
+:program:`dialog`-like backend.
+
+    .. versionadded:: 2.14
+    """
     ExceptionShortDescription = "Unable to retrieve the version of the \
 dialog-like backend"
 
 class UnableToParseBackendVersion(error):
     """Exception raised when we cannot parse the version string of the \
-dialog-like backend."""
+:program:`dialog`-like backend.
+
+    .. versionadded:: 2.14
+    """
     ExceptionShortDescription = "Unable to parse as a dialog-like backend \
 version string"
 
 class UnableToParseDialogBackendVersion(UnableToParseBackendVersion):
-    """Exception raised when we cannot parse the version string of the dialog \
-backend."""
+    """Exception raised when we cannot parse the version string of the \
+:program:`dialog` backend.
+
+    .. versionadded:: 2.14
+    """
     ExceptionShortDescription = "Unable to parse as a dialog version string"
 
 class InadequateBackendVersion(error):
     """Exception raised when the backend version in use is inadequate \
-in a given situation."""
+in a given situation.
+
+    .. versionadded:: 2.14
+    """
     ExceptionShortDescription = "Inadequate backend version"
 
 
@@ -286,15 +279,15 @@ except re.error as e:
 #   command-line is not treated as an option, as in:
 #        dialog --title -- --Not an option
 def _dash_escape(args):
-    """Escape all elements of 'args' that need escaping.
+    """Escape all elements of *args* that need escaping.
 
-    'args' may be any sequence and is not modified by this function.
-    Return a new list where every element that needs escaping has
-    been escaped.
+    *args* may be any sequence and is not modified by this function.
+    Return a new list where every element that needs escaping has been
+    escaped.
 
     An element needs escaping when it starts with two ASCII hyphens
-    ('--'). Escaping consists in prepending an element composed of
-    two ASCII hyphens, i.e., the string '--'.
+    (``--``). Escaping consists in prepending an element composed of two
+    ASCII hyphens, i.e., the string ``'--'``.
 
     """
     res = []
@@ -310,9 +303,9 @@ def _dash_escape(args):
 # We need this function in the global namespace for the lambda
 # expressions in _common_args_syntax to see it when they are called.
 def _dash_escape_nf(args):      # nf: non-first
-    """Escape all elements of 'args' that need escaping, except the first one.
+    """Escape all elements of *args* that need escaping, except the first one.
 
-    See _dash_escape() for details. Return a new list.
+    See :func:`_dash_escape` for details. Return a new list.
 
     """
     if not args:
@@ -322,7 +315,7 @@ def _dash_escape_nf(args):      # nf: non-first
     return l
 
 def _simple_option(option, enable):
-    """Turn on or off the simplest dialog Common Options."""
+    """Turn on or off the simplest :term:`dialog common options`."""
     if enable:
         return (option,)
     else:
@@ -416,15 +409,17 @@ _common_args_syntax = {
 
 
 def _find_in_path(prog_name):
-    """Search an executable in the PATH.
+    """Search an executable in the :envvar:`PATH`.
 
-    If PATH is not defined, the default path ":/bin:/usr/bin" is
-    used.
+    If :envvar:`PATH` is not defined, the default path
+    ``:/bin:/usr/bin`` is used.
 
-    Return a path to the file or None if no readable and executable
+    Return a path to the file or ``None`` if no readable and executable
     file is found.
 
-    Notable exception: PythonDialogOSError
+    Notable exception:
+
+      :exc:`PythonDialogOSError`
 
     """
     with _OSErrorHandling():
@@ -445,17 +440,17 @@ def _path_to_executable(f):
     Find a path to an executable, using the same rules as the POSIX
     exec*p functions (see execvp(3) for instance).
 
-    If 'f' contains a '/', it is assumed to be a path and is simply
-    checked for read and write permissions; otherwise, it is looked
-    for according to the contents of the PATH environment variable,
-    which defaults to ":/bin:/usr/bin" if unset.
+    If *f* contains a ``/``, it is assumed to be a path and is simply
+    checked for read and write permissions; otherwise, it is looked for
+    according to the contents of the :envvar:`PATH` environment
+    variable, which defaults to ``:/bin:/usr/bin`` if unset.
 
     The returned path is not necessarily absolute.
 
     Notable exceptions:
 
-        ExecutableNotFound
-        PythonDialogOSError
+      - :exc:`ExecutableNotFound`
+      - :exc:`PythonDialogOSError`
 
     """
     with _OSErrorHandling():
@@ -476,17 +471,18 @@ def _path_to_executable(f):
 
 
 def _to_onoff(val):
-    """Convert boolean expressions to "on" or "off".
+    """Convert boolean expressions to ``"on"`` or ``"off"``.
 
-    Return:
-      - "on" if 'val' is True, a non-zero integer, "on" or any case
-        variation thereof;
-      - "off" if 'val' is False, 0, "off" or any case variation thereof.
+    :return:
+      - ``"on"`` if *val* is ``True``, a non-zero integer, ``"on"`` or
+        any case variation thereof;
+      - ``"off"`` if *val* is ``False``, ``0``, ``"off"`` or any case
+        variation thereof.
 
     Notable exceptions:
 
-        PythonDialogReModuleError
-        BadPythonDialogUsage
+      - :exc:`PythonDialogReModuleError`
+      - :exc:`BadPythonDialogUsage`
 
     """
     if isinstance(val, (bool, int)):
@@ -504,23 +500,24 @@ def _to_onoff(val):
 
 
 def _compute_common_args(mapping):
-    """Compute the list of arguments for dialog common options.
+    """Compute the list of arguments for :term:`dialog common options`.
 
-    Compute a list of the command-line arguments to pass to dialog
-    from a keyword arguments dictionary for options listed as "common
-    options" in the manual page for dialog. These are the options
-    that are not tied to a particular widget.
+    Compute a list of the command-line arguments to pass to
+    :program:`dialog` from a keyword arguments dictionary for options
+    listed as "common options" in the manual page for :program:`dialog`.
+    These are the options that are not tied to a particular widget.
 
-    This allows to specify these options in a pythonic way, such as:
+    This allows one to specify these options in a pythonic way, such
+    as::
 
        d.checklist(<usual arguments for a checklist>,
                    title="...",
                    backtitle="...")
 
-    instead of having to pass them with strings like "--title foo" or
-    "--backtitle bar".
+    instead of having to pass them with strings like ``"--title foo"``
+    or ``"--backtitle bar"``.
 
-    Notable exceptions: None
+    Notable exceptions: none
 
     """
     args = []
@@ -577,50 +574,52 @@ else:
 
 
 class DialogBackendVersion(BackendVersion):
-    """Class representing possible versions of the dialog backend.
+    """Class representing possible versions of the :program:`dialog` backend.
 
     The purpose of this class is to make it easy to reliably compare
-    between versions of the dialog backend. It encapsulates the
-    specific details of the backend versioning scheme to allow
+    between versions of the :program:`dialog` backend. It encapsulates
+    the specific details of the backend versioning scheme to allow
     eventual adaptations to changes in this scheme without affecting
     external code.
 
     The version is represented by two components in this class: the
-    "dotted part" and the "rest". For instance, in the '1.2' version
-    string, the dotted part is [1, 2] and the rest is the empty
-    string. However, in version '1.2-20130902', the dotted part is
-    still [1, 2], but the rest is the string '-20130902'.
+    :dfn:`dotted part` and the :dfn:`rest`. For instance, in the
+    ``'1.2'`` version string, the dotted part is ``[1, 2]`` and the rest
+    is the empty string. However, in version ``'1.2-20130902'``, the
+    dotted part is still ``[1, 2]``, but the rest is the string
+    ``'-20130902'``.
 
     Instances of this class can be created with the constructor by
-    specifying the dotted part and the rest. Alternatively, an
-    instance can be created from the corresponding version string
-    (e.g., '1.2-20130902') using the fromstring() class method. This
-    is particularly useful with the result of d.backend_version(),
-    where 'd' is a Dialog instance. Actually, the main constructor
-    detects if its first argument is a string and calls fromstring()
-    in this case as a convenience. Therefore, all of the following
-    expressions are valid to create a DialogBackendVersion instance:
+    specifying the dotted part and the rest. Alternatively, an instance
+    can be created from the corresponding version string (e.g.,
+    ``'1.2-20130902'``) using the :meth:`fromstring` class method. This
+    is particularly useful with the result of
+    :samp:`{d}.backend_version()`, where *d* is a :class:`Dialog`
+    instance. Actually, the main constructor detects if its first
+    argument is a string and calls :meth:`!fromstring` in this case as a
+    convenience. Therefore, all of the following expressions are valid
+    to create a DialogBackendVersion instance::
 
       DialogBackendVersion([1, 2])
       DialogBackendVersion([1, 2], "-20130902")
       DialogBackendVersion("1.2-20130902")
       DialogBackendVersion.fromstring("1.2-20130902")
 
-    If 'bv' is a DialogBackendVersion instance, str(bv) is a string
-    representing the same version (for instance, "1.2-20130902").
+    If *bv* is a :class:`DialogBackendVersion` instance,
+    :samp:`str({bv})` is a string representing the same version (for
+    instance, ``"1.2-20130902"``).
 
-    Two DialogBackendVersion instances can be compared with the usual
-    comparison operators (<, <=, ==, !=, >=, >). The algorithm is
-    designed so that the following order is respected (after
-    instanciation with fromstring()):
+    Two :class:`DialogBackendVersion` instances can be compared with the
+    usual comparison operators (``<``, ``<=``, ``==``, ``!=``, ``>=``,
+    ``>``). The algorithm is designed so that the following order is
+    respected (after instanciation with :meth:`fromstring`)::
 
       1.2 < 1.2-20130902 < 1.2-20130903 < 1.2.0 < 1.2.0-20130902
 
-    among other cases. Actually, the "dotted parts" are the primary
-    keys when comparing and "rest" strings act as secondary keys.
-    Dotted parts are compared with the standard Python list
-    comparison and "rest" strings using the standard Python string
-    comparison.
+    among other cases. Actually, the *dotted parts* are the primary keys
+    when comparing and *rest* strings act as secondary keys. *Dotted
+    parts* are compared with the standard Python list comparison and
+    *rest* strings using the standard Python string comparison.
 
     """
     try:
@@ -630,7 +629,7 @@ class DialogBackendVersion(BackendVersion):
         raise PythonDialogReModuleError(str(e)) from e
 
     def __init__(self, dotted_part_or_str, rest=""):
-        """Create a DialogBackendVersion instance.
+        """Create a :class:`DialogBackendVersion` instance.
 
         Please see the class docstring for details.
 
@@ -663,6 +662,20 @@ class DialogBackendVersion(BackendVersion):
 
     @classmethod
     def fromstring(cls, s):
+        """Create a :class:`DialogBackendVersion` instance from a \
+:program:`dialog` version string.
+
+        :param str s: a :program:`dialog` version string
+        :return:
+          a :class:`DialogBackendVersion` instance representing the same
+          string
+
+        Notable exceptions:
+
+          - :exc:`UnableToParseDialogBackendVersion`
+          - :exc:`PythonDialogReModuleError`
+
+          """
         try:
             mo = cls._backend_version_cre.match(s)
             if not mo:
@@ -695,29 +708,31 @@ class DialogBackendVersion(BackendVersion):
 
 
 def widget(func):
-    """Decorator to mark Dialog methods that provide widgets.
+    """Decorator to mark :class:`Dialog` methods that provide widgets.
 
-    This allows code to perform automatic operations on these
-    specific methods. For instance, one can define a class that
-    behaves similarly to Dialog, except that after every
-    widget-producing call, it spawns a "confirm quit" dialog if the
-    widget returned Dialog.ESC, and loops in case the user doesn't
-    actually want to quit.
+    This allows code to perform automatic operations on these specific
+    methods. For instance, one can define a class that behaves similarly
+    to :class:`Dialog`, except that after every widget-producing call,
+    it spawns a "confirm quit" dialog if the widget returned
+    :attr:`Dialog.ESC`, and loops in case the user doesn't actually want
+    to quit.
 
     When it is unclear whether a method should have the decorator or
-    not, the return value is used to draw the line. For instance,
-    among 'gauge_start', 'gauge_update' and 'gauge_stop', only the
-    last one has the decorator because it returns a Dialog exit code,
-    whereas the first two don't return anything meaningful.
+    not, the return value is used to draw the line. For instance, among
+    :meth:`Dialog.gauge_start`, :meth:`Dialog.gauge_update` and
+    :meth:`Dialog.gauge_stop`, only the last one has the decorator
+    because it returns a :term:`Dialog exit code`, whereas the first two
+    don't return anything meaningful.
 
     Note:
 
       Some widget-producing methods return the Dialog exit code, but
-      other methods return a *sequence*, the first element of which
-      is the Dialog exit code; the 'retval_is_code' attribute, which
-      is set by the decorator of the same name, allows to
-      programmatically discover the interface a given method conforms
-      to.
+      other methods return a *sequence*, the first element of which is
+      the Dialog exit code; the ``retval_is_code`` attribute, which is
+      set by the decorator of the same name, allows to programmatically
+      discover the interface a given method conforms to.
+
+    .. versionadded:: 2.14
 
     """
     func.is_widget = True
@@ -725,13 +740,15 @@ def widget(func):
 
 
 def retval_is_code(func):
-    """Decorator for Dialog widget-producing methods whose return value is \
-the Dialog exit code.
+    """Decorator for :class:`Dialog` widget-producing methods whose \
+return value is the :term:`Dialog exit code`.
 
-    This decorator is intended for widget-producing methods whose
-    return value consists solely of the Dialog exit code. When this
-    decorator is *not* used on a widget-producing method, the Dialog
-    exit code must be the first element of the return value.
+    This decorator is intended for widget-producing methods whose return
+    value consists solely of the Dialog exit code. When this decorator
+    is *not* used on a widget-producing method, the Dialog exit code
+    must be the first element of the return value.
+
+    .. versionadded:: 3.0
 
     """
     func.retval_is_code = True
@@ -754,404 +771,17 @@ def _obsolete_property(name, replacement=None):
 
 # Main class of the module
 class Dialog:
-    """Class providing bindings for dialog-compatible programs.
+    """Class providing bindings for :program:`dialog`-compatible programs.
 
-    This class allows you to invoke dialog or a compatible program in
-    a pythonic way to build quicky and easily simple but nice text
-    interfaces.
+    This class allows you to invoke :program:`dialog` or a compatible
+    program in a pythonic way to quickly and easily build simple but
+    nice text interfaces.
 
-    An application typically creates one instance of the Dialog class
-    and uses it for all its widgets, but it is possible to
+    An application typically creates one instance of the :class:`Dialog`
+    class and uses it for all its widgets, but it is possible to
     concurrently use several instances of this class with different
-    parameters (such as the background title) if you have a need
-    for this.
-
-
-    Public methods of the Dialog class (mainly widgets)
-    ===================================================
-
-    The Dialog class has the following methods that produce or update
-    widgets:
-
-      buildlist
-      calendar
-      checklist
-      dselect
-      editbox
-      form
-      fselect
-
-      gauge_start
-      gauge_update
-      gauge_stop
-
-      infobox
-      inputbox
-      inputmenu
-      menu
-      mixedform
-      mixedgauge
-      msgbox
-      passwordbox
-      passwordform
-      pause
-      programbox
-      progressbox
-      radiolist
-      rangebox
-      scrollbox
-      tailbox
-      textbox
-      timebox
-      treeview
-      yesno
-
-    All these widgets are described in the docstrings of the
-    corresponding Dialog methods. Many of these descriptions are
-    adapted from the dialog(1) manual page, with the kind permission
-    of Thomas Dickey.
-
-    The Dialog class also has a few other methods, that are not
-    related to a particular widget:
-
-      add_persistent_args
-      backend_version       (see "Checking the backend version" below)
-      maxsize
-      set_background_title
-
-      clear                 (has been OBSOLETE for many years!)
-      setBackgroundTitle    (has been OBSOLETE for many years!)
-
-
-    Passing dialog "Common Options"
-    ===============================
-
-    Every widget method has a **kwargs argument allowing you to pass
-    dialog so-called Common Options (see the dialog(1) manual page)
-    to dialog for this widget call. For instance, if 'd' is a Dialog
-    instance, you can write:
-
-      d.checklist(args, ..., title="A Great Title", no_shadow=True)
-
-    The no_shadow option is worth looking at:
-
-      1. It is an option that takes no argument as far as dialog is
-         concerned (unlike the "--title" option, for instance). When
-         you list it as a keyword argument, the option is really
-         passed to dialog only if the value you gave it evaluates to
-         True in a boolean context. For instance, "no_shadow=True"
-         will cause "--no-shadow" to be passed to dialog whereas
-         "no_shadow=False" will cause this option not to be passed to
-         dialog at all.
-
-      2. It is an option that has a hyphen (-) in its name, which you
-         must change into an underscore (_) to pass it as a Python
-         keyword argument. Therefore, "--no-shadow" is passed by
-         giving a "no_shadow=True" keyword argument to a Dialog method
-         (the leading two dashes are also consistently removed).
-
-
-    Automatic size for widgets
-    ==========================
-
-    In many cases, it is possible to have the 'dialog' backend
-    automatically determine a suitable size for the widgets it
-    displays. This can be done by passing 'width=0' and 'height=0' to
-    the widget-producing methods (some widgets also have parameters
-    such as 'list_height' or 'menu_height'). Instead of writing this
-    in every widget call or so, you may want to initialize the Dialog
-    instance with 'autowidgetsize=True' (experimental setting), which
-    sets the effective default value of such size parameters to 0.
-    Please refer to the Dialog constructor docstring for details.
-
-
-    Return value of widget-producing methods
-    ========================================
-
-    Most Dialog methods that create a widget (actually: all methods
-    that supervise the exit of a widget) return a value which fits
-    into one of these categories:
-
-      1. The return value is a Dialog exit code (see below).
-
-      2. The return value is a sequence whose first element is a
-         Dialog exit code (the rest of the sequence being related to
-         what the user entered in the widget).
-
-    "Dialog exit code" (high-level)
-    -------------------------------
-    A Dialog exit code is a string such as "ok", "cancel", "esc",
-    "help" and "extra", respectively available as Dialog.OK,
-    Dialog.CANCEL, Dialog.ESC, Dialog.HELP and Dialog.EXTRA, i.e.
-    attributes of the Dialog class. These are the standard Dialog
-    exit codes, also known as "high-level exit codes", that user code
-    should deal with. They indicate how/why the widget ended. Some
-    widgets may return additional, non-standard exit codes; for
-    instance, the inputmenu widget may return "accepted" or "renamed"
-    in addition to the standard Dialog exit codes.
-
-    When getting a Dialog exit code from a widget-producing method,
-    user code should compare it with Dialog.OK and friends (or
-    equivalently, with "ok" and friends) using the == operator. This
-    allows to easily replace Dialog.OK and friends with objects that
-    compare the same with "ok" and u"ok" in Python 2, for instance.
-
-    "dialog exit status" (low-level)
-    --------------------------------
-    The standard Dialog exit codes are derived from the dialog exit
-    status, also known as "low-level exit code". This low-level exit
-    code is an integer returned by the dialog backend whose different
-    possible values are referred to as DIALOG_OK, DIALOG_CANCEL,
-    DIALOG_ESC, DIALOG_ERROR, DIALOG_EXTRA, DIALOG_HELP and
-    DIALOG_ITEM_HELP in the dialog(1) manual page. Note that:
-      - DIALOG_HELP and DIALOG_ITEM_HELP both map to Dialog.HELP in
-        pythondialog, because they both correspond to the same user
-        action and the difference brings no information that the
-        caller does not already have;
-      - DIALOG_ERROR has no counterpart as a Dialog attribute,
-        because it is automatically translated into a DialogError
-        exception when received.
-
-    In pythondialog 2.x, the low-level exit codes were available
-    as the DIALOG_OK, DIALOG_CANCEL, etc. attributes of Dialog
-    instances. For compatibility, the Dialog class has attributes of
-    the same names mapped to Dialog.OK, Dialog.CANCEL, etc., but
-    their use is deprecated as of pythondialog 3.0.
-
-
-    Adding a Extra button
-    =====================
-
-    With most widgets, it is possible to add a supplementary button
-    called "Extra button". To do that, you simply have to use
-    'extra_button=True' (keyword argument) in the widget call.
-    By default, the button text is "Extra", but you can specify
-    another string with the 'extra_label' keyword argument.
-
-    When the widget exits, you know if the Extra button was pressed
-    if the Dialog exit code is Dialog.EXTRA ("extra"). Normally, the
-    rest of the return value is the same as if the widget had been
-    closed with OK. Therefore, if the widget normally returns a list
-    of three integers, for instance, you can expect to get the same
-    information if Extra is pressed instead of OK.
-
-
-    Providing on-line help facilities
-    =================================
-
-    With most dialog widgets, it is possible to provide online help
-    to the final user. At the time of this writing (October 2013),
-    there are three main options governing these help facilities in
-    the dialog backend: --help-button, --item-help and --help-status.
-    Since dialog 1.2-20130902, there is also --help-tags that
-    modifies the way --item-help works. As explained previously, to
-    use these options in pythondialog, you can pass the
-    'help_button', 'item_help', 'help_status' and 'help_tags' keyword
-    arguments to Dialog widget-producing methods.
-
-    Adding a Help button
-    --------------------
-    In order to provide a Help button in addition to the normal
-    buttons of a widget, you can pass help_button=True (keyword
-    argument) to the corresponding Dialog method. For instance, if
-    'd' is a Dialog instance, you can write:
-
-      code = d.yesno("<text>", height=10, width=40, help_button=True)
-
-    or
-
-      code, answer = d.inputbox("<text>", init="<init>",
-                                help_button=True)
-
-    When the method returns, the exit code is Dialog.HELP (i.e., the
-    string "help") if the user pressed the Help button. Apart from
-    that, it works exactly as if 'help_button=True' had not been
-    used. In the last example, if the user presses the Help button,
-    'answer' will contain the user input, just as if OK had been
-    pressed. Similarly, if you write:
-
-      code, t = d.checklist(
-                    "<text>", height=0, width=0, list_height=0,
-                    choices=[ ("Tag 1", "Item 1", False),
-                              ("Tag 2", "Item 2", True),
-                              ("Tag 3", "Item 3", True) ],
-                    help_button=True)
-
-    and find that code == Dialog.HELP, then 't' contains the tag
-    string for the highlighted item when the Help button was pressed.
-
-    Finally, note that it is possible to choose the text written on
-    the Help button by supplying a string as the 'help_label' keyword
-    argument.
-
-    Providing inline per-item help
-    ------------------------------
-    In addition to, or instead of the Help button, you can provide
-    item-specific help that is normally displayed at the bottom of
-    the widget. This can be done by passing the 'item_help=True'
-    keyword argument to the widget-producing method and by including
-    the item-specific help strings in the appropriate argument.
-
-    For widgets where item-specific help makes sense (i.e., there are
-    several elements that can be highlighted), there is usually a
-    parameter, often called 'elements', 'choices', 'nodes'..., that
-    must be provided as a sequence describing the various
-    lines/items/nodes/... that can be highlighted in the widget. When
-    'item_help=True' is passed, every element of this sequence must
-    be completed with a string which is the item-help string of the
-    element (dialog(1) terminology). For instance, the following call
-    with no inline per-item help support:
-
-      code, t = d.checklist(
-                    "<text>", height=0, width=0, list_height=0,
-                    choices=[ ("Tag 1", "Item 1", False),
-                              ("Tag 2", "Item 2", True),
-                              ("Tag 3", "Item 3", True) ],
-                    help_button=True)
-
-    can be altered this way to provide inline item-specific help:
-
-      code, t = d.checklist(
-                    "<text>", height=0, width=0, list_height=0,
-                    choices=[ ("Tag 1", "Item 1", False, "Help 1"),
-                              ("Tag 2", "Item 2", True,  "Help 2"),
-                              ("Tag 3", "Item 3", True,  "Help 3") ],
-                    help_button=True, item_help=True, help_tags=True)
-
-    With this modification, the item-help string for the highlighted
-    item is displayed in the bottom line of the screen and updated as
-    the user highlights other items.
-
-    If you don't want a Help button, just use 'item_help=True'
-    without 'help_button=True' ('help_tags' doesn't matter). Then,
-    you have the inline help at the bottom of the screen, and the
-    following discussion about the return value can be ignored.
-
-    If the user chooses the Help button, 'code' will be equal to
-    Dialog.HELP ("help") and 't' will contain the tag string
-    corresponding to the highlighted item when the Help button was
-    pressed ("Tag 1/2/3" in the example). This is because of the
-    'help_tags' option; without it (or with 'help_tags=False'), 't'
-    would have contained the item-help string of the highlighted
-    choice ("Help 1/2/3" in the example).
-
-    If you remember what was said earlier, if 'item_help=True' had
-    not been used in the previous example, 't' would still contain
-    the tag of the highlighted choice if the user closed the widget
-    with the Help button. This is the same as when using
-    'item_help=True' in combination with 'help_tags=True'; however,
-    you would get the item-help string instead if 'help_tags' were
-    False (which is the default, as in the dialog backend, and in
-    order to preserve compatibility with the 'menu' implementation
-    that is several years old).
-
-    Therefore, I recommend for consistency to use 'help_tags=True'
-    whenever possible when specifying 'item_help=True'. This makes
-    "--help-tags" a good candidate for use with
-    Dialog.add_persistent_args() to avoid repeating it over and over.
-    However, there are two cases where 'help_tags=True' cannot be
-    used:
-      - when the version of the dialog backend is lower than
-        1.2-20130902 (the --help-tags option was added in this
-        version);
-      - when using empty or otherwise identical tags for presentation
-        purposes (unless you don't need to tell which element was
-        highlighted when the Help button was pressed, in which case
-        it doesn't matter to be unable to discriminate between the
-        tags).
-
-    Getting the widget status before the Help button was pressed
-    ------------------------------------------------------------
-    Typically, when the user chooses Help in a widget, the
-    application will display a dialog box such as 'textbox', 'msgbox'
-    or 'scrollbox' and redisplay the original widget afterwards. For
-    simple widgets such as 'inputbox', when the Dialog exit code is
-    equal to Dialog.HELP, the return value contains enough
-    information to redisplay the widget in the same state it had when
-    Help was chosen. However, for more complex widgets such as
-    'radiolist', 'checklist', 'form' and its derivatives, knowing the
-    highlighted item is not enough to restore the widget state after
-    processing the help request: one needs to know the checked item /
-    list of checked items / form contents.
-
-    This is where the 'help_status' keyword argument becomes useful.
-    Example:
-
-      code, t = d.checklist(
-                    "<text>", height=0, width=0, list_height=0,
-                    choices=[ ("Tag 1", "Item 1", False),
-                              ("Tag 2", "Item 2", True),
-                              ("Tag 3", "Item 3", True) ],
-                    help_button=True, help_status=True)
-
-    When Help is chosen, code == Dialog.HELP and 't' is a tuple of the
-    form (tag, selected_tags, choices) where:
-      - 'tag' gives the tag string of the highlighted item (which
-        would be the value of 't' if 'help_status' were set to
-        False);
-      - 'selected_tags' is the... list of selected tags (note that
-        highlighting and selecting an item are different things!);
-      - 'choices' is a list built from the original 'choices'
-        argument of the 'checklist' call and from the list of
-        selected tags, that can be used as is to create a widget with
-        the same items and selection state as the original widget had
-        when Help was chosen.
-
-    Normally, pythondialog should always provide something similar to
-    the last item in the previous example in order to make it as easy
-    as possible to redisplay the widget in the appropriate state. To
-    know precisely what is returned with 'help_status=True', the best
-    ways are usually to experiment or read the code (by the way,
-    there are many examples of widgets with various combinations of
-    'help_button', 'item_help' and 'help_status' in the demo).
-
-    As can be inferred from the last sentence, the various options
-    related to help support are not mutually exclusive and may be
-    used together to provide good help support.
-
-    It is also worth noting that the docstrings of the various
-    widgets are written, in most cases, under the assumption that the
-    widget was closed "normally" (typically, with the OK or Extra
-    button). For instance, a docstring may state that the method
-    returns a tuple of the form (code, tag) where 'tag' is ..., but
-    actually, if using 'item_help=True' with 'help_tags=False', the
-    'tag' may very well be an item-help string, and if using
-    'help_status=True', it is likely to be a structured object such
-    as a tuple or list. Of course, handling all these possible
-    variations for all widgets would be a tedious task and would
-    probably significantly degrade the readability of said
-    docstrings.
-
-    Checking the backend version
-    ============================
-
-    The Dialog constructor retrieves the version string of the dialog
-    backend and stores it as an instance of a BackendVersion subclass
-    into the 'cached_backend_version' attribute. This allows doing
-    things such as ('d' being a Dialog instance):
-
-      if d.compat == "dialog" and \\
-        d.cached_backend_version >= DialogBackendVersion("1.2-20130902"):
-          ...
-
-    in a reliable way, allowing to fix the parsing and comparison
-    algorithms right in the appropriate BackendVersion subclass,
-    should the dialog-like backend versioning scheme change in
-    unforeseen ways.
-
-    As Xdialog seems to be dead and not to support --print-version,
-    the 'cached_backend_version' attribute is set to None in
-    Xdialog-compatibility mode (2013-09-12). Should this ever change,
-    one should define an XDialogBackendVersion class to handle the
-    particularities of the Xdialog versioning scheme.
-
-
-    Exceptions
-    ==========
-
-    Please refer to the specific methods' docstrings or simply to the
-    module's docstring for a list of all exceptions that might be
-    raised by this class' methods.
+    parameters (such as the background title) if you have a need for
+    this.
 
     """
     try:
@@ -1189,27 +819,46 @@ class Dialog:
 
     # High-level exit codes, AKA "Dialog exit codes". These are the codes that
     # pythondialog-based applications should use.
+    #
+    #: :term:`Dialog exit code` corresponding to the ``DIALOG_OK``
+    #: :term:`dialog exit status`
     OK     = "ok"
+    #: :term:`Dialog exit code` corresponding to the ``DIALOG_CANCEL``
+    #: :term:`dialog exit status`
     CANCEL = "cancel"
+    #: :term:`Dialog exit code` corresponding to the ``DIALOG_ESC``
+    #: :term:`dialog exit status`
     ESC    = "esc"
+    #: :term:`Dialog exit code` corresponding to the ``DIALOG_EXTRA``
+    #: :term:`dialog exit status`
     EXTRA  = "extra"
+    #: :term:`Dialog exit code` corresponding to the ``DIALOG_HELP`` and
+    #: ``DIALOG_ITEM_HELP`` :term:`dialog exit statuses <dialog exit status>`
     HELP   = "help"
 
     # Define properties to maintain backward-compatibility while warning about
     # the obsolete attributes (which used to refer to the low-level exit codes
     # in pythondialog 2.x).
+    #
+    #: Obsolete property superseded by :attr:`Dialog.OK` since version 3.0
     DIALOG_OK        = property(_obsolete_property("OK"),
                          doc="Obsolete property superseded by Dialog.OK")
+    #: Obsolete property superseded by :attr:`Dialog.CANCEL` since version 3.0
     DIALOG_CANCEL    = property(_obsolete_property("CANCEL"),
                          doc="Obsolete property superseded by Dialog.CANCEL")
+    #: Obsolete property superseded by :attr:`Dialog.ESC` since version 3.0
     DIALOG_ESC       = property(_obsolete_property("ESC"),
                          doc="Obsolete property superseded by Dialog.ESC")
+    #: Obsolete property superseded by :attr:`Dialog.EXTRA` since version 3.0
     DIALOG_EXTRA     = property(_obsolete_property("EXTRA"),
                          doc="Obsolete property superseded by Dialog.EXTRA")
+    #: Obsolete property superseded by :attr:`Dialog.HELP` since version 3.0
     DIALOG_HELP      = property(_obsolete_property("HELP"),
                          doc="Obsolete property superseded by Dialog.HELP")
     # We treat DIALOG_ITEM_HELP and DIALOG_HELP the same way in pythondialog,
     # since both indicate the same user action ("Help" button pressed).
+    #
+    #: Obsolete property superseded by :attr:`Dialog.HELP` since version 3.0
     DIALOG_ITEM_HELP = property(_obsolete_property("ITEM_HELP",
                                                    replacement="HELP"),
                          doc="Obsolete property superseded by Dialog.HELP")
@@ -1229,95 +878,77 @@ class Dialog:
 
     def __init__(self, dialog="dialog", DIALOGRC=None,
                  compat="dialog", use_stdout=None, *, autowidgetsize=False):
-        """Constructor for Dialog instances.
+        """Constructor for :class:`Dialog` instances.
 
-        dialog     -- name of (or path to) the dialog-like program to
-                      use; if it contains a '/', it is assumed to be
-                      a path and is used as is; otherwise, it is
-                      looked for according to the contents of the
-                      PATH environment variable, which defaults to
-                      ":/bin:/usr/bin" if unset.
-        DIALOGRC --   string to pass to the dialog-like program as
-                      the DIALOGRC environment variable, or None if
-                      no modification to the environment regarding
-                      this variable should be done in the call to the
-                      dialog-like program
-        compat     -- compatibility mode (see below)
-        use_stdout -- read dialog's standard output stream instead of
-                      its standard error stream in order to get
-                      most 'results' (user-supplied strings, etc.;
-                      basically everything apart from the exit
-                      status). This is for compatibility with Xdialog
-                      and should only be used if you have a good
-                      reason to do so.
-        autowidgetsize -- boolean indicating whether to enable
-                      'autowidgetsize' mode. When enabled, all
-                      pythondialog widget-producing methods will
-                      behave as if width=0, height=0, etc. had been
-                      passed, except where these parameters are
-                      explicitely specified with different values.
-                      This has the effect that, by default, the
-                      'dialog' backend will automatically compute a
-                      suitable size for the widgets. More details
-                      about this option are given below.
+        :param str dialog:
+          name of (or path to) the :program:`dialog`-like program to
+          use; if it contains a ``'/'``, it is assumed to be a path and
+          is used as is; otherwise, it is looked for according to the
+          contents of the :envvar:`PATH` environment variable, which
+          defaults to ``":/bin:/usr/bin"`` if unset.
+        :param str DIALOGRC:
+          string to pass to the :program:`dialog`-like program as the
+          :envvar:`DIALOGRC` environment variable, or ``None`` if no
+          modification to the environment regarding this variable should
+          be done in the call to the :program:`dialog`-like program
+        :param str compat:
+          compatibility mode (see :ref:`below
+          <Dialog-constructor-compat-arg>`)
+        :param bool use_stdout:
+          read :program:`dialog`'s standard output stream instead of its
+          standard error stream in order to get most "results"
+          (user-supplied strings, selected items, etc.; basically,
+          everything except the exit status). This is for compatibility
+          with :program:`Xdialog` and should only be used if you have a
+          good reason to do so.
+        :param bool autowidgetsize:
+          whether to enable *autowidgetsize* mode. When enabled, all
+          pythondialog widget-producing methods will behave as if
+          ``width=0``, ``height=0``, etc. had been passed, except where
+          these parameters are explicitely specified with different
+          values. This has the effect that, by default, the
+          :program:`dialog` backend will automatically compute a
+          suitable size for the widgets. More details about this option
+          are given :ref:`below <autowidgetsize>`.
+        :return: a :class:`Dialog` instance
 
-        The officially supported dialog-like program in pythondialog
-        is the well-known dialog program written in C, based on the
-        ncurses library. It is also known as cdialog and its home
-        page is currently (2013-08-12) located at:
+        .. _Dialog-constructor-compat-arg:
 
-            http://invisible-island.net/dialog/dialog.html
+        The officially supported :program:`dialog`-like program in
+        pythondialog is the well-known dialog_ program written in C,
+        based on the ncurses_ library.
 
-        If you want to use a different program such as Xdialog, you
-        should indicate the executable file name with the 'dialog'
-        argument *and* the compatibility type that you think it
-        conforms to with the 'compat' argument. Currently, 'compat'
-        can be either "dialog" (for dialog; this is the default) or
-        "Xdialog" (for, well, Xdialog).
+        .. _dialog: http://invisible-island.net/dialog/dialog.html
+        .. _ncurses: http://invisible-island.net/ncurses/ncurses.html
 
-        The 'compat' argument allows me to cope with minor
-        differences in behaviour between the various programs
-        implementing the dialog interface (not the text or graphical
-        interface, I mean the "API"). However, having to support
-        various APIs simultaneously is ugly and I would really prefer
-        you to report bugs to the relevant maintainers when you find
-        incompatibilities with dialog. This is for the benefit of
-        pretty much everyone that relies on the dialog interface.
+        If you want to use a different program such as Xdialog_, you
+        should indicate the executable file name with the *dialog*
+        argument **and** the compatibility type that you think it
+        conforms to with the *compat* argument. Currently, *compat* can
+        be either ``"dialog"`` (for :program:`dialog`; this is the
+        default) or ``"Xdialog"`` (for, well, :program:`Xdialog`).
 
-        Notes about the 'autowidgetsize' option
-        ---------------------------------------
+        .. _Xdialog: http://xdialog.free.fr/
 
-        The 'autowidgetsize' option should be convenient in
-        situations where figuring out suitable widget size parameters
-        is a burden, for instance when developing little scripts that
-        don't need too much visual polishing, or when a widget is
-        used to display data, the size of which is not easily
-        predictable.
-
-        This option is implemented in the following way: for a given
-        size parameter (for instance, width) of a given widget, the
-        default value in the widget-producing method is now None if
-        it previously had a non-zero default. At runtime, if the
-        value seen by the widget-producing method is not None, it is
-        used as is; on the contrary, if that value is None, it is
-        automatically replaced with:
-          - 0 if the Dialog instance has been initialized with
-           'autowidgetsize' set to True;
-          - the old default otherwise.
-
-        Notes:
-          - the 'autowidgetsize' option is currently marked as
-            experimental, please give some feedback;
-          - you may encounter questionable results if you only set
-            one of the 'width' and 'height' parameters to 0 for a
-            given widget (seen in dialog 1.2-20140219).
+        The *compat* argument allows me to cope with minor differences
+        in behaviour between the various programs implementing the
+        :program:`dialog` interface (not the text or graphical
+        interface, I mean the API). However, having to support various
+        APIs simultaneously is ugly and I would really prefer you to
+        report bugs to the relevant maintainers when you find
+        incompatibilities with :program:`dialog`. This is for the
+        benefit of pretty much everyone that relies on the
+        :program:`dialog` interface.
 
         Notable exceptions:
 
-            ExecutableNotFound
-            PythonDialogOSError
-            UnableToRetrieveBackendVersion
-            UnableToParseBackendVersion
+          - :exc:`ExecutableNotFound`
+          - :exc:`PythonDialogOSError`
+          - :exc:`UnableToRetrieveBackendVersion`
+          - :exc:`UnableToParseBackendVersion`
+
+        .. versionadded:: 3.1
+           Support for the *autowidgetsize* parameter.
 
         """
         # DIALOGRC differs from the Dialog._DIALOG_* attributes in that:
@@ -1375,36 +1006,42 @@ class Dialog:
 
     @classmethod
     def dash_escape(cls, args):
-        """Escape all elements of 'args' that need escaping.
+        """
+        Escape all elements of *args* that need escaping for :program:`dialog`.
 
-        'args' may be any sequence and is not modified by this method.
+        *args* may be any sequence and is not modified by this method.
         Return a new list where every element that needs escaping has
         been escaped.
 
         An element needs escaping when it starts with two ASCII hyphens
-        ('--'). Escaping consists in prepending an element composed of
-        two ASCII hyphens, i.e., the string '--'.
+        (``--``). Escaping consists in prepending an element composed of
+        two ASCII hyphens, i.e., the string ``'--'``.
 
-        All high-level Dialog methods automatically perform dash
-        escaping where appropriate. In particular, this is the case
-        for every method that provides a widget: yesno(), msgbox(),
-        etc. You only need to do it yourself when calling a low-level
-        method such as add_persistent_args().
+        All high-level :class:`Dialog` methods automatically perform
+        :term:`dash escaping` where appropriate. In particular, this is
+        the case for every method that provides a widget: :meth:`yesno`,
+        :meth:`msgbox`, etc. You only need to do it yourself when
+        calling a low-level method such as :meth:`add_persistent_args`.
+
+        .. versionadded:: 2.12
 
         """
         return _dash_escape(args)
 
     @classmethod
     def dash_escape_nf(cls, args):
-        """Escape all elements of 'args' that need escaping, except the first one.
+        """
+        Escape all elements of *args* that need escaping, except the first one.
 
-        See dash_escape() for details. Return a new list.
+        See :meth:`dash_escape` for details. Return a new list.
 
-        All high-level Dialog methods automatically perform dash
+        All high-level :class:`Dialog` methods automatically perform dash
         escaping where appropriate. In particular, this is the case
-        for every method that provides a widget: yesno(), msgbox(),
+        for every method that provides a widget: :meth:`yesno`, :meth:`msgbox`,
         etc. You only need to do it yourself when calling a low-level
-        method such as add_persistent_args().
+        method such as :meth:`add_persistent_args`.
+
+        .. versionadded:: 2.12
 
         """
         return _dash_escape_nf(args)
@@ -1412,13 +1049,13 @@ class Dialog:
     def add_persistent_args(self, args):
         """Add arguments to use for every subsequent dialog call.
 
-        This method cannot guess which elements of 'args' are dialog
-        options (such as '--title') and which are not (for instance,
-        you might want to use '--title' or even '--' as an argument
-        to a dialog option). Therefore, this method does not perform
-        any kind of dash escaping; you have to do it yourself.
-        dash_escape() and dash_escape_nf() may be useful for this
-        purpose.
+        This method cannot guess which elements of *args* are dialog
+        options (such as ``--title``) and which are not (for instance,
+        you might want to use ``--title`` or even ``--`` as an argument
+        to a dialog option). Therefore, this method does not perform any
+        kind of :term:`dash escaping`; you have to do it yourself.
+        :meth:`dash_escape` and :meth:`dash_escape_nf` may be useful for
+        this purpose.
 
         """
         self.dialog_persistent_arglist.extend(args)
@@ -1426,19 +1063,21 @@ class Dialog:
     def set_background_title(self, text):
         """Set the background title for dialog.
 
-        text   -- string to use as the background title
+        :param str text: string to use as background title
+
+        .. versionadded:: 2.13
 
         """
         self.add_persistent_args(self.dash_escape_nf(("--backtitle", text)))
 
     # For compatibility with the old dialog
     def setBackgroundTitle(self, text):
-        """Set the background title for dialog.
+        """Set the background title for :program:`dialog`.
 
-        text   -- string to use as the background title
+        :param str text: background title to use behind widgets
 
-        This method is obsolete. Please remove calls to it from your
-        programs.
+        .. deprecated:: 2.03
+          Use :meth:`set_background_title` instead.
 
         """
         warnings.warn("Dialog.setBackgroundTitle() has been obsolete for "
@@ -1449,15 +1088,15 @@ class Dialog:
     def setup_debug(self, enable, file=None, always_flush=False):
         """Setup the debugging parameters.
 
-        When enabled, all dialog commands are written to 'file' using
-        Bourne shell syntax.
+        When enabled, all :program:`dialog` commands are written to
+        *file* using POSIX shell syntax.
 
-        enable         -- boolean indicating whether to enable or
-                          disable debugging
-        file           -- file object where to write debugging
-                          information
-        always_flush   -- boolean indicating whether to call
-                          file.flush() after each command written
+        :param bool enable:       whether to enable or disable debugging
+        :param file file:         where to write debugging information
+        :param bool always_flush: whether to call :meth:`file.flush`
+                                  after each command written
+
+        .. versionadded:: 2.12
 
         """
         self._debug_enabled = enable
@@ -1503,47 +1142,50 @@ class Dialog:
     def _call_program(self, cmdargs, *, dash_escape="non-first",
                       use_persistent_args=True,
                       redir_child_stdin_from_fd=None, close_fds=(), **kwargs):
-        """Do the actual work of invoking the dialog-like program.
+        """Do the actual work of invoking the :program:`dialog`-like program.
 
-        Communication with the dialog-like program is performed
-        through one pipe(2) and optionally a user-specified file
-        descriptor, depending on 'redir_child_stdin_from_fd'. The
-        pipe allows the parent process to read what dialog writes on
-        its standard error[*] stream.
+        Communication with the :program:`dialog`-like program is
+        performed through one :manpage:`pipe(2)` and optionally a
+        user-specified file descriptor, depending on
+        *redir_child_stdin_from_fd*. The pipe allows the parent process
+        to read what :program:`dialog` writes on its standard error
+        stream [#]_.
 
-        If 'use_persistent_args' is True (the default), the elements
-        of self.dialog_persistent_arglist are passed as the first
-        arguments to self._dialog_prg; otherwise,
-        self.dialog_persistent_arglist is not used at all. The
-        remaining arguments are those computed from kwargs followed
-        by the elements of 'cmdargs'.
+        If *use_persistent_args* is ``True`` (the default), the elements
+        of ``self.dialog_persistent_arglist`` are passed as the first
+        arguments to ``self._dialog_prg``; otherwise,
+        ``self.dialog_persistent_arglist`` is not used at all. The
+        remaining arguments are those computed from *kwargs* followed by
+        the elements of *cmdargs*.
 
-        If 'dash_escape' is the string "non-first", then every
-        element of 'cmdargs' that starts with '--' is escaped by
-        prepending an element consisting of '--', except the first
-        one (which is usually a dialog option such as '--yesno').
-        In order to disable this escaping mechanism, pass the string
-        "none" as 'dash_escape'.
+        If *dash_escape* is the string ``"non-first"``, then every
+        element of *cmdargs* that starts with ``'--'`` is escaped by
+        prepending an element consisting of ``'--'``, except the first
+        one (which is usually a :program:`dialog` option such as
+        ``'--yesno'``). In order to disable this escaping mechanism,
+        pass the string ``"none"`` as *dash_escape*.
 
-        If 'redir_child_stdin_from_fd' is not None, it should be an
+        If *redir_child_stdin_from_fd* is not ``None``, it should be an
         open file descriptor (i.e., an integer). That file descriptor
-        will be connected to dialog's standard input. This is used by
-        the gauge widget to feed data to dialog, as well as for
-        progressbox() to allow dialog to read data from a
-        possibly-growing file.
+        will be connected to :program:`dialog`'s standard input. This is
+        used by the gauge widget to feed data to :program:`dialog`, as
+        well as for :meth:`progressbox` in order to allow
+        :program:`dialog` to read data from a possibly-growing file.
 
-        If 'redir_child_stdin_from_fd' is None, the standard input in
-        the child process (which runs dialog) is not redirected in
-        any way.
+        If *redir_child_stdin_from_fd* is ``None``, the standard input
+        in the child process (which runs :program:`dialog`) is not
+        redirected in any way.
 
-        If 'close_fds' is passed, it should be a sequence of
-        file descriptors that will be closed by the child process
-        before it exec()s the dialog-like program.
+        If *close_fds* is passed, it should be a sequence of file
+        descriptors that will be closed by the child process before it
+        exec()s the :program:`dialog`-like program.
 
-          [*] standard ouput stream with 'use_stdout'
+        Notable exception:
 
-        Notable exception: PythonDialogOSError (if any of the pipe(2)
-                           or close(2) system calls fails...)
+          :exc:`PythonDialogOSError` (if any of the pipe(2) or close(2)
+          system calls fails...)
+
+        .. [#] standard ouput stream if *use_stdout* is ``True``
 
         """
         # We want to define DIALOG_OK, DIALOG_CANCEL, etc. in the
@@ -1574,7 +1216,7 @@ class Dialog:
 
         if self._debug_enabled:
             # Write the complete command line with environment variables
-            # setting to the debug log file (Bourne shell syntax for easy
+            # setting to the debug log file (POSIX shell syntax for easy
             # copy-pasting into a terminal, followed by repr(arglist)).
             self._write_command_to_file(new_environ, arglist)
 
@@ -1633,34 +1275,34 @@ class Dialog:
         return (child_pid, child_output_rfd)
 
     def _wait_for_program_termination(self, child_pid, child_output_rfd):
-        """Wait for a dialog-like process to terminate.
+        """Wait for a :program:`dialog`-like process to terminate.
 
         This function waits for the specified process to terminate,
         raises the appropriate exceptions in case of abnormal
-        termination and returns the Dialog exit code (high-level) and
-        stderr[*] output of the process as a tuple:
-        (hl_exit_code, output_string).
+        termination and returns the :term:`Dialog exit code` and stderr
+        [#stream]_ output of the process as a tuple: :samp:`({hl_exit_code},
+        {output_string})`.
 
-        'child_output_rfd' must be the file descriptor for the
-        reading end of the pipe created by self._call_program(), the
-        writing end of which was connected by self._call_program()
-        to the child process's standard error[*].
+        *child_output_rfd* must be the file descriptor for the
+        reading end of the pipe created by :meth:`_call_program`, the
+        writing end of which was connected by :meth:`_call_program`
+        to the child process's standard error [#stream]_.
 
-        This function reads the process' output on standard error[*]
-        from 'child_output_rfd' and closes this file descriptor once
-        this is done.
-
-          [*] actually, standard output if self.use_stdout is True
+        This function reads the process output on the standard error
+        [#stream]_ from *child_output_rfd* and closes this file
+        descriptor once this is done.
 
         Notable exceptions:
 
-            DialogTerminatedBySignal
-            DialogError
-            PythonDialogErrorBeforeExecInChildProcess
-            PythonDialogIOError    if the Python version is < 3.3
-            PythonDialogOSError
-            PythonDialogBug
-            ProbablyPythonBug
+          - :exc:`DialogTerminatedBySignal`
+          - :exc:`DialogError`
+          - :exc:`PythonDialogErrorBeforeExecInChildProcess`
+          - :exc:`PythonDialogIOError`    if the Python version is < 3.3
+          - :exc:`PythonDialogOSError`
+          - :exc:`PythonDialogBug`
+          - :exc:`ProbablyPythonBug`
+
+        .. [#stream] standard output if ``self.use_stdout`` is ``True``
 
         """
         # Read dialog's output on its stderr (stdout with 'use_stdout')
@@ -1724,18 +1366,18 @@ class Dialog:
 
     def _perform(self, cmdargs, *, dash_escape="non-first",
                  use_persistent_args=True, **kwargs):
-        """Perform a complete dialog-like program invocation.
+        """Perform a complete :program:`dialog`-like program invocation.
 
-        This function invokes the dialog-like program, waits for its
-        termination and returns the appropriate Dialog exit code
-        (high-level) along with whatever output it produced.
+        This function invokes the :program:`dialog`-like program, waits
+        for its termination and returns the appropriate :term:`Dialog
+        exit code` along with whatever output it produced.
 
-        See _call_program() for a description of the parameters.
+        See :meth:`_call_program` for a description of the parameters.
 
         Notable exceptions:
 
-            any exception raised by self._call_program() or
-            self._wait_for_program_termination()
+          any exception raised by :meth:`_call_program` or
+          :meth:`_wait_for_program_termination`
 
         """
         (child_pid, child_output_rfd) = \
@@ -1748,14 +1390,15 @@ class Dialog:
         return (exit_code, output)
 
     def _strip_xdialog_newline(self, output):
-        """Remove trailing newline (if any) in Xdialog compatibility mode"""
+        """Remove trailing newline (if any) in \
+:program:`Xdialog`-compatibility mode"""
         if self.compat == "Xdialog" and output.endswith("\n"):
             output = output[:-1]
         return output
 
     # This is for compatibility with the old dialog.py
     def _perform_no_options(self, cmd):
-        """Call dialog without passing any more options."""
+        """Call :program:`dialog` without passing any more options."""
 
         warnings.warn("Dialog._perform_no_options() has been obsolete for "
                       "many years", DeprecationWarning)
@@ -1763,11 +1406,14 @@ class Dialog:
 
     # For compatibility with the old dialog.py
     def clear(self):
-        """Clear the screen. Equivalent to the dialog --clear option.
+        """Clear the screen.
 
-        This method is obsolete. Please remove calls to it from your
-        programs. You may use the clear(1) program to clear the screen.
-        cf. clear_screen() in examples/demo.py for an example.
+        Equivalent to the :option:`--clear` option of :program:`dialog`.
+
+        .. deprecated:: 2.03
+          You may use the :manpage:`clear(1)` program instead.
+          cf. ``clear_screen()`` in :file:`examples/demo.py` for an
+          example.
 
         """
         warnings.warn("Dialog.clear() has been obsolete for many years.\n"
@@ -1781,7 +1427,7 @@ class Dialog:
                 or kwargs.get("help_status", False))
 
     def _parse_quoted_string(self, s, start=0):
-        """Parse a quoted string from a dialog help output."""
+        """Parse a quoted string from a :program:`dialog` help output."""
         if start >= len(s) or s[start] != '"':
             raise PythonDialogBug("quoted string does not start with a double "
                                   "quote: {0!r}".format(s))
@@ -1805,7 +1451,8 @@ class Dialog:
         return (''.join(l), i+1)
 
     def _split_shellstyle_arglist(self, s):
-        """Split an argument list with shell-style quoting performed by dialog.
+        """Split an argument list with shell-style quoting performed \
+by :program:`dialog`.
 
         Any argument in 's' may or may not be quoted. Quoted
         arguments are always expected to be enclosed in double quotes
@@ -1971,32 +1618,40 @@ class Dialog:
                         minimum_version, self.cached_backend_version))
 
     def backend_version(self):
-        """Get the version of the dialog-like program (backend).
+        """Get the version of the :program:`dialog`-like program (backend).
 
-        If the version of the dialog-like program can be retrieved,
-        return it as a string; otherwise, raise
-        UnableToRetrieveBackendVersion.
+        If the version of the :program:`dialog`-like program can be
+        retrieved, return it as a string; otherwise, raise
+        :exc:`UnableToRetrieveBackendVersion`.
 
         This version is not to be confused with the pythondialog
         version.
 
         In most cases, you should rather use the
-        'cached_backend_version' attribute of Dialog instances,
-        because:
+        :attr:`cached_backend_version` attribute of :class:`Dialog`
+        instances, because:
+
           - it avoids calling the backend every time one needs the
             version;
-          - it is a BackendVersion instance (or instance of a
-            subclass) that allows easy and reliable comparisons
-            between versions;
-          - the version string corresponding to a BackendVersion
-            instance (or instance of a subclass) can be obtained with
-            str().
+          - it is a :class:`BackendVersion` instance (or instance of a
+            subclass) that allows easy and reliable comparisons between
+            versions;
+          - the version string corresponding to a
+            :class:`BackendVersion` instance (or instance of a subclass)
+            can be obtained with :func:`str`.
 
         Notable exceptions:
 
-            UnableToRetrieveBackendVersion
-            PythonDialogReModuleError
-            any exception raised by self._perform()
+          - :exc:`UnableToRetrieveBackendVersion`
+          - :exc:`PythonDialogReModuleError`
+          - any exception raised by :meth:`Dialog._perform`
+
+        .. versionadded:: 2.12
+
+        .. versionchanged:: 2.14
+           Raise :exc:`UnableToRetrieveBackendVersion` instead of
+           returning ``None`` when the version of the
+           :program:`dialog`-like program can't be retrieved.
 
         """
         code, output = self._perform(["--print-version"],
@@ -2019,18 +1674,21 @@ class Dialog:
     def maxsize(self, **kwargs):
         """Get the maximum size of dialog boxes.
 
-        If the exit code from the backend is self.OK, return a
-        (lines, cols) tuple of integers; otherwise, return None.
+        If the exit status from the backend corresponds to
+        :attr:`Dialog.OK`, return a :samp:`({lines}, {cols})` tuple of
+        integers; otherwise, return ``None``.
 
         If you want to obtain the number of lines and columns of the
         terminal, you should call this method with
-        use_persistent_args=False, because arguments such as
-        --backtitle modify the values returned.
+        ``use_persistent_args=False``, because :program:`dialog` options
+        such as :option:`--backtitle` modify the returned values.
 
         Notable exceptions:
 
-            PythonDialogReModuleError
-            any exception raised by self._perform()
+          - :exc:`PythonDialogReModuleError`
+          - any exception raised by :meth:`Dialog._perform`
+
+        .. versionadded:: 2.12
 
         """
         code, output = self._perform(["--print-maxsize"], **kwargs)
@@ -2065,49 +1723,62 @@ class Dialog:
                   **kwargs):
         """Display a buildlist box.
 
-        text        -- text to display in the box
-        height      -- height of the box
-        width       -- width of the box
-        list_height -- height of the selected and unselected list
-                       boxes
-        items       -- a list of (tag, item, status) tuples where
-                       'status' specifies the initial
-                       selected/unselected state of each entry; can
-                       be True or False, 1 or 0, "on" or "off" (True,
-                       1 and "on" meaning selected), or any case
-                       variation of these two strings.
+        :param str text:        text to display in the box
+        :param int height:      height of the box
+        :param int width:       width of the box
+        :param int list_height: height of the selected and unselected
+                                list boxes
+        :param items:
+          an iterable of :samp:`({tag}, {item}, {status})` tuples where
+          *status* specifies the initial selected/unselected state of
+          each entry; can be ``True`` or ``False``, ``1`` or ``0``,
+          ``"on"`` or ``"off"`` (``True``, ``1`` and ``"on"`` meaning
+          selected), or any case variation of these two strings.
 
-        A buildlist dialog is similar in logic to the checklist but
-        differs in presentation. In this widget, two lists are
-        displayed, side by side. The list on the left shows
-        unselected items. The list on the right shows selected items.
-        As items are selected or unselected, they move between the
-        two lists. The 'status' component of 'items' specifies which
+        :return: a tuple of the form :samp:`({code}, {tags})` where:
+
+          - *code* is a :term:`Dialog exit code`;
+          - *tags* is a list of the tags corresponding to the selected
+            items, in the order they have in the list on the right.
+
+        :rtype: tuple
+
+        A :meth:`!buildlist` dialog is similar in logic to the
+        :meth:`checklist`, but differs in presentation. In this widget,
+        two lists are displayed, side by side. The list on the left
+        shows unselected items. The list on the right shows selected
+        items. As items are selected or unselected, they move between
+        the two lists. The *status* component of *items* specifies which
         items are initially selected.
 
-        Return a tuple of the form (code, tags) where:
-          - 'code' is the Dialog exit code;
-          - 'tags' is a list of the tags corresponding to the
-            selected items, in the order they have in the list on the
-            right.
+        +--------------+------------------------------------------------+
+        |     Key      |                     Action                     |
+        +==============+================================================+
+        | :kbd:`Space` | select or deselect the highlighted item,       |
+        |              | *i.e.*, move it between the left and right     |
+        |              | lists                                          |
+        +--------------+------------------------------------------------+
+        | :kbd:`^`     | move the focus to the left list                |
+        +--------------+------------------------------------------------+
+        | :kbd:`$`     | move the focus to the right list               |
+        +--------------+------------------------------------------------+
+        | :kbd:`Tab`   | move focus (see *visit_items* below)           |
+        +--------------+------------------------------------------------+
+        | :kbd:`Enter` | press the focused button                       |
+        +--------------+------------------------------------------------+
 
-        Keys: SPACE   select or deselect the highlighted item, i.e.,
-                      move it between the left and right lists
-              ^       move the focus to the left list
-              $       move the focus to the right list
-              TAB     move focus (see 'visit_items' below)
-              ENTER   press the focused button
-
-        If called with 'visit_items=True', the TAB key can move the
-        focus to the left and right lists, which is probably more
+        If called with ``visit_items=True``, the :kbd:`Tab` key can move
+        the focus to the left and right lists, which is probably more
         intuitive for users than the default behavior that requires
-        using ^ and $ for this purpose.
+        using :kbd:`^` and :kbd:`$` for this purpose.
 
         This widget requires dialog >= 1.2 (2012-12-30).
 
         Notable exceptions:
 
-            any exception raised by self._perform() or _to_onoff()
+          any exception raised by :meth:`Dialog._perform` or :func:`_to_onoff`
+
+        .. versionadded:: 3.0
 
         """
         self._dialog_version_check("1.2", "the buildlist widget")
@@ -2152,34 +1823,44 @@ class Dialog:
                  **kwargs):
         """Display a calendar dialog box.
 
-        text   -- text to display in the box
-        height -- height of the box (minus the calendar height)
-        width  -- width of the box
-        day    -- inititial day highlighted
-        month  -- inititial month displayed
-        year   -- inititial year selected
+        :param str text:  text to display in the box
+        :param height:    height of the box (minus the calendar height)
+        :type height:     int or ``None``
+        :param int width: width of the box
+        :param int day:   inititial day highlighted
+        :param int month: inititial month displayed
+        :param int year:  inititial year selected
+        :return: a tuple of the form :samp:`({code}, {date})` where:
 
-        A calendar box displays day, month and year in separately
-        adjustable windows. If the year is given as zero, the current
-        date is used as an initial value; otherwise, if any of the
-        values for day, month and year is negative, the current
+          - *code* is a :term:`Dialog exit code`;
+          - *date* is a list of the form :samp:`[{day}, {month},
+            {year}]`, where *day*, *month* and *year* are integers
+            corresponding to the date chosen by the user.
+
+        :rtype: tuple
+
+        A :meth:`!calendar` box displays day, month and year in
+        separately adjustable windows. If *year* is given as ``0``, the
+        current date is used as initial value; otherwise, if any of the
+        values for *day*, *month* and *year* is negative, the current
         date's corresponding value is used. You can increment or
-        decrement any of those using the left, up, right and down
-        arrows. Use tab or backtab to move between windows.
-
-        Return a tuple of the form (code, date) where:
-          - 'code' is the Dialog exit code;
-          - 'date' is a list of the form [day, month, year], where
-            'day', 'month' and 'year' are integers corresponding to
-            the date chosen by the user.
+        decrement any of those using the :kbd:`Left`, :kbd:`Up`,
+        :kbd:`Right` and :kbd:`Down` arrows. Use :kbd:`Tab` or
+        :kbd:`Backtab` to move between windows.
 
         Default values for the size parameters when the
-        'autowidgetsize' option is disabled: height=6, width=0.
+        :ref:`autowidgetsize <autowidgetsize>` option is disabled:
+        ``height=6, width=0``.
 
         Notable exceptions:
-            - any exception raised by self._perform()
-            - UnexpectedDialogOutput
-            - PythonDialogReModuleError
+
+          - any exception raised by :meth:`Dialog._perform`
+          - :exc:`UnexpectedDialogOutput`
+          - :exc:`PythonDialogReModuleError`
+
+        .. versionchanged:: 3.2
+           The default values for *day*, *month* and *year* have been
+           changed from ``0`` to ``-1``.
 
         """
         (height,) = self._default_size((height, ), (6,))
@@ -2203,31 +1884,36 @@ class Dialog:
                   choices=[], **kwargs):
         """Display a checklist box.
 
-        text        -- text to display in the box
-        height      -- height of the box
-        width       -- width of the box
-        list_height -- number of entries displayed in the box (which
-                       can be scrolled) at a given time
-        choices     -- a list of tuples (tag, item, status) where
-                       'status' specifies the initial on/off state of
-                       each entry; can be True or False, 1 or 0, "on"
-                       or "off" (True, 1 and "on" meaning checked),
-                       or any case variation of these two strings.
+        :param str text:    text to display in the box
+        :param height:      height of the box
+        :type height:       int or ``None``
+        :param width:       width of the box
+        :type width:        int or ``None``
+        :param list_height:
+          number of entries displayed in the box at a given time (the
+          contents can be scrolled)
+        :type list_height:  int or ``None``
+        :param choices:
+          an iterable of :samp:`({tag}, {item}, {status})` tuples where
+          *status* specifies the initial selected/unselected state of
+          each entry; can be ``True`` or ``False``, ``1`` or ``0``,
+          ``"on"`` or ``"off"`` (``True``, ``1`` and ``"on"`` meaning
+          selected), or any case variation of these two strings.
+        :return: a tuple of the form :samp:`({code}, [{tag}, ...])`
+          whose first element is a :term:`Dialog exit code` and second
+          element lists all tags for the entries selected by the user.
+          If the user exits with :kbd:`Esc` or :guilabel:`Cancel`, the
+          returned tag list is empty.
 
-        Return a tuple of the form (code, [tag, ...]) with the tags
-        for the entries that were selected by the user. 'code' is the
-        Dialog exit code.
-
-        If the user exits with ESC or CANCEL, the returned tag list
-        is empty.
+        :rtype: tuple
 
         Default values for the size parameters when the
-        'autowidgetsize' option is disabled: height=15, width=54,
-        list_height=7.
+        :ref:`autowidgetsize <autowidgetsize>` option is disabled:
+        ``height=15, width=54, list_height=7``.
 
         Notable exceptions:
 
-            any exception raised by self._perform() or _to_onoff()
+          any exception raised by :meth:`Dialog._perform` or :func:`_to_onoff`
 
         """
         height, width, list_height = self._default_size(
@@ -2316,10 +2002,10 @@ class Dialog:
                     "unexpected widget name in {0}.{1}._generic_form(): "
                     "{2!r}".format(__name__, type(self).__name__, widget_name))
 
-            for name, value in (("LABEL", label), ("ITEM", item)):
+            for name, value in (("label", label), ("item", item)):
                 if not isinstance(value, str):
                     raise BadPythonDialogUsage(
-                        "{0}.{1}.{2}: {3} element not a string: {4!r}".format(
+                        "{0}.{1}.{2}: {3!r} element not a string: {4!r}".format(
                             __name__, type(self).__name__,
                             method_name, name, value))
 
@@ -2354,51 +2040,54 @@ class Dialog:
     def form(self, text, elements, height=0, width=0, form_height=0, **kwargs):
         """Display a form consisting of labels and fields.
 
-        text        -- text to display in the box
-        elements    -- sequence describing the labels and fields (see
-                       below)
-        height      -- height of the box
-        width       -- width of the box
-        form_height -- number of form lines displayed at the same time
+        :param str text:        text to display in the box
+        :param elements:        sequence describing the labels and
+                                fields (see below)
+        :param int height:      height of the box
+        :param int width:       width of the box
+        :param int form_height: number of form lines displayed at the
+                                same time
+        :return: a tuple of the form :samp:`({code}, {list})` where:
 
-        A form box consists in a series of fields and associated
-        labels. This type of dialog is suitable for adjusting
-        configuration parameters and similar tasks.
+          - *code* is a :term:`Dialog exit code`;
+          - *list* gives the contents of every editable field on exit,
+            with the same order as in *elements*.
 
-        Each element of 'elements' must itself be a sequence
-        (LABEL, YL, XL, ITEM, YI, XI, FIELD_LENGTH, INPUT_LENGTH)
-        containing the various parameters concerning a given field
-        and the associated label.
+        :rtype: tuple
 
-        LABEL is a string that will be displayed at row YL, column
-        XL. ITEM is a string giving the initial value for the field,
-        which will be displayed at row YI, column XI (row and column
+        A :meth:`!form` box consists in a series of :dfn:`fields` and
+        associated :dfn:`labels`. This type of dialog is suitable for
+        adjusting configuration parameters and similar tasks.
+
+        Each element of *elements* must itself be a sequence
+        :samp:`({label}, {yl}, {xl}, {item}, {yi}, {xi}, {field_length},
+        {input_length})` containing the various parameters concerning a
+        given field and the associated label.
+
+        *label* is a string that will be displayed at row *yl*, column
+        *xl*. *item* is a string giving the initial value for the field,
+        which will be displayed at row *yi*, column *xi* (row and column
         numbers starting from 1).
 
-        FIELD_LENGTH and INPUT_LENGTH are integers that respectively
-        specify the number of characters used for displaying the
-        field and the maximum number of characters that can be
-        entered for this field. These two integers also determine
-        whether the contents of the field can be modified, as
-        follows:
+        *field_length* and *input_length* are integers that respectively
+        specify the number of characters used for displaying the field
+        and the maximum number of characters that can be entered for
+        this field. These two integers also determine whether the
+        contents of the field can be modified, as follows:
 
-          - if FIELD_LENGTH is zero, the field cannot be altered and
+          - if *field_length* is zero, the field cannot be altered and
             its contents determines the displayed length;
 
-          - if FIELD_LENGTH is negative, the field cannot be altered
-            and the opposite of FIELD_LENGTH gives the displayed
+          - if *field_length* is negative, the field cannot be altered
+            and the opposite of *field_length* gives the displayed
             length;
 
-          - if INPUT_LENGTH is zero, it is set to FIELD_LENGTH.
-
-        Return a tuple of the form (code, list) where 'code' is the
-        Dialog exit code and 'list' gives the contents of every
-        editable field on exit, with the same order as in 'elements'.
+          - if *input_length* is zero, it is set to *field_length*.
 
         Notable exceptions:
 
-            BadPythonDialogUsage
-            any exception raised by self._perform()
+          - :exc:`BadPythonDialogUsage`
+          - any exception raised by :meth:`Dialog._perform`
 
         """
         return self._generic_form("form", "form", text, elements,
@@ -2409,20 +2098,20 @@ class Dialog:
                      **kwargs):
         """Display a form consisting of labels and invisible fields.
 
-        This widget is identical to the form box, except that all
-        text fields are treated as passwordbox widgets rather than
-        inputbox widgets.
+        This widget is identical to the :meth:`form` box, except that
+        all text fields are treated as :meth:`passwordbox` widgets
+        rather than :meth:`inputbox` widgets.
 
-        By default (as in dialog), nothing is echoed to the terminal
-        as the user types in the invisible fields. This can be
-        confusing to users. Use the 'insecure' keyword argument if
-        you want an asterisk to be echoed for each character entered
-        by the user.
+        By default (as in :program:`dialog)`, nothing is echoed to the
+        terminal as the user types in the invisible fields. This can be
+        confusing to users. Use ``insecure=True`` (keyword argument) if
+        you want an asterisk to be echoed for each character entered by
+        the user.
 
         Notable exceptions:
 
-            BadPythonDialogUsage
-            any exception raised by self._perform()
+          - :exc:`BadPythonDialogUsage`
+          - any exception raised by :meth:`Dialog._perform`
 
         """
         return self._generic_form("passwordform", "passwordform", text,
@@ -2434,37 +2123,52 @@ class Dialog:
                   **kwargs):
         """Display a form consisting of labels and fields.
 
-        text        -- text to display in the box
-        elements    -- sequence describing the labels and fields (see
-                       below)
-        height      -- height of the box
-        width       -- width of the box
-        form_height -- number of form lines displayed at the same time
+        :param str text:        text to display in the box
+        :param elements:        sequence describing the labels and
+                                fields (see below)
+        :param int height:      height of the box
+        :param int width:       width of the box
+        :param int form_height: number of form lines displayed at the
+                                same time
+        :return: a tuple of the form :samp:`({code}, {list})` where:
 
-        A mixedform box is very similar to a form box, and differs
-        from the latter by allowing field attributes to be specified.
+          - *code* is a :term:`Dialog exit code`;
+          - *list* gives the contents of every field on exit, with the
+            same order as in *elements*.
 
-        Each element of 'elements' must itself be a sequence (LABEL,
-        YL, XL, ITEM, YI, XI, FIELD_LENGTH, INPUT_LENGTH, ATTRIBUTES)
-        containing the various parameters concerning a given field
-        and the associated label.
+        :rtype: tuple
 
-        ATTRIBUTES is a bit mask with the following meaning:
+        A :meth:`!mixedform` box is very similar to a :meth:`form` box,
+        and differs from the latter by allowing field attributes to be
+        specified.
 
-          bit 0  -- the field should be hidden (e.g., a password)
-          bit 1  -- the field should be read-only (e.g., a label)
+        Each element of *elements* must itself be a sequence
+        :samp:`({label}, {yl}, {xl}, {item}, {yi}, {xi}, {field_length},
+        {input_length}, {attributes})` containing the various parameters
+        concerning a given field and the associated label.
 
-        For all other parameters, please refer to the documentation
-        of the form box.
+        *attributes* is an integer interpreted as a bit mask with the
+        following meaning (bit 0 being the least significant bit):
 
-        The return value is the same as would be with the form box,
-        except that field marked as read-only with bit 1 of
-        ATTRIBUTES are also included in the output list.
+        +------------+-----------------------------------------------+
+        | Bit number |                    Meaning                    |
+        +============+===============================================+
+        |     0      | the field should be hidden (e.g., a password) |
+        +------------+-----------------------------------------------+
+        |     1      | the field should be read-only (e.g., a label) |
+        +------------+-----------------------------------------------+
+
+        For all other parameters, please refer to the documentation of
+        the :meth:`form` box.
+
+        The return value is the same as would be with the :meth:`!form`
+        box, except that fields marked as read-only with bit 1 of
+        *attributes* are also included in the output list.
 
         Notable exceptions:
 
-            BadPythonDialogUsage
-            any exception raised by self._perform()
+          - :exc:`BadPythonDialogUsage`
+          - any exception raised by :meth:`Dialog._perform`
 
         """
         return self._generic_form("mixedform", "mixedform", text, elements,
@@ -2474,37 +2178,39 @@ class Dialog:
     def dselect(self, filepath, height=0, width=0, **kwargs):
         """Display a directory selection dialog box.
 
-        filepath -- initial path
-        height   -- height of the box
-        width    -- width of the box
+        :param str filepath: initial path
+        :param int height:   height of the box
+        :param int width:    width of the box
+        :return: a tuple of the form :samp:`({code}, {path})` where:
 
-        The directory-selection dialog displays a text-entry window
+          - *code* is a :term:`Dialog exit code`;
+          - *path* is the directory chosen by the user.
+
+        :rtype: tuple
+
+        The directory selection dialog displays a text entry window
         in which you can type a directory, and above that a window
         with directory names.
 
-        Here, filepath can be a filepath in which case the directory
-        window will display the contents of the path and the
-        text-entry window will contain the preselected directory.
+        Here, *filepath* can be a path to a file, in which case the
+        directory window will display the contents of the path and the
+        text entry window will contain the preselected directory.
 
-        Use tab or arrow keys to move between the windows. Within the
-        directory window, use the up/down arrow keys to scroll the
-        current selection. Use the space-bar to copy the current
-        selection into the text-entry window.
+        Use :kbd:`Tab` or the arrow keys to move between the windows.
+        Within the directory window, use the :kbd:`Up` and :kbd:`Down`
+        arrow keys to scroll the current selection. Use the :kbd:`Space`
+        bar to copy the current selection into the text entry window.
 
-        Typing any printable characters switches focus to the
-        text-entry window, entering that character as well as
-        scrolling the directory window to the closest match.
+        Typing any printable character switches focus to the text entry
+        window, entering that character as well as scrolling the
+        directory window to the closest match.
 
-        Use a carriage return or the "OK" button to accept the
-        current value in the text-entry window and exit.
-
-        Return a tuple of the form (code, path) where 'code' is the
-        Dialog exit code and 'path' is the directory chosen by the
-        user.
+        Use :kbd:`Enter` or the :guilabel:`OK` button to accept the
+        current value in the text entry window and exit.
 
         Notable exceptions:
 
-            any exception raised by self._perform()
+          any exception raised by :meth:`Dialog._perform`
 
         """
         # The help output does not depend on whether --help-status was passed
@@ -2517,25 +2223,29 @@ class Dialog:
     def editbox(self, filepath, height=0, width=0, **kwargs):
         """Display a basic text editor dialog box.
 
-        filepath -- file which determines the initial contents of
-                    the dialog box
-        height   -- height of the box
-        width    -- width of the box
+        :param str filepath: path to a file which determines the initial
+                             contents of the dialog box
+        :param int height:   height of the box
+        :param int width:    width of the box
+        :return: a tuple of the form :samp:`({code}, {text})` where:
 
-        The editbox dialog displays a copy of the file contents. You
-        may edit it using the Backspace, Delete and cursor keys to
-        correct typing errors. It also recognizes Page Up and Page
-        Down. Unlike the inputbox, you must tab to the "OK" or
-        "Cancel" buttons to close the dialog. Pressing the "Enter"
-        key within the box will split the corresponding line.
+          - *code* is a :term:`Dialog exit code`;
+          - *text* is the contents of the text entry window on exit.
 
-        Return a tuple of the form (code, text) where 'code' is the
-        Dialog exit code and 'text' is the contents of the text entry
-        window on exit.
+        :rtype: tuple
+
+        The :meth:`!editbox` dialog displays a copy of the file
+        contents. You may edit it using the :kbd:`Backspace`,
+        :kbd:`Delete` and cursor keys to correct typing errors. It also
+        recognizes :kbd:`Page Up` and :kbd:`Page Down`. Unlike the
+        :meth:`inputbox`, you must tab to the :guilabel:`OK` or
+        :guilabel:`Cancel` buttons to close the dialog. Pressing the
+        :kbd:`Enter` key within the box will split the corresponding
+        line.
 
         Notable exceptions:
 
-            any exception raised by self._perform()
+          any exception raised by :meth:`Dialog._perform`
 
         """
         return self._widget_with_string_output(
@@ -2546,39 +2256,42 @@ class Dialog:
     def fselect(self, filepath, height=0, width=0, **kwargs):
         """Display a file selection dialog box.
 
-        filepath -- initial file path
-        height   -- height of the box
-        width    -- width of the box
+        :param str filepath: initial path
+        :param int height:   height of the box
+        :param int width:    width of the box
+        :return: a tuple of the form :samp:`({code}, {path})` where:
 
-        The file-selection dialog displays a text-entry window in
-        which you can type a filename (or directory), and above that
-        two windows with directory names and filenames.
+          - *code* is a :term:`Dialog exit code`;
+          - *path* is the path chosen by the user (the last element of
+            which may be a directory or a file).
 
-        Here, filepath can be a file path in which case the file and
-        directory windows will display the contents of the path and
-        the text-entry window will contain the preselected filename.
+        :rtype: tuple
 
-        Use tab or arrow keys to move between the windows. Within the
-        directory or filename windows, use the up/down arrow keys to
-        scroll the current selection. Use the space-bar to copy the
-        current selection into the text-entry window.
+        The file selection dialog displays a text entry window in
+        which you can type a file name (or directory), and above that
+        two windows with directory names and file names.
 
-        Typing any printable character switches focus to the
-        text-entry window, entering that character as well as
-        scrolling the directory and filename windows to the closest
-        match.
+        Here, *filepath* can be a path to a file, in which case the file
+        and directory windows will display the contents of the path and
+        the text entry window will contain the preselected file name.
 
-        Use a carriage return or the "OK" button to accept the
-        current value in the text-entry window, or the "Cancel"
-        button to cancel.
+        Use :kbd:`Tab` or the arrow keys to move between the windows.
+        Within the directory or file name windows, use the :kbd:`Up` and
+        :kbd:`Down` arrow keys to scroll the current selection. Use the
+        :kbd:`Space` bar to copy the current selection into the text
+        entry window.
 
-        Return a tuple of the form (code, path) where 'code' is the
-        Dialog exit code and 'path' is the path chosen by the user
-        (the last element of which may be a directory or a file).
+        Typing any printable character switches focus to the text entry
+        window, entering that character as well as scrolling the
+        directory and file name windows to the closest match.
+
+        Use :kbd:`Enter` or the :guilabel:`OK` button to accept the
+        current value in the text entry window, or the
+        :guilabel:`Cancel` button to cancel.
 
         Notable exceptions:
 
-            any exception raised by self._perform()
+          any exception raised by :meth:`Dialog._perform`
 
         """
         # The help output does not depend on whether --help-status was passed
@@ -2589,28 +2302,29 @@ class Dialog:
 
     def gauge_start(self, text="", height=None, width=None, percent=0,
                     **kwargs):
-        """Display gauge box.
+        """Display a gauge box.
 
-        text    -- text to display in the box
-        height  -- height of the box
-        width   -- width of the box
-        percent -- initial percentage shown in the meter
+        :param str text:    text to display in the box
+        :param height:      height of the box
+        :type height:       int or ``None``
+        :param width:       width of the box
+        :type width:        int or ``None``
+        :param int percent: initial percentage shown in the meter
+        :return:            undefined
 
         A gauge box displays a meter along the bottom of the box. The
         meter indicates a percentage.
 
-        This function starts the dialog-like program telling it to
-        display a gauge box with a text in it and an initial
+        This function starts the :program:`dialog`-like program, telling
+        it to display a gauge box containing a text and an initial
         percentage in the meter.
 
-        Return value: undefined.
 
+        .. rubric:: Gauge typical usage
 
-        Gauge typical usage
-        -------------------
+        Gauge typical usage (assuming that *d* is an instance of the
+        :class:`Dialog` class) looks like this::
 
-        Gauge typical usage (assuming that 'd' is an instance of the
-        Dialog class) looks like this:
             d.gauge_start()
             # do something
             d.gauge_update(10)       # 10% of the whole task is done
@@ -2620,11 +2334,13 @@ class Dialog:
 
 
         Default values for the size parameters when the
-        'autowidgetsize' option is disabled: height=8, width=54.
+        :ref:`autowidgetsize <autowidgetsize>` option is disabled:
+        ``height=8, width=54``.
 
         Notable exceptions:
-            - any exception raised by self._call_program()
-            - PythonDialogOSError
+
+          - any exception raised by :meth:`_call_program`
+          - :exc:`PythonDialogOSError`
 
         """
         height, width = self._default_size((height, width), (8, 54))
@@ -2653,27 +2369,27 @@ class Dialog:
     def gauge_update(self, percent, text="", update_text=False):
         """Update a running gauge box.
 
-        percent     -- new percentage (integer) to show in the gauge
-                       meter
-        text        -- new text to optionally display in the box
-        update_text -- boolean indicating whether to update the
-                       text in the box
+        :param int percent:      new percentage to show in the gauge
+                                 meter
+        :param str text:         new text to optionally display in the
+                                 box
+        :param bool update_text: whether to update the text in the box
+        :return:                 undefined
 
         This function updates the percentage shown by the meter of a
-        running gauge box (meaning 'gauge_start' must have been
-        called previously). If update_text is True, the text
+        running gauge box (meaning :meth:`gauge_start` must have been
+        called previously). If *update_text* is ``True``, the text
         displayed in the box is also updated.
 
-        See the 'gauge_start' function's documentation for
-        information about how to use a gauge.
+        See the :meth:`gauge_start` method documentation for information
+        about how to use a gauge.
 
-        Return value: undefined.
+        Notable exception:
 
-        Notable exception: PythonDialogIOError (PythonDialogOSError
-                           from Python 3.3 onwards) can be raised if
-                           there is an I/O error while writing to the
-                           pipe used to talk to the dialog-like
-                           program.
+          :exc:`PythonDialogIOError` (:exc:`PythonDialogOSError` from
+          Python 3.3 onwards) can be raised if there is an I/O error
+          while trying to write to the pipe used to talk to the
+          :program:`dialog`-like program.
 
         """
         if not isinstance(percent, int):
@@ -2691,6 +2407,12 @@ class Dialog:
 
     # For "compatibility" with the old dialog.py...
     def gauge_iterate(*args, **kwargs):
+        """Update a running gauge box.
+
+        .. deprecated:: 2.03
+          Use :meth:`gauge_update` instead.
+
+        """
         warnings.warn("Dialog.gauge_iterate() has been obsolete for "
                       "many years", DeprecationWarning)
         gauge_update(*args, **kwargs)
@@ -2700,20 +2422,22 @@ class Dialog:
     def gauge_stop(self):
         """Terminate a running gauge widget.
 
-        This function performs the appropriate cleanup actions to
-        terminate a running gauge (started with 'gauge_start').
+        :return:         a :term:`Dialog exit code`
+        :rtype:          str
 
-        See the 'gauge_start' function's documentation for
+        This function performs the appropriate cleanup actions to
+        terminate a running gauge started with :meth:`gauge_start`.
+
+        See the :meth:`!gauge_start` method documentation for
         information about how to use a gauge.
 
-        Return value: the Dialog exit code from the backend.
-
         Notable exceptions:
-            - any exception raised by
-              self._wait_for_program_termination()
-            - PythonDialogIOError (PythonDialogOSError from
-              Python 3.3 onwards) can be raised if closing the pipe
-              used to talk to the dialog-like program fails.
+
+          - any exception raised by
+            :meth:`_wait_for_program_termination`;
+          - :exc:`PythonDialogIOError` (:exc:`PythonDialogOSError` from
+            Python 3.3 onwards) can be raised if closing the pipe used
+            to talk to the :program:`dialog`-like program fails.
 
         """
         p = self._gauge_process
@@ -2731,26 +2455,29 @@ class Dialog:
     def infobox(self, text, height=None, width=None, **kwargs):
         """Display an information dialog box.
 
-        text   -- text to display in the box
-        height -- height of the box
-        width  -- width of the box
+        :param str text: text to display in the box
+        :param height:   height of the box
+        :type height:    int or ``None``
+        :param width:    width of the box
+        :type width:     int or ``None``
+        :return:         a :term:`Dialog exit code`
+        :rtype:          str
 
-        An info box is basically a message box. However, in this
-        case, dialog will exit immediately after displaying the
-        message to the user. The screen is not cleared when dialog
-        exits, so that the message will remain on the screen after
-        the method returns. This is useful when you want to inform
-        the user that some operations are carrying on that may
+        An info box is basically a message box. However, in this case,
+        :program:`dialog` will exit immediately after displaying the
+        message to the user. The screen is not cleared when
+        :program:`dialog` exits, so that the message will remain on the
+        screen after the method returns. This is useful when you want to
+        inform the user that some operations are carrying on that may
         require some time to finish.
 
-        Return the Dialog exit code from the backend.
-
         Default values for the size parameters when the
-        'autowidgetsize' option is disabled: height=10, width=30.
+        :ref:`autowidgetsize <autowidgetsize>` option is disabled:
+        ``height=10, width=30``.
 
         Notable exceptions:
 
-            any exception raised by self._perform()
+          any exception raised by :meth:`Dialog._perform`
 
         """
         height, width = self._default_size((height, width), (10, 30))
@@ -2763,28 +2490,33 @@ class Dialog:
     def inputbox(self, text, height=None, width=None, init='', **kwargs):
         """Display an input dialog box.
 
-        text   -- text to display in the box
-        height -- height of the box
-        width  -- width of the box
-        init   -- default input string
+        :param str text: text to display in the box
+        :param height:   height of the box
+        :type height:    int or ``None``
+        :param width:    width of the box
+        :type width:     int or ``None``
+        :param str init: default input string
+        :return: a tuple of the form :samp:`({code}, {string})` where:
+
+          - *code* is a :term:`Dialog exit code`;
+          - *string* is the string entered by the user.
+
+        :rtype: tuple
 
         An input box is useful when you want to ask questions that
-        require the user to input a string as the answer. If init is
-        supplied it is used to initialize the input string. When
-        entering the string, the BACKSPACE key can be used to
-        correct typing errors. If the input string is longer than
-        can fit in the dialog box, the input field will be scrolled.
-
-        Return a tuple of the form (code, string) where 'code' is the
-        Dialog exit code and 'string' is the string entered by the
-        user.
+        require the user to input a string as the answer. If *init* is
+        supplied, it is used to initialize the input string. When
+        entering the string, the :kbd:`Backspace` key can be used to
+        correct typing errors. If the input string is longer than can
+        fit in the dialog box, the input field will be scrolled.
 
         Default values for the size parameters when the
-        'autowidgetsize' option is disabled: height=10, width=30.
+        :ref:`autowidgetsize <autowidgetsize>` option is disabled:
+        ``height=10, width=30``.
 
         Notable exceptions:
 
-            any exception raised by self._perform()
+          any exception raised by :meth:`Dialog._perform`
 
         """
         height, width = self._default_size((height, width), (10, 30))
@@ -2799,87 +2531,102 @@ class Dialog:
                   choices=[], **kwargs):
         """Display an inputmenu dialog box.
 
-        text        -- text to display in the box
-        height      -- height of the box
-        width       -- width of the box
-        menu_height -- height of the menu (scrollable part)
-        choices     -- a sequence of (tag, item) tuples, the meaning
-                       of which is explained below
+        :param str text:    text to display in the box
+        :param int height:  height of the box
+        :param width:       width of the box
+        :type width:        int or ``None``
+        :param menu_height: height of the menu (scrollable part)
+        :type menu_height:  int or ``None``
+        :param choices:     an iterable of :samp:`({tag}, {item})`
+                            tuples, the meaning of which is explained
+                            below
+        :return:            see :ref:`below <inputmenu-return-value>`
 
 
-        Overview
-        --------
+        .. rubric:: Overview
 
-        An inputmenu box is a dialog box that can be used to present
-        a list of choices in the form of a menu for the user to
+        An :meth:`!inputmenu` box is a dialog box that can be used to
+        present a list of choices in the form of a menu for the user to
         choose. Choices are displayed in the given order. The main
-        differences with the menu dialog box are:
+        differences with the :meth:`menu` dialog box are:
 
-          * entries are not automatically centered, but
-            left-adjusted;
+          - entries are not automatically centered, but left-adjusted;
 
-          * the current entry can be renamed by pressing the Rename
-            button, which allows editing the 'item' part of the
-            current entry.
+          - the current entry can be renamed by pressing the
+            :guilabel:`Rename` button, which allows editing the *item*
+            part of the current entry.
 
-        Each menu entry consists of a 'tag' string and an 'item'
-        string. The tag gives the entry a name to distinguish it from
-        the other entries in the menu and to provide quick keyboard
-        access. The item is a short description of the option that
-        the entry represents.
+        Each menu entry consists of a *tag* string and an *item* string.
+        The :dfn:`tag` gives the entry a name to distinguish it from the
+        other entries in the menu and to provide quick keyboard access.
+        The :dfn:`item` is a short description of the option that the
+        entry represents.
 
         The user can move between the menu entries by pressing the
-        UP/DOWN keys or the first letter of the tag as a hot key.
-        There are 'menu_height' lines (not entries!) displayed in the
-        scrollable part of the menu at one time.
+        :kbd:`Up` and :kbd:`Down` arrow keys or the first letter of the
+        tag as a hot key. There are *menu_height* lines (not entries!)
+        displayed in the scrollable part of the menu at one time.
 
-        BEWARE!
+        At the time of this writing (with :program:`dialog`
+        1.2-20140219), it is not possible to add an Extra button to this
+        widget, because internally, the :guilabel:`Rename` button *is*
+        the Extra button.
 
-          It is strongly advised not to put any space in tags,
-          otherwise the dialog output can be ambiguous if the
-          corresponding entry is renamed, causing pythondialog to
-          return a wrong tag string and new item text.
+        .. note::
 
-          The reason is that in this case, the dialog output is
-          "RENAMED <tag> <item>" (without angle brackets) and
-          pythondialog cannot guess whether spaces after the
-          "RENAMED " prefix belong to the <tag> or the new <item>
-          text.
+          It is strongly advised not to put any space in tags, otherwise
+          the :program:`dialog` output can be ambiguous if the
+          corresponding entry is renamed, causing pythondialog to return
+          a wrong tag string and new item text.
 
-        Note: there is no point in calling this method with
-              'help_status=True', because it is not possible to
-              rename several items nor is it possible to choose the
-              Help button (or any button other than Rename) once one
-              has started to rename an item.
+          The reason is that in this case, the :program:`dialog` output
+          is :samp:`RENAMED {tag} {item}` and pythondialog cannot guess
+          whether spaces after the :samp:`RENAMED` + *space* prefix
+          belong to the *tag* or the new *item* text.
 
-        Return value
-        ------------
+        .. note::
 
-        Return a tuple of the form (exit_info, tag, new_item_text)
-        where:
+          There is no point in calling this method with
+          ``help_status=True``, because it is not possible to rename
+          several items nor is it possible to choose the
+          :guilabel:`Help` button (or any button other than
+          :guilabel:`Rename`) once one has started to rename an item.
 
-        'exit_info' is either:
-          - the string "accepted", meaning that an entry was accepted
-            without renaming;
-          - the string "renamed", meaning that an entry was accepted
-            after being renamed;
-          - one of the standard Dialog exit codes Dialog.CANCEL,
-            Dialog.ESC, Dialog.HELP.
+        .. _inputmenu-return-value:
 
-        'tag' indicates which entry was accepted (with or without
-        renaming), if any. If no entry was accepted (e.g., if the
-        dialog was exited with the Cancel button), then 'tag' is
-        None.
+        .. rubric:: Return value
 
-        'new_item_text' gives the new 'item' part of the renamed
-        entry if 'exit_info' is "renamed", otherwise it is None.
+        Return a tuple of the form :samp:`({exit_info}, {tag},
+        {new_item_text})` where:
+
+          + *exit_info* is either:
+
+            - the string ``"accepted"``, meaning that an entry was
+              accepted without renaming;
+            - the string ``"renamed"``, meaning that an entry was
+              accepted after being renamed;
+            - one of the standard :term:`Dialog exit codes <Dialog exit
+              code>` :attr:`Dialog.CANCEL`, :attr:`Dialog.ESC` or
+              :attr:`Dialog.HELP` (:attr:`Dialog.EXTRA` can't be
+              returned, because internally, the :guilabel:`Rename`
+              button *is* the Extra button).
+
+          + *tag* indicates which entry was accepted (with or without
+            renaming), if any. If no entry was accepted (e.g., if the
+            dialog was exited with the :guilabel:`Cancel` button), then
+            *tag* is ``None``.
+
+          + *new_item_text* gives the new *item* part of the renamed
+            entry if *exit_info* is ``"renamed"``, otherwise it is
+            ``None``.
 
         Default values for the size parameters when the
-        'autowidgetsize' option is disabled: width=60, menu_height=7.
+        :ref:`autowidgetsize <autowidgetsize>` option is disabled:
+        ``height=0, width=60, menu_height=7``.
 
         Notable exceptions:
 
-            any exception raised by self._perform()
+          any exception raised by :meth:`Dialog._perform`
 
         """
         width, menu_height = self._default_size((width, menu_height), (60, 7))
@@ -2908,48 +2655,50 @@ class Dialog:
              **kwargs):
         """Display a menu dialog box.
 
-        text        -- text to display in the box
-        height      -- height of the box
-        width       -- width of the box
-        menu_height -- number of entries displayed in the box (which
-                       can be scrolled) at a given time
-        choices     -- a sequence of (tag, item) tuples (see below)
+        :param str text:        text to display in the box
+        :param height:      height of the box
+        :type height:       int or ``None``
+        :param width:       width of the box
+        :type width:        int or ``None``
+        :param menu_height: number of entries displayed in the box
+                            (which can be scrolled) at a given time
+        :type menu_height:  int or ``None``
+        :param choices:     an iterable of :samp:`({tag}, {item})`
+                            tuples, the meaning of which is explained
+                            below
+        :return: a tuple of the form :samp:`({code}, {tag})` where:
 
+          - *code* is a :term:`Dialog exit code`;
+          - *tag* is the tag string corresponding to the item that the
+            user chose.
 
-        Overview
-        --------
+        :rtype: tuple
 
-        As its name suggests, a menu box is a dialog box that can be
-        used to present a list of choices in the form of a menu for
-        the user to choose. Choices are displayed in the given order.
+        As its name suggests, a :meth:`!menu` box is a dialog box that
+        can be used to present a list of choices in the form of a menu
+        for the user to choose. Choices are displayed in the given
+        order.
 
-        Each menu entry consists of a 'tag' string and an 'item'
-        string. The tag gives the entry a name to distinguish it from
-        the other entries in the menu and to provide quick keyboard
-        access. The item is a short description of the option that
-        the entry represents.
+        Each menu entry consists of a *tag* string and an *item* string.
+        The :dfn:`tag` gives the entry a name to distinguish it from the
+        other entries in the menu and to provide quick keyboard access.
+        The :dfn:`item` is a short description of the option that the
+        entry represents.
 
         The user can move between the menu entries by pressing the
-        UP/DOWN keys, the first letter of the tag as a hot key, or
-        the number keys 1-9. There are 'menu_height' entries
-        displayed in the menu at one time, but the menu will be
-        scrolled if there are more entries than that.
-
-
-        Return value
-        ------------
-
-        Return a tuple of the form (code, tag) where 'code' is the
-        Dialog exit code and 'tag' the tag string of the item that
-        the user chose.
+        :kbd:`Up` and :kbd:`Down` arrow keys, the first letter of the
+        tag as a hotkey, or the number keys :kbd:`1` through :kbd:`9`.
+        There are *menu_height* entries displayed in the menu at one
+        time, but it will be scrolled if there are more entries than
+        that.
 
         Default values for the size parameters when the
-        'autowidgetsize' option is disabled: height=15, width=54,
-        menu_height=7.
+        :ref:`autowidgetsize <autowidgetsize>` option is disabled:
+        ``height=15, width=54, menu_height=7``.
 
         Notable exceptions:
 
-            any exception raised by self._perform()
+          any exception raised by :meth:`Dialog._perform`
 
         """
         height, width, menu_height = self._default_size(
@@ -2967,54 +2716,63 @@ class Dialog:
              **kwargs):
         """Display a mixed gauge dialog box.
 
-        text        -- text to display in the middle of the box,
-                       between the elements list and the progress bar
-        height      -- height of the box
-        width       -- width of the box
-        percent     -- integer giving the percentage for the global
-                       progress bar
-        elements    -- a sequence of (tag, item) tuples, the meaning
-                       of which is explained below
+        :param str text:    text to display in the middle of the box,
+                            between the elements list and the progress
+                            bar
+        :param int height:  height of the box
+        :param int width:   width of the box
+        :param int percent: integer giving the percentage for the global
+                            progress bar
+        :param elements:    an iterable of :samp:`({tag}, {item})`
+                            tuples, the meaning of which is explained
+                            below
+        :return:            a :term:`Dialog exit code`
+        :rtype:             str
 
-        A mixedgauge box displays a list of "elements" with status
-        indication for each of them, followed by a text and finally a
-        (global) progress bar along the bottom of the box.
+        A :meth:`!mixedgauge` box displays a list of "elements" with
+        status indication for each of them, followed by a text and
+        finally a global progress bar along the bottom of the box.
 
-        The top part ('elements') is suitable for displaying a task
-        list. One element is displayed per line, with its 'tag' part
-        on the left and its 'item' part on the right. The 'item' part
-        is a string that is displayed on the right of the same line.
+        The top part ("elements") is suitable for displaying a task
+        list. One element is displayed per line, with its *tag* part on
+        the left and its *item* part on the right. The *item* part is a
+        string that is displayed on the right of the same line.
 
-        The 'item' of an element can be an arbitrary string, but
-        special values listed in the dialog(3) manual page translate
-        into a status indication for the corresponding task ('tag'),
-        such as: "Succeeded", "Failed", "Passed", "Completed", "Done",
-        "Skipped", "In Progress", "Checked", "N/A" or a progress
-        bar.
+        The *item* part of an element can be an arbitrary string.
+        Special values listed in the :manpage:`dialog(3)` manual page
+        are translated into a status indication for the corresponding
+        task (*tag*), such as: "Succeeded", "Failed", "Passed",
+        "Completed", "Done", "Skipped", "In Progress", "Checked", "N/A"
+        or a progress bar.
 
         A progress bar for an element is obtained by supplying a
-        negative number for the 'item'. For instance, "-75" will
-        cause a progress bar indicating 75 % to be displayed on the
+        negative number for the *item*. For instance, ``"-75"`` will
+        cause a progress bar indicating 75% to be displayed on the
         corresponding line.
 
-        For your convenience, if an 'item' appears to be an integer
-        or a float, it will be converted to a string before being
-        passed to the dialog-like program.
+        For your convenience, if an *item* appears to be an integer or a
+        float, it will be converted to a string before being passed to
+        the :program:`dialog`-like program.
 
-        'text' is shown as a sort of caption between the list and the
-        global progress bar. The latter displays 'percent' as the
+        *text* is shown as a sort of caption between the list and the
+        global progress bar. The latter displays *percent* as the
         percentage of completion.
 
-        Contrary to the gauge widget, mixedgauge is completely
-        static. You have to call mixedgauge() several times in order
-        to display different percentages in the global progress bar,
-        or status indicators for a given task.
+        Contrary to the regular :ref:`gauge widget <gauge-widget>`,
+        :meth:`!mixedgauge` is completely static. You have to call
+        :meth:`!mixedgauge` several times in order to display different
+        percentages in the global progress bar or various status
+        indicators for a given task.
 
-        Return the Dialog exit code from the backend.
+        .. note::
+
+           Calling :meth:`!mixedgauge` several times is likely to cause
+           unwanted flickering because of the screen initializations
+           performed by :program:`dialog` on every run.
 
         Notable exceptions:
 
-            any exception raised by self._perform()
+          any exception raised by :meth:`Dialog._perform`
 
         """
         cmd = ["--mixedgauge", text, str(height), str(width), str(percent)]
@@ -3027,38 +2785,40 @@ class Dialog:
     def msgbox(self, text, height=None, width=None, **kwargs):
         """Display a message dialog box, with scrolling and line wrapping.
 
-        text   -- text to display in the box
-        height -- height of the box
-        width  -- width of the box
+        :param str text: text to display in the box
+        :param height:   height of the box
+        :type height:    int or ``None``
+        :param width:    width of the box
+        :type width:     int or ``None``
+        :return:         a :term:`Dialog exit code`
+        :rtype:          str
 
-        Display a text in a message box, with a scrollbar and
-        percentage indication if the text is too long to fit in a
-        single "screen".
+        Display *text* in a message box, with a scrollbar and percentage
+        indication if *text* is too long to fit in a single "screen".
 
-        A message box is very similar to a yes/no box. The only
-        difference between a message box and a yes/no box is that a
-        message box has only a single OK button. You can use this
-        dialog box to display any message you like. After reading
-        the message, the user can press the Enter key so that dialog
-        will exit and the calling program can continue its
-        operation.
+        An :meth:`!msgbox` is very similar to a :meth:`yesno` box. The
+        only difference between an :meth:`!msgbox` and a :meth:`!yesno`
+        box is that the former only has a single :guilabel:`OK` button.
+        You can use :meth:`!msgbox` to display any message you like.
+        After reading the message, the user can press the :kbd:`Enter`
+        key so that :program:`dialog` will exit and the calling program
+        can continue its operation.
 
-        msgbox() performs automatic line wrapping. If you want to
-        force a newline at some point, simply insert it in 'text'. In
-        other words (with the default settings), newline characters
-        in 'text' *are* respected; the line wrapping process
-        performed by dialog only inserts *additional* newlines when
-        needed. If you want no automatic line wrapping, consider
-        using scrollbox().
-
-        Return the Dialog exit code from the backend.
+        :meth:`!msgbox` performs automatic line wrapping. If you want to
+        force a newline at some point, simply insert it in *text*. In
+        other words (with the default settings), newline characters in
+        *text* **are** respected; the line wrapping process performed by
+        :program:`dialog` only inserts **additional** newlines when
+        needed. If you want no automatic line wrapping, consider using
+        :meth:`scrollbox`.
 
         Default values for the size parameters when the
-        'autowidgetsize' option is disabled: height=10, width=30.
+        :ref:`autowidgetsize <autowidgetsize>` option is disabled:
+        ``height=10, width=30``.
 
         Notable exceptions:
 
-            any exception raised by self._perform()
+          any exception raised by :meth:`Dialog._perform`
 
         """
         height, width = self._default_size((height, width), (10, 30))
@@ -3072,28 +2832,33 @@ class Dialog:
     def pause(self, text, height=None, width=None, seconds=5, **kwargs):
         """Display a pause dialog box.
 
-        text       -- text to display in the box
-        height     -- height of the box
-        width      -- width of the box
-        seconds    -- number of seconds to pause for (integer)
+        :param str text:    text to display in the box
+        :param height:      height of the box
+        :type height:       int or ``None``
+        :param width:       width of the box
+        :type width:        int or ``None``
+        :param int seconds: number of seconds to pause for
+        :return:
+          a :term:`Dialog exit code` (which is :attr:`Dialog.OK` if the
+          widget ended automatically after *seconds* seconds or if the
+          user pressed the :guilabel:`OK` button)
+        :rtype:             str
 
-        A pause box displays a text and a meter along the bottom of
-        the box, during a specified amount of time ('seconds'). The
-        meter indicates how many seconds remain until the end of the
-        pause. The widget exits when the specified number of seconds
-        is elapsed, or immediately if the user presses the OK button,
-        the Cancel button or the Esc key.
-
-        Return the Dialog exit code, which is Dialog.OK if the pause
-        ended automatically after 'seconds' seconds or if the user
-        pressed the OK button.
+        A :meth:`!pause` box displays a text and a meter along the
+        bottom of the box, during a specified amount of time
+        (*seconds*). The meter indicates how many seconds remain until
+        the end of the pause. The widget exits when the specified number
+        of seconds is elapsed, or immediately if the user presses the
+        :guilabel:`OK` button, the :guilabel:`Cancel` button or the
+        :kbd:`Esc` key.
 
         Default values for the size parameters when the
-        'autowidgetsize' option is disabled: height=15, width=60.
+        :ref:`autowidgetsize <autowidgetsize>` option is disabled:
+        ``height=15, width=60``.
 
         Notable exceptions:
 
-            any exception raised by self._perform()
+          any exception raised by :meth:`Dialog._perform`
 
         """
         height, width = self._default_size((height, width), (15, 60))
@@ -3106,35 +2871,41 @@ class Dialog:
     def passwordbox(self, text, height=None, width=None, init='', **kwargs):
         """Display a password input dialog box.
 
-        text   -- text to display in the box
-        height -- height of the box
-        width  -- width of the box
-        init   -- default input password
+        :param str text:  text to display in the box
+        :param height:    height of the box
+        :type height:     int or ``None``
+        :param width:     width of the box
+        :type width:      int or ``None``
+        :param str init:  default input password
+        :return: a tuple of the form :samp:`({code}, {password})` where:
 
-        A password box is similar to an input box, except that the
-        text the user enters is not displayed. This is useful when
-        prompting for passwords or other sensitive information. Be
-        aware that if anything is passed in "init", it will be
-        visible in the system's process table to casual snoopers.
-        Also, it is very confusing to the user to provide them with a
-        default password they cannot see. For these reasons, using
-        "init" is highly discouraged.
+          - *code* is a :term:`Dialog exit code`;
+          - *password* is the password entered by the user.
 
-        By default (as in dialog), nothing is echoed to the terminal
-        as the user enters the sensitive text. This can be confusing
-        to users. Use the 'insecure' keyword argument if you want an
-        asterisk to be echoed for each character entered by the user.
+        :rtype: tuple
 
-        Return a tuple of the form (code, password) where 'code' is
-        the Dialog exit code and 'password' is the password entered
-        by the user.
+        A :meth:`!passwordbox` is similar to an :meth:`inputbox`, except
+        that the text the user enters is not displayed. This is useful
+        when prompting for passwords or other sensitive information. Be
+        aware that if anything is passed in *init*, it will be visible
+        in the system's process table to casual snoopers. Also, it is
+        very confusing to the user to provide them with a default
+        password they cannot see. For these reasons, using *init* is
+        highly discouraged.
+
+        By default (as in :program:`dialog`), nothing is echoed to the
+        terminal as the user enters the sensitive text. This can be
+        confusing to users. Use ``insecure=True`` (keyword argument) if
+        you want an asterisk to be echoed for each character entered by
+        the user.
 
         Default values for the size parameters when the
-        'autowidgetsize' option is disabled: height=10, width=60.
+        :ref:`autowidgetsize <autowidgetsize>` option is disabled:
+        ``height=10, width=60``.
 
         Notable exceptions:
 
-            any exception raised by self._perform()
+          any exception raised by :meth:`Dialog._perform`
 
         """
         height, width = self._default_size((height, width), (10, 60))
@@ -3182,44 +2953,55 @@ class Dialog:
     @retval_is_code
     def progressbox(self, file_path=None, file_flags=os.O_RDONLY,
                     fd=None, text=None, height=None, width=None, **kwargs):
-        """Display a possibly growing stream in a dialog box, as with "tail -f".
+        """
+        Display a possibly growing stream in a dialog box, as with ``tail -f``.
 
-          file_path  -- path to the file that is going to be displayed
-          file_flags -- flags used when opening 'file_path'; those
-                        are passed to os.open() function (not the
-                        built-in open function!). By default, only
-                        one flag is used: os.O_RDONLY.
+        A file, or more generally a stream that can be read from, must
+        be specified with either:
 
-        OR, ALTERNATIVELY:
+        :param str file_path: path to the file that is going to be displayed
+        :param file_flags:
+          flags used when opening *file_path*; those are passed to
+          :func:`os.open` (not the built-in :func:`open` function!). By
+          default, only one flag is set: :data:`os.O_RDONLY`.
 
-          fd       -- file descriptor for the stream to be displayed
+        or
 
-        text     -- caption continuously displayed at the top, above the
-                    stream text, or None to disable the caption
-        height   -- height of the box
-        width    -- width of the box
+        :param int fd: file descriptor for the stream to be displayed
 
-        Display the contents of the specified file, updating the
-        dialog box whenever the file grows, as with the "tail -f"
-        command.
+        Remaining parameters:
+
+        :param text:   caption continuously displayed at the top, above
+                       the stream text, or ``None`` to disable the
+                       caption
+        :param height: height of the box
+        :type height:  int or ``None``
+        :param width:  width of the box
+        :type width:   int or ``None``
+        :return:       a :term:`Dialog exit code`
+        :rtype:        str
+
+        Display the contents of the specified file, updating the dialog
+        box whenever the file grows, as with the ``tail -f`` command.
 
         The file can be specified in two ways:
-          - either by giving its path (and optionally os.open()
-            flags) with parameters 'file_path' and 'file_flags';
-          - or by passing its file descriptor with parameter 'fd' (in
-            which case it may not even be a file; for instance, it
-            could be an anonymous pipe created with os.pipe()).
 
-        Return the Dialog exit code from the backend.
+          - either by giving its path (and optionally :func:`os.open`
+            flags) with parameters *file_path* and *file_flags*;
+
+          - or by passing its file descriptor with parameter *fd* (in
+            which case it may not even be a file; for instance, it could
+            be an anonymous pipe created with :func:`os.pipe`).
 
         Default values for the size parameters when the
-        'autowidgetsize' option is disabled: height=20, width=78.
+        :ref:`autowidgetsize <autowidgetsize>` option is disabled:
+        ``height=20, width=78``.
 
         Notable exceptions:
 
-            PythonDialogIOError    if the Python version is < 3.3
-            PythonDialogOSError
-            any exception raised by self._perform()
+          - :exc:`PythonDialogOSError` (:exc:`PythonDialogIOError` if
+            the Python version is < 3.3)
+          - any exception raised by :meth:`Dialog._perform`
 
         """
         height, width = self._default_size((height, width), (20, 78))
@@ -3231,27 +3013,31 @@ class Dialog:
     @retval_is_code
     def programbox(self, file_path=None, file_flags=os.O_RDONLY,
                    fd=None, text=None, height=None, width=None, **kwargs):
-        """Display a possibly growing stream in a dialog box, as with "tail -f".
+        """
+        Display a possibly growing stream in a dialog box, as with ``tail -f``.
 
-        A programbox is very similar to a progressbox. The only
-        difference between a program box and a progress box is that a
-        program box displays an OK button, but only after the input
-        stream has been exhausted (i.e., End Of File has been
-        reached).
+        A :meth:`!programbox` is very similar to a :meth:`progressbox`.
+        The only difference between a :meth:`!programbox` and a
+        :meth:`!progressbox` is that a :meth:`!programbox` displays an
+        :guilabel:`OK` button, but only after the input stream has been
+        exhausted (i.e., *End Of File* has been reached).
 
         This dialog box can be used to display the piped output of an
         external program. After the program completes, the user can
-        press the Enter key to close the dialog and resume execution
-        of the calling program.
+        press the :kbd:`Enter` key to close the dialog and resume
+        execution of the calling program.
 
         The parameters and exceptions are the same as for
-        'progressbox'. Please refer to the corresponding
+        :meth:`progressbox`. Please refer to the corresponding
         documentation.
 
         Default values for the size parameters when the
-        'autowidgetsize' option is disabled: height=20, width=78.
+        :ref:`autowidgetsize <autowidgetsize>` option is disabled:
+        ``height=20, width=78``.
 
-        This widget requires dialog >= 1.1 (2011-03-02).
+        This widget requires :program:`dialog` >= 1.1 (2011-03-02).
+
+        .. versionadded:: 2.14
 
         """
         self._dialog_version_check("1.1", "the programbox widget")
@@ -3266,37 +3052,46 @@ class Dialog:
                   choices=[], **kwargs):
         """Display a radiolist box.
 
-        text        -- text to display in the box
-        height      -- height of the box
-        width       -- width of the box
-        list_height -- number of entries displayed in the box (which
-                       can be scrolled) at a given time
-        choices     -- a list of tuples (tag, item, status) where
-                       'status' specifies the initial on/off state of
-                       each entry; can be True or False, 1 or 0, "on"
-                       or "off" (True and 1 meaning "on"), or any case
-                       variation of these two strings. No more than
-                       one entry should be set to True.
+        :param str text:    text to display in the box
+        :param height:      height of the box
+        :type height:       int or ``None``
+        :param width:       width of the box
+        :type width:        int or ``None``
+        :param list_height: number of entries displayed in the box
+                            (which can be scrolled) at a given time
+        :type list_height:  int or ``None``
+        :param choices:
+          an iterable of :samp:`({tag}, {item}, {status})` tuples
+          where *status* specifies the initial selected/unselected
+          state of each entry; can be ``True`` or ``False``, ``1`` or
+          ``0``, ``"on"`` or ``"off"`` (``True``, ``1`` and ``"on"``
+          meaning selected), or any case variation of these two
+          strings. No more than one entry should be set to ``True``.
+        :return: a tuple of the form :samp:`({code}, {tag})` where:
 
-        A radiolist box is similar to a menu box. The main difference
-        is that you can indicate which entry is initially selected,
-        by setting its status to True.
+          - *code* is a :term:`Dialog exit code`;
+          - *tag* is the tag string corresponding to the entry that was
+            chosen by the user.
 
-        Return a tuple of the form (code, tag) with the tag for the
-        entry that was chosen by the user. 'code' is the Dialog exit
-        code from the backend.
+        :rtype: tuple
 
-        If the user exits with ESC or CANCEL, or if all entries were
-        initially set to False and not altered before the user chose
-        OK, the returned tag is the empty string.
+        A :meth:`!radiolist` box is similar to a :meth:`menu` box. The
+        main differences are presentation and that the
+        :meth:`!radiolist` allows you to indicate which entry is
+        initially selected, by setting its status to ``True``.
+
+        If the user exits with :kbd:`Esc` or :guilabel:`Cancel`, or if
+        all entries were initially set to ``False`` and not altered
+        before the user chose :guilabel:`OK`, the returned tag is the
+        empty string.
 
         Default values for the size parameters when the
-        'autowidgetsize' option is disabled: height=15, width=54,
-        list_height=7.
+        :ref:`autowidgetsize <autowidgetsize>` option is disabled:
+        ``height=15, width=54, list_height=7``.
 
         Notable exceptions:
 
-            any exception raised by self._perform() or _to_onoff()
+          any exception raised by :meth:`Dialog._perform` or :func:`_to_onoff`
 
         """
         height, width, list_height = self._default_size(
@@ -3326,47 +3121,62 @@ class Dialog:
     @widget
     def rangebox(self, text, height=0, width=0, min=None, max=None, init=None,
                  **kwargs):
-        """Display an range dialog box.
+        """Display a range dialog box.
 
-        text   -- text to display above the actual range control
-        height -- height of the box
-        width  -- width of the box
-        min    -- minimum value for the range control
-        max    -- maximum value for the range control
-        init   -- initial value for the range control
+        :param str text:   text to display above the actual range control
+        :param int height: height of the box
+        :param int width:  width of the box
+        :param int min:    minimum value for the range control
+        :param int max:    maximum value for the range control
+        :param int init:   initial value for the range control
+        :return: a tuple of the form :samp:`({code}, {val})` where:
 
-        The rangebox dialog allows the user to select from a range of
-        values using a kind of slider. The range control shows the
-        current value as a bar (like the gauge dialog).
+          - *code* is a :term:`Dialog exit code`;
+          - *val* is an integer: the value chosen by the user.
 
-        The return value is a tuple of the form (code, val) where
-        'code' is the Dialog exit code and 'val' is an integer: the
-        value chosen by the user.
+        :rtype: tuple
 
-        The Tab and arrow keys move the cursor between the buttons
-        and the range control. When the cursor is on the latter, you
-        can change the value with the following keys:
+        The :meth:`!rangebox` dialog allows the user to select from a
+        range of integers using a kind of slider. The range control
+        shows the current value as a bar (like the :ref:`gauge dialog
+        <gauge-widget>`).
 
-          Left/Right arrows   select a digit to modify
+        The :kbd:`Tab` and arrow keys move the cursor between the
+        buttons and the range control. When the cursor is on the latter,
+        you can change the value with the following keys:
 
-          +/-                 increment/decrement the selected digit
-                              by one unit
-
-          0-9                 set the selected digit to the given
-                              value
+        +-----------------------+----------------------------+
+        |          Key          |           Action           |
+        +=======================+============================+
+        | :kbd:`Left` and       | select a digit to modify   |
+        | :kbd:`Right` arrows   |                            |
+        +-----------------------+----------------------------+
+        | :kbd:`+` / :kbd:`-`   | increment/decrement the    |
+        |                       | selected digit by one unit |
+        +-----------------------+----------------------------+
+        | :kbd:`0`–:kbd:`9`     | set the selected digit to  |
+        |                       | the given value            |
+        +-----------------------+----------------------------+
 
         Some keys are also recognized in all cursor positions:
 
-          Home/End            set the value to its minimum or maximum
+        +------------------+--------------------------------------+
+        |       Key        |                Action                |
+        +==================+======================================+
+        | :kbd:`Home` /    | set the value to its minimum or      |
+        | :kbd:`End`       | maximum                              |
+        +------------------+--------------------------------------+
+        | :kbd:`Page Up` / | decrement/increment the value so     |
+        | :kbd:`Page Down` | that the slider moves by one column  |
+        +------------------+--------------------------------------+
 
-          PageUp/PageDown     decrement/increment the value so that
-                              the slider moves by one column
-
-        This widget requires dialog >= 1.2 (2012-12-30).
+        This widget requires :program:`dialog` >= 1.2 (2012-12-30).
 
         Notable exceptions:
 
-            any exception raised by self._perform()
+          any exception raised by :meth:`Dialog._perform`
+
+        .. versionadded:: 2.14
 
         """
         self._dialog_version_check("1.2", "the rangebox widget")
@@ -3396,30 +3206,40 @@ class Dialog:
     def scrollbox(self, text, height=None, width=None, **kwargs):
         """Display a string in a scrollable box, with no line wrapping.
 
-        text   -- string to display in the box
-        height -- height of the box
-        width  -- width of the box
+        :param str text: string to display in the box
+        :param height:   height of the box
+        :type height:    int or ``None``
+        :param width:    width of the box
+        :type width:     int or ``None``
+        :return:         a :term:`Dialog exit code`
+        :rtype:          str
 
-        This method is a layer on top of textbox. The textbox widget
-        in dialog allows to display file contents only. This method
-        allows you to display any text in a scrollable box. This is
-        simply done by creating a temporary file, calling textbox() and
-        deleting the temporary file afterwards.
+        This method is a layer on top of :meth:`textbox`. The
+        :meth:`!textbox` widget in :program:`dialog` allows one to
+        display file contents only. This method can be used to display
+        any text in a scrollable box. This is simply done by creating a
+        temporary file, calling :meth:`!textbox` and deleting the
+        temporary file afterwards.
 
         The text is not automatically wrapped. New lines in the
-        scrollable box will be placed exactly as in 'text'. If you
-        want automatic line wrapping, you should use the msgbox
-        widget instead (the 'textwrap' module from the Python
+        scrollable box will be placed exactly as in *text*. If you want
+        automatic line wrapping, you should use the :meth:`msgbox`
+        widget instead (the :mod:`textwrap` module from the Python
         standard library is also worth knowing about).
 
-        Return the Dialog exit code from the backend.
-
         Default values for the size parameters when the
-        'autowidgetsize' option is disabled: height=20, width=78.
+        :ref:`autowidgetsize <autowidgetsize>` option is disabled:
+        ``height=20, width=78``.
 
         Notable exceptions:
-            - PythonDialogIOError    if the Python version is < 3.3
-            - PythonDialogOSError
+
+          :exc:`PythonDialogOSError` (:exc:`PythonDialogIOError` if the
+          Python version is < 3.3)
+
+        .. versionchanged:: 3.1
+           :exc:`UnableToCreateTemporaryDirectory` exception can't be
+           raised anymore. The equivalent condition now raises
+           :exc:`PythonDialogOSError`.
 
         """
         height, width = self._default_size((height, width), (20, 78))
@@ -3450,73 +3270,80 @@ class Dialog:
 
     @widget
     @retval_is_code
-    def tailbox(self, filename, height=None, width=None, **kwargs):
-        """Display the contents of a file in a dialog box, as with "tail -f".
+    def tailbox(self, filepath, height=None, width=None, **kwargs):
+        """Display the contents of a file in a dialog box, as with ``tail -f``.
 
-        filename -- name of the file, the contents of which is to be
-                    displayed in the box
-        height   -- height of the box
-        width    -- width of the box
+        :param str filepath: path to a file, the contents of which is to
+                             be displayed in the box
+        :param height:       height of the box
+        :type height:        int or ``None``
+        :param width:        width of the box
+        :type width:         int or ``None``
+        :return:             a :term:`Dialog exit code`
+        :rtype:              str
 
-        Display the contents of the specified file, updating the
-        dialog box whenever the file grows, as with the "tail -f"
-        command.
-
-        Return the Dialog exit code from the backend.
+        Display the contents of the file specified with *filepath*,
+        updating the dialog box whenever the file grows, as with the
+        ``tail -f`` command.
 
         Default values for the size parameters when the
-        'autowidgetsize' option is disabled: height=20, width=60.
+        :ref:`autowidgetsize <autowidgetsize>` option is disabled:
+        ``height=20, width=60``.
 
         Notable exceptions:
 
-            any exception raised by self._perform()
+          any exception raised by :meth:`Dialog._perform`
 
         """
         height, width = self._default_size((height, width), (20, 60))
         return self._widget_with_no_output(
             "tailbox",
-            ["--tailbox", filename, str(height), str(width)],
+            ["--tailbox", filepath, str(height), str(width)],
             kwargs)
     # No tailboxbg widget, at least for now.
 
     @widget
     @retval_is_code
-    def textbox(self, filename, height=None, width=None, **kwargs):
+    def textbox(self, filepath, height=None, width=None, **kwargs):
         """Display the contents of a file in a dialog box.
 
-        filename -- name of the file whose contents is to be
-                    displayed in the box
-        height   -- height of the box
-        width    -- width of the box
+        :param str filepath: path to a file, the contents of which is to
+                             be displayed in the box
+        :param height:       height of the box
+        :type height:        int or ``None``
+        :param width:        width of the box
+        :type width:         int or ``None``
+        :return:             a :term:`Dialog exit code`
+        :rtype:              str
 
-        A text box lets you display the contents of a text file in a
-        dialog box. It is like a simple text file viewer. The user
-        can move through the file by using the UP/DOWN, PGUP/PGDN
-        and HOME/END keys available on most keyboards. If the lines
-        are too long to be displayed in the box, the LEFT/RIGHT keys
-        can be used to scroll the text region horizontally. For more
-        convenience, forward and backward searching functions are
-        also provided.
-
-        Return the Dialog exit code from the backend.
+        A :meth:`!textbox` lets you display the contents of a text file
+        in a dialog box. It is like a simple text file viewer. The user
+        can move through the file using the :kbd:`Up` and :kbd:`Down`
+        arrow keys, :kbd:`Page Up` and :kbd:`Page Down` as well as the
+        :kbd:`Home` and :kbd:`End` keys available on most keyboards. If
+        the lines are too long to be displayed in the box, the
+        :kbd:`Left` and :kbd:`Right` arrow keys can be used to scroll
+        the text region horizontally. For more convenience, forward and
+        backward search functions are also provided.
 
         Default values for the size parameters when the
-        'autowidgetsize' option is disabled: height=20, width=60.
+        :ref:`autowidgetsize <autowidgetsize>` option is disabled:
+        ``height=20, width=60``.
 
         Notable exceptions:
 
-            any exception raised by self._perform()
+          any exception raised by :meth:`Dialog._perform`
 
         """
         height, width = self._default_size((height, width), (20, 60))
         # This is for backward compatibility... not that it is
         # stupid, but I prefer explicit programming.
         if kwargs.get("title", None) is None:
-            kwargs["title"] = filename
+            kwargs["title"] = filepath
 
         return self._widget_with_no_output(
             "textbox",
-            ["--textbox", filename, str(height), str(width)],
+            ["--textbox", filepath, str(height), str(width)],
             kwargs)
 
     def _timebox_parse_time(self, time_str):
@@ -3538,34 +3365,40 @@ class Dialog:
                 second=-1, **kwargs):
         """Display a time dialog box.
 
-        text   -- text to display in the box
-        height -- height of the box
-        width  -- width of the box
-        hour   -- inititial hour selected
-        minute -- inititial minute selected
-        second -- inititial second selected
+        :param str text:   text to display in the box
+        :param height:     height of the box
+        :type height:      int or ``None``
+        :param int width:  width of the box
+        :type width:       int or ``None``
+        :param int hour:   inititial hour selected
+        :param int minute: inititial minute selected
+        :param int second: inititial second selected
+        :return: a tuple of the form :samp:`({code}, {time})` where:
 
-        A dialog is displayed which allows you to select hour, minute
-        and second. If the values for hour, minute or second are
-        negative (or not explicitely provided, as they default to
-        -1), the current time's corresponding values are used. You
-        can increment or decrement any of those using the left-, up-,
-        right- and down-arrows. Use tab or backtab to move between
-        windows.
-
-        Return a tuple of the form (code, time) where:
-          - 'code' is the Dialog exit code;
-          - 'time' is a list of the form [hour, minute, second],
-            where 'hour', 'minute' and 'second' are integers
+          - *code* is a :term:`Dialog exit code`;
+          - *time* is a list of the form :samp:`[{hour}, {minute},
+            {second}]`, where *hour*, *minute* and *second* are integers
             corresponding to the time chosen by the user.
 
+        :rtype: tuple
+
+        :meth:`timebox` is a dialog box which allows one to select an
+        hour, minute and second. If any of the values for *hour*,
+        *minute* and *second* is negative, the current time's
+        corresponding value is used. You can increment or decrement any
+        of those using the :kbd:`Left`, :kbd:`Up`, :kbd:`Right` and
+        :kbd:`Down` arrows. Use :kbd:`Tab` or :kbd:`Backtab` to move
+        between windows.
+
         Default values for the size parameters when the
-        'autowidgetsize' option is disabled: height=3, width=30.
+        :ref:`autowidgetsize <autowidgetsize>` option is disabled:
+        ``height=3, width=30``.
 
         Notable exceptions:
-            - any exception raised by self._perform()
-            - PythonDialogReModuleError
-            - UnexpectedDialogOutput
+
+          - any exception raised by :meth:`Dialog._perform`
+          - :exc:`PythonDialogReModuleError`
+          - :exc:`UnexpectedDialogOutput`
 
         """
         height, width = self._default_size((height, width), (3, 30))
@@ -3589,40 +3422,46 @@ class Dialog:
                  nodes=[], **kwargs):
         """Display a treeview box.
 
-        text        -- text to display at the top of the box
-        height      -- height of the box
-        width       -- width of the box
-        list_height -- number of lines reserved for the main part of
-                       the box, where the tree is displayed
-        nodes       -- a list of (tag, item, status, depth) tuples
-                       describing nodes, where:
-                         - 'tag' is used to indicate which node was
-                           selected by the user on exit;
-                         - 'item' is the text displayed for the node;
-                         - 'status' specifies the initial on/off
-                           state of each node; can be True or False,
-                           1 or 0, "on" or "off" (True, 1 and "on"
-                           meaning selected), or any case variation
-                           of these two strings;
-                         - 'depth' is a non-negative integer
-                           indicating the depth of the node in the
-                           tree (0 for the root node).
+        :param str text:        text to display at the top of the box
+        :param int height:      height of the box
+        :param int width:       width of the box
+        :param int list_height:
+          number of lines reserved for the main part of the box,
+          where the tree is displayed
+        :param nodes:
+          an iterable of :samp:`({tag}, {item}, {status}, {depth})` tuples
+          describing nodes, where:
+
+            - *tag* is used to indicate which node was selected by
+              the user on exit;
+            - *item* is the text displayed for the node;
+            - *status* specifies the initial selected/unselected
+              state of each entry; can be ``True`` or ``False``,
+              ``1`` or ``0``, ``"on"`` or ``"off"`` (``True``, ``1``
+              and ``"on"`` meaning selected), or any case variation
+              of these two strings;
+            - *depth* is a non-negative integer indicating the depth
+              of the node in the tree (``0`` for the root node).
+
+        :return: a tuple of the form :samp:`({code}, {tag})` where:
+
+          - *code* is a :term:`Dialog exit code`;
+          - *tag* is the tag of the selected node.
 
         Display nodes organized in a tree structure. Each node has a
-        tag, an 'item' text, a selected status, and a depth in the
-        tree. Only the 'item' texts are displayed in the widget; tags
-        are only used for the return value. Only one node can be
-        selected at a given time, as for the radiolist widget.
+        *tag*, an *item* text, a selected *status*, and a *depth* in
+        the tree. Only the *item* texts are displayed in the widget;
+        *tag*\s are only used for the return value. Only one node can
+        be selected at a given time, as for the :meth:`radiolist`
+        widget.
 
-        Return a tuple of the form (code, tag) where:
-          - 'code' is the Dialog exit code from the backend;
-          - 'tag' is the tag of the selected node.
-
-        This widget requires dialog >= 1.2 (2012-12-30).
+        This widget requires :program:`dialog` >= 1.2 (2012-12-30).
 
         Notable exceptions:
 
-            any exception raised by self._perform() or _to_onoff()
+          any exception raised by :meth:`Dialog._perform` or :func:`_to_onoff`
+
+        .. versionadded:: 2.14
 
         """
         self._dialog_version_check("1.2", "the treeview widget")
@@ -3668,30 +3507,36 @@ class Dialog:
     def yesno(self, text, height=None, width=None, **kwargs):
         """Display a yes/no dialog box.
 
-        text   -- text to display in the box
-        height -- height of the box
-        width  -- width of the box
+        :param str text: text to display in the box
+        :param height:   height of the box
+        :type height:    int or ``None``
+        :param width:    width of the box
+        :type width:     int or ``None``
+        :return:         a :term:`Dialog exit code`
+        :rtype:          str
 
-        A yes/no dialog box of size 'height' rows by 'width' columns
-        will be displayed. The string specified by 'text' is
-        displayed inside the dialog box. If this string is too long
-        to fit in one line, it will be automatically divided into
-        multiple lines at appropriate places. The text string can
-        also contain the sub-string "\\n" or newline characters to
-        control line breaking explicitly. This dialog box is useful
-        for asking questions that require the user to answer either
-        yes or no. The dialog box has a Yes button and a No button,
-        in which the user can switch between by pressing the TAB
-        key.
+        Display a dialog box containing *text* and two buttons labelled
+        :guilabel:`Yes` and :guilabel:`No` by default.
 
-        Return the Dialog exit code from the backend.
+        The box size is *height* rows by *width* columns. If *text* is
+        too long to fit in one line, it will be automatically divided
+        into multiple lines at appropriate places. *text* may also
+        contain the substring ``"\\n"`` or newline characters to control
+        line breaking explicitly.
+
+        This :meth:`!yesno` dialog box is useful for asking questions
+        that require the user to answer either "yes" or "no". These are
+        the default button labels, however they can be freely set with
+        the ``yes_label`` and ``no_label`` keyword arguments. The user
+        can switch between the buttons by pressing the :kbd:`Tab` key.
 
         Default values for the size parameters when the
-        'autowidgetsize' option is disabled: height=10, width=30.
+        :ref:`autowidgetsize <autowidgetsize>` option is disabled:
+        ``height=10, width=30``.
 
         Notable exceptions:
 
-            any exception raised by self._perform()
+          any exception raised by :meth:`Dialog._perform`
 
         """
         height, width = self._default_size((height, width), (10, 30))
