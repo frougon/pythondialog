@@ -5,6 +5,7 @@
 .gitignore                     text export-ignore
 *.py                           text
 *.txt                          text
+*.rst                          text
 *.xml                          text
 *.svg                          text
 *.jpg                          binary
