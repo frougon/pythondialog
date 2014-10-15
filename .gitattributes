@@ -13,8 +13,10 @@
 AUTHORS                        text
 ChangeLog.init                 text
 COPYING                        text
+COPYING.*                      text
 INSTALL                        text
 MANIFEST.in                    text
+Makefile                       text
 README.*                       text
 setup.cfg                      text
 TODO                           text
