@@ -178,8 +178,8 @@ can do::
 
    python3 -Wd examples/demo.py 2>/path/to/file
 
-and examine /path/to/file. This can also help you to find files that are
-still open when your program exits.
+and examine ``/path/to/file``. This can also help you to find files that
+are still open when your program exits.
 
 **Note:**
 
@@ -201,29 +201,34 @@ Troubleshooting
 If you have a problem with a pythondialog call, you should read its
 documentation and the dialog(1) manual page. If this is not enough, you
 can enable logging of shell command-line equivalents of all dialog calls
-made by your program with a simple call to Dialog.setup_debug(), first
-available in pythondialog 2.12. An example of this can be found in
-demo.py from the 'examples' directory.
+made by your program with a simple call to ``Dialog.setup_debug()``,
+first available in pythondialog 2.12. An example of this can be found in
+``demo.py`` from the ``examples`` directory.
 
 As of version 2.12, you can also enable this debugging facility for
-demo.py by calling it with the --debug flag (cf. 'demo.py --help').
+``demo.py`` by calling it with the ``--debug`` flag (cf.
+``demo.py --help``).
 
 
 Using Xdialog instead of dialog
 -------------------------------
 
-As far as I can tell, Xdialog has not been ported to GTK+ 2 or later. It
-is not in Debian stable nor unstable (June 23, 2013). It is not
-installed on my system (because of the GTK+ 1.2 dependency), and
-according to the Xdialog-specific patches I received from Peter Åstrand
-in 2004, was not a drop-in replacement for dialog (in particular,
-Xdialog seemed to want to talk to the caller through stdout instead of
-stderr, grrrrr!).
+As far as I can tell, `Xdialog`_ has not been ported to `GTK+`_ version
+2 or later. It is not in `Debian`_ stable nor unstable (June 23, 2013).
+It is not installed on my system (because of the GTK+ 1.2 dependency),
+and according to the Xdialog-specific patches I received from Peter
+Åstrand in 2004, was not a drop-in replacement for `dialog`_ (in
+particular, Xdialog seemed to want to talk to the caller through stdout
+instead of stderr, grrrrr!).
+
+.. _Xdialog: http://xdialog.free.fr/
+.. _GTK+: http://www.gtk.org/
+.. _Debian: http://www.debian.org/
 
 All this to say that, even though I didn't remove the options to use
 another backend than dialog, nor did I remove the handful of little,
 non-invasive modifications that help pythondialog work better with
-Xdialog, I don't really support the latter. I test everything with
+`Xdialog`_, I don't really support the latter. I test everything with
 dialog, and nothing with Xdialog.
 
 That being said, here is the *old* text of this section (from 2004), in
@@ -261,8 +266,8 @@ added some features to it (mainly the first gauge implementation, I
 guess). Florent Rougon rewrote most parts of the program to make it more
 robust and flexible so that it can give access to most features of the
 dialog program. Peter Åstrand took over maintainership between 2004 and
-2009, with particular care for the Xdialog support. Florent Rougon took
-over maintainership again starting from 2009...
+2009, with particular care for the `Xdialog`_ support. Florent Rougon
+took over maintainership again starting from 2009...
 
 .. 
   # Local Variables:
