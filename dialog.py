@@ -1785,7 +1785,7 @@ by :program:`dialog`.
         intuitive for users than the default behavior that requires
         using :kbd:`^` and :kbd:`$` for this purpose.
 
-        This widget requires dialog >= 1.2 (2012-12-30).
+        This widget requires dialog >= 1.2-20121230.
 
         Notable exceptions:
 
@@ -1794,7 +1794,7 @@ by :program:`dialog`.
         .. versionadded:: 3.0
 
         """
-        self._dialog_version_check("1.2", "the buildlist widget")
+        self._dialog_version_check("1.2-20121230", "the buildlist widget")
 
         cmd = ["--buildlist", text, str(height), str(width), str(list_height)]
         for t in items:
@@ -3048,12 +3048,12 @@ by :program:`dialog`.
         :ref:`autowidgetsize <autowidgetsize>` option is disabled:
         ``height=20, width=78``.
 
-        This widget requires :program:`dialog` >= 1.1 (2011-03-02).
+        This widget requires :program:`dialog` >= 1.1-20110302.
 
         .. versionadded:: 2.14
 
         """
-        self._dialog_version_check("1.1", "the programbox widget")
+        self._dialog_version_check("1.1-20110302", "the programbox widget")
 
         height, width = self._default_size((height, width), (20, 78))
         return self._progressboxoid(
@@ -3183,7 +3183,7 @@ by :program:`dialog`.
         | :kbd:`Page Down` | that the slider moves by one column  |
         +------------------+--------------------------------------+
 
-        This widget requires :program:`dialog` >= 1.2 (2012-12-30).
+        This widget requires :program:`dialog` >= 1.2-20121230.
 
         Notable exceptions:
 
@@ -3192,7 +3192,7 @@ by :program:`dialog`.
         .. versionadded:: 2.14
 
         """
-        self._dialog_version_check("1.2", "the rangebox widget")
+        self._dialog_version_check("1.2-20121230", "the rangebox widget")
 
         for name in ("min", "max", "init"):
             if not isinstance(locals()[name], int):
@@ -3468,7 +3468,7 @@ by :program:`dialog`.
         be selected at a given time, as for the :meth:`radiolist`
         widget.
 
-        This widget requires :program:`dialog` >= 1.2 (2012-12-30).
+        This widget requires :program:`dialog` >= 1.2-20121230.
 
         Notable exceptions:
 
@@ -3477,7 +3477,7 @@ by :program:`dialog`.
         .. versionadded:: 2.14
 
         """
-        self._dialog_version_check("1.2", "the treeview widget")
+        self._dialog_version_check("1.2-20121230", "the treeview widget")
         cmd = ["--treeview", text, str(height), str(width), str(list_height)]
 
         nselected = 0

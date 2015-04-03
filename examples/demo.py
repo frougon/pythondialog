@@ -441,12 +441,12 @@ The dialog-like program displaying this message box reports version \
 
         sandwich = self.radiolist_demo()
 
-        if self.dialog_version_check("1.2", "the rangebox demo", explain=True):
+        if self.dialog_version_check("1.2-20121230", "the rangebox demo", explain=True):
             nb_engineers = self.rangebox_demo()
         else:
             nb_engineers = None
 
-        if self.dialog_version_check("1.2", "the buildlist demo", explain=True):
+        if self.dialog_version_check("1.2-20121230", "the buildlist demo", explain=True):
             desert_island_stuff = self.buildlist_demo()
         else:
             desert_island_stuff = None
@@ -464,7 +464,8 @@ The dialog-like program displaying this message box reports version \
                             nb_engineers, desert_island_stuff, date, time_,
                             password)
 
-        if self.dialog_version_check("1.2", "the treeview demo", explain=True):
+        if self.dialog_version_check("1.2-20121230", "the treeview demo",
+                                     explain=True):
             if self.dialog_version_check("1.2-20130902"):
                 self.treeview_demo_with_help()
             else:
@@ -509,7 +510,8 @@ Now, please select a file you would like to see growing (or not...).""",
         # early. This bug has been fixed in version 1.2-20140112, therefore
         # we'll run the programbox_demo as part of the main demo if the dialog
         # version is >= than this one, otherwise we'll keep it here.
-        if self.dialog_version_check("1.1", "the programbox demo", explain=True):
+        if self.dialog_version_check("1.1-20110302", "the programbox demo",
+                                     explain=True):
             # First dialog version where the programbox widget works fine
             if not self.dialog_version_check("1.2-20140112"):
                 self.programbox_demo()
