@@ -118,6 +118,14 @@ from textwrap import dedent
 try:
     from textwrap import indent
 except ImportError:
+    try:
+        callable                # Normally, should be __builtins__.callable
+    except NameError:
+        # Python 3.1 doesn't have the 'callable' builtin function. Let's
+        # provide ours.
+        def callable(f):
+            return hasattr(f, '__call__')
+
     def indent(text, prefix, predicate=None):
         l = []
 
