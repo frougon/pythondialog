@@ -1,7 +1,7 @@
 # dialog.py --- A Python interface to the ncurses-based "dialog" utility
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2002, 2003, 2004, 2009, 2010, 2013, 2014  Florent Rougon
+# Copyright (C) 2002, 2003, 2004, 2009, 2010, 2013, 2014, 2015  Florent Rougon
 # Copyright (C) 2004  Peter Åstrand
 # Copyright (C) 2000  Robb Shecter, Sultanbek Tezadov
 #
@@ -1656,6 +1656,19 @@ by :program:`dialog`.
         """
         code, output = self._perform(["--print-version"],
                                      use_persistent_args=False)
+
+        # Workaround for old dialog versions
+        if code == self.OK and not (output.strip() or self.use_stdout):
+            # output.strip() is empty and self.use_stdout is False.
+            # This can happen with old dialog versions (1.1-20100428
+            # apparently does that). Try again, reading from stdout this
+            # time.
+            self.use_stdout = True
+            code, output = self._perform(["--stdout", "--print-version"],
+                                         use_persistent_args=False,
+                                         dash_escape="none")
+            self.use_stdout = False
+
         if code == self.OK:
             try:
                 mo = self._print_version_cre.match(output)
