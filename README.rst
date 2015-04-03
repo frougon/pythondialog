@@ -35,7 +35,7 @@ changes`_, links to the `documentation`_, the `Git repository`_, the
 If you want to get a quick idea of what this module allows one to do,
 you can download a release tarball and run demo.py::
 
-  python3 examples/demo.py
+  PYTHONPATH=. python3 examples/demo.py
 
 
 What is pythondialog good for? What are its limitations?
@@ -176,7 +176,7 @@ you have to do two things in order to see them:
 For instance, to see the warnings produced when running the demo, you
 can do::
 
-   python3 -Wd examples/demo.py 2>/path/to/file
+  PYTHONPATH=. python3 -Wd examples/demo.py 2>/path/to/file
 
 and examine ``/path/to/file``. This can also help you to find files that
 are still open when your program exits.
