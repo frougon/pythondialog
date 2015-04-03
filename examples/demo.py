@@ -1295,10 +1295,18 @@ and was the first person to give a rigorous definition of real numbers."""
         sandwich_report = "Favorite sandwich: {sandwich}{comment}".format(
             sandwich=sandwich, comment=sandwich_comment)
 
-        if len(desert_island_stuff) == 0:
-            desert_island_string = " nothing!"
+        if desert_island_stuff is None:
+            # The widget was not available, the user didn't see anything.
+            desert_island_string = ""
         else:
-            desert_island_string = "\n\n  " + "\n  ".join(desert_island_stuff)
+            if len(desert_island_stuff) == 0:
+                desert_things = " nothing!"
+            else:
+                desert_things = "\n\n  " + "\n  ".join(desert_island_stuff)
+
+            desert_island_string = \
+                "\nOn a desert island, you would take:{0}\n".format(
+                desert_things)
 
         day, month, year = date
         hour, minute, second = time_
@@ -1309,9 +1317,7 @@ Name: {name}
 Favorite day of the week: {favday}
 Favorite sandwich toppings:{toppings}
 {sandwich_report}
-
-On a desert island, you would take:{desert_island_string}
-
+{desert_island_string}
 Your answer about Georg Cantor's date of birth: \
 {year:04d}-{month:02d}-{day:02d}
 (at precisely {hour:02d}:{min:02d}:{sec:02d}!)
