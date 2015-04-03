@@ -3,7 +3,7 @@
 
 # demo.py --- Demonstration program and cheap test suite for pythondialog
 #
-# Copyright (C) 2002-2010, 2013, 2014  Florent Rougon
+# Copyright (C) 2002-2010, 2013, 2014, 2015  Florent Rougon
 # Copyright (C) 2000  Robb Shecter, Sultanbek Tezadov
 #
 # This program is in the public domain.
@@ -73,7 +73,6 @@ simple_example.py.
 
 import sys, os, locale, stat, time, getopt, subprocess, traceback, textwrap
 import pprint
-import contextlib               # Not really indispensable here
 import dialog
 from dialog import DialogBackendVersion
 
@@ -308,7 +307,7 @@ class MyDialog:
 # Dummy context manager to make sure the debug file is closed on exit, be it
 # normal or abnormal, and to avoid having two code paths, one for normal mode
 # and one for debug mode.
-class DummyContextManager(contextlib.ContextDecorator):
+class DummyContextManager:
     def __enter__(self):
         return self
 
