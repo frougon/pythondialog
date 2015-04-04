@@ -3,7 +3,7 @@
 
 # demo.py --- Demonstration program and cheap test suite for pythondialog
 #
-# Copyright (C) 2002-2010, 2013, 2014  Florent Rougon
+# Copyright (C) 2002-2010, 2013, 2014, 2015  Florent Rougon
 # Copyright (C) 2000  Robb Shecter, Sultanbek Tezadov
 #
 # This program is in the public domain.
@@ -73,8 +73,6 @@ simple_example.py.
 
 import sys, os, locale, stat, time, getopt, subprocess, traceback, textwrap
 import pprint
-import contextlib               # Not really indispensable here
-
 import dialog
 from dialog import DialogBackendVersion
 
@@ -120,6 +118,14 @@ from textwrap import dedent
 try:
     from textwrap import indent
 except ImportError:
+    try:
+        callable                # Normally, should be __builtins__.callable
+    except NameError:
+        # Python 3.1 doesn't have the 'callable' builtin function. Let's
+        # provide ours.
+        def callable(f):
+            return hasattr(f, '__call__')
+
     def indent(text, prefix, predicate=None):
         l = []
 
@@ -309,7 +315,7 @@ class MyDialog:
 # Dummy context manager to make sure the debug file is closed on exit, be it
 # normal or abnormal, and to avoid having two code paths, one for normal mode
 # and one for debug mode.
-class DummyContextManager(contextlib.ContextDecorator):
+class DummyContextManager:
     def __enter__(self):
         return self
 
@@ -441,12 +447,12 @@ The dialog-like program displaying this message box reports version \
 
         sandwich = self.radiolist_demo()
 
-        if self.dialog_version_check("1.2", "the rangebox demo", explain=True):
+        if self.dialog_version_check("1.2-20121230", "the rangebox demo", explain=True):
             nb_engineers = self.rangebox_demo()
         else:
             nb_engineers = None
 
-        if self.dialog_version_check("1.2", "the buildlist demo", explain=True):
+        if self.dialog_version_check("1.2-20121230", "the buildlist demo", explain=True):
             desert_island_stuff = self.buildlist_demo()
         else:
             desert_island_stuff = None
@@ -464,7 +470,8 @@ The dialog-like program displaying this message box reports version \
                             nb_engineers, desert_island_stuff, date, time_,
                             password)
 
-        if self.dialog_version_check("1.2", "the treeview demo", explain=True):
+        if self.dialog_version_check("1.2-20121230", "the treeview demo",
+                                     explain=True):
             if self.dialog_version_check("1.2-20130902"):
                 self.treeview_demo_with_help()
             else:
@@ -509,7 +516,8 @@ Now, please select a file you would like to see growing (or not...).""",
         # early. This bug has been fixed in version 1.2-20140112, therefore
         # we'll run the programbox_demo as part of the main demo if the dialog
         # version is >= than this one, otherwise we'll keep it here.
-        if self.dialog_version_check("1.1", "the programbox demo", explain=True):
+        if self.dialog_version_check("1.1-20110302", "the programbox demo",
+                                     explain=True):
             # First dialog version where the programbox widget works fine
             if not self.dialog_version_check("1.2-20140112"):
                 self.programbox_demo()
@@ -1292,10 +1300,18 @@ and was the first person to give a rigorous definition of real numbers."""
         sandwich_report = "Favorite sandwich: {sandwich}{comment}".format(
             sandwich=sandwich, comment=sandwich_comment)
 
-        if len(desert_island_stuff) == 0:
-            desert_island_string = " nothing!"
+        if desert_island_stuff is None:
+            # The widget was not available, the user didn't see anything.
+            desert_island_string = ""
         else:
-            desert_island_string = "\n\n  " + "\n  ".join(desert_island_stuff)
+            if len(desert_island_stuff) == 0:
+                desert_things = " nothing!"
+            else:
+                desert_things = "\n\n  " + "\n  ".join(desert_island_stuff)
+
+            desert_island_string = \
+                "\nOn a desert island, you would take:{0}\n".format(
+                desert_things)
 
         day, month, year = date
         hour, minute, second = time_
@@ -1306,9 +1322,7 @@ Name: {name}
 Favorite day of the week: {favday}
 Favorite sandwich toppings:{toppings}
 {sandwich_report}
-
-On a desert island, you would take:{desert_island_string}
-
+{desert_island_string}
 Your answer about Georg Cantor's date of birth: \
 {year:04d}-{month:02d}-{day:02d}
 (at precisely {hour:02d}:{min:02d}:{sec:02d}!)
