@@ -81,10 +81,10 @@ from io import open
 import atexit
 
 progname = os.path.basename(sys.argv[0])
-progversion = "0.9-py2"
+progversion = "0.10-py2"
 version_blurb = """Demonstration program and cheap test suite for pythondialog.
 
-Copyright (C) 2002-2010, 2013, 2014  Florent Rougon
+Copyright (C) 2002-2010, 2013, 2014, 2015  Florent Rougon
 Copyright (C) 2000  Robb Shecter, Sultanbek Tezadov
 
 This is free software; see the source for copying conditions.  There is NO
