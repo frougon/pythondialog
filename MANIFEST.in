@@ -1,4 +1,6 @@
-include README.rst README.distributors COPYING INSTALL AUTHORS TODO ChangeLog
-include demo.py simple_example.py MANIFEST.in
-global-exclude *~
-global-exclude .gitattributes
+include README.rst README.distributors COPYING COPYING.Sphinx INSTALL AUTHORS
+include TODO ChangeLog MANIFEST.in
+recursive-include examples *.py
+recursive-include doc *.py *.txt *.rst *.png Makefile
+prune doc/screenshots/thumbs
+prune doc/_build

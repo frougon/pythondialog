@@ -3,7 +3,7 @@
 
 # demo.py --- Demonstration program and cheap test suite for pythondialog
 #
-# Copyright (C) 2002-2010, 2013  Florent Rougon
+# Copyright (C) 2002-2010, 2013, 2014, 2015  Florent Rougon
 # Copyright (C) 2000  Robb Shecter, Sultanbek Tezadov
 #
 # This program is in the public domain.
@@ -81,10 +81,10 @@ from io import open
 import atexit
 
 progname = os.path.basename(sys.argv[0])
-progversion = "0.8-py2"
+progversion = "0.9-autowidgetsize-py2"
 version_blurb = """Demonstration program and cheap test suite for pythondialog.
 
-Copyright (C) 2002-2010  Florent Rougon
+Copyright (C) 2002-2010, 2013, 2014  Florent Rougon
 Copyright (C) 2000  Robb Shecter, Sultanbek Tezadov
 
 This is free software; see the source for copying conditions.  There is NO
@@ -142,6 +142,14 @@ from textwrap import dedent
 try:
     from textwrap import indent
 except ImportError:
+    try:
+        callable                # Normally, should be __builtins__.callable
+    except NameError:
+        # Python 3.1 doesn't have the 'callable' builtin function. Let's
+        # provide ours.
+        def callable(f):
+            return hasattr(f, '__call__')
+
     def indent(text, prefix, predicate=None):
         l = []
 
@@ -348,8 +356,14 @@ class MyApp(object):
         global d
         # If you want to use Xdialog (pathnames are also OK for the 'dialog'
         # argument), you can use:
-        #   dialog.Dialog(dialog="Xdialog", compat="Xdialog")
-        self.Dialog_instance = dialog.Dialog(dialog="dialog")
+        #   dialog.Dialog(dialog="Xdialog", compat="Xdialog", ...)
+        #
+        # With the 'autowidgetsize' option enabled, pythondialog's
+        # widget-producing methods behave as if width=0, height=0, etc. had
+        # been passed, except where these parameters are explicitely specified
+        # with different values.
+        self.Dialog_instance = dialog.Dialog(dialog="dialog",
+                                             autowidgetsize=True)
         # See the module docstring at the top of the file to understand the
         # purpose of MyDialog.
         d = MyDialog(self.Dialog_instance)
@@ -428,6 +442,9 @@ The dialog-like program displaying this message box reports version \
                  width=60, height=17)
 
         self.progressbox_demo_with_file_descriptor()
+        # First dialog version where the programbox widget works fine
+        if self.dialog_version_check("1.2-20140112"):
+            self.programbox_demo()
         self.infobox_demo()
         self.gauge_demo()
         answer = self.yesno_demo(with_help=True)
@@ -454,12 +471,12 @@ The dialog-like program displaying this message box reports version \
 
         sandwich = self.radiolist_demo()
 
-        if self.dialog_version_check("1.2", "the rangebox demo", explain=True):
+        if self.dialog_version_check("1.2-20121230", "the rangebox demo", explain=True):
             nb_engineers = self.rangebox_demo()
         else:
             nb_engineers = None
 
-        if self.dialog_version_check("1.2", "the buildlist demo", explain=True):
+        if self.dialog_version_check("1.2-20121230", "the buildlist demo", explain=True):
             desert_island_stuff = self.buildlist_demo()
         else:
             desert_island_stuff = None
@@ -477,7 +494,8 @@ The dialog-like program displaying this message box reports version \
                             nb_engineers, desert_island_stuff, date, time_,
                             password)
 
-        if self.dialog_version_check("1.2", "the treeview demo", explain=True):
+        if self.dialog_version_check("1.2-20121230", "the treeview demo",
+                                     explain=True):
             if self.dialog_version_check("1.2-20130902"):
                 self.treeview_demo_with_help()
             else:
@@ -490,7 +508,7 @@ The dialog-like program displaying this message box reports version \
 Haha. You thought it was over. Wrong. Even more fun is to come!
 
 Now, please select a file you would like to see growing (or not...).""",
-                 width=75)
+                 width=75, height=8)
 
         # Looks nicer if the screen is not completely filled by the widget,
         # hence the -1.
@@ -516,13 +534,17 @@ Now, please select a file you would like to see growing (or not...).""",
         # regular file.
         time.sleep(1 if params["fast_mode"] else 2)
 
-        # programbox_demo would be fine right after
-        # progressbox_demo_with_file_descriptor in demo(), but there is a
-        # little bug in dialog 1.2-20130902 that makes the first two lines
-        # disappear too early. Until the fix is widely deployed, it is probably
-        # best to keep programbox_demo out of the main demo.
-        if self.dialog_version_check("1.1", "the programbox demo", explain=True):
-            self.programbox_demo()
+        # programbox_demo is fine right after
+        # progressbox_demo_with_file_descriptor in demo(), but there was a
+        # little bug in dialog that made the first two lines disappear too
+        # early. This bug has been fixed in version 1.2-20140112, therefore
+        # we'll run the programbox_demo as part of the main demo if the dialog
+        # version is >= than this one, otherwise we'll keep it here.
+        if self.dialog_version_check("1.1-20110302", "the programbox demo",
+                                     explain=True):
+            # First dialog version where the programbox widget works fine
+            if not self.dialog_version_check("1.2-20140112"):
+                self.programbox_demo()
         # Almost identical to mixedform (mixedform being more powerful). Also,
         # there is now form_demo_with_help() which uses the form widget.
         self.form_demo()
@@ -578,11 +600,11 @@ Now, please select a file you would like to see growing (or not...).""",
             # User chose to abort
             return
         else:
-            d.progressbox(file_path=path,
+            d.progressbox(file_path=path, width=78, height=20,
                           text="You can put some header text here",
                           title="Progressbox example with a file path")
 
-    def progressboxoid(self, widget, func_name, text):
+    def progressboxoid(self, widget, func_name, text, **kwargs):
         # Since this is just a demo, I will not try to catch os.error exceptions
         # in this function, for the sake of readability.
         read_fd, write_fd = os.pipe()
@@ -614,7 +636,8 @@ Now, please select a file you would like to see growing (or not...).""",
         # etc.
         getattr(d, widget)(
             fd=read_fd,
-            title="{0} example with a file descriptor".format(widget))
+            title="{0} example with a file descriptor".format(widget),
+            **kwargs)
 
         # Now that the progressbox is over (second child process, running the
         # dialog-like program), we can wait() for the first child process.
@@ -695,7 +718,8 @@ found the idea rather cool and
 improved the module during the
 following years...""" + 15*'\n'
 
-        return self.progressboxoid("progressbox", func_name, text)
+        return self.progressboxoid("progressbox", func_name, text,
+                                   width=78, height=20)
 
     def programbox_demo(self):
         func_name = "programbox_demo"
@@ -715,8 +739,8 @@ of some external program.
 
 This will be done right away if you choose "Yes" in the next dialog.
 This choice will cause 'find /usr/bin' to be run with subprocess.Popen()
-and the output to be displayed, via a pipe, in a 'programbox' widget.\n"""
-        self.progressboxoid("programbox", func_name, text)
+and the output to be displayed, via a pipe, in a 'programbox' widget."""
+        self.progressboxoid("programbox", func_name, text, width=78, height=20)
 
         if d.Yesno("Do you want to run 'find /usr/bin' in a programbox widget?"):
             try:
@@ -734,7 +758,7 @@ and the output to be displayed, via a pipe, in a 'programbox' widget.\n"""
                 # in the title bar.
                 d.programbox(fd=p.stdout.fileno(),
                              text="Example showing the output of a command "
-                             "with programbox")
+                             "with programbox", width=78, height=20)
                 retcode = p.wait()
 
             # Context manager support for subprocess.Popen objects requires
@@ -833,7 +857,7 @@ You have all my support, be brave!""",
             msg = "Well, feel free to send your complaints to /dev/null!\n\n" \
                 "Sincerely yours, etc."
 
-        d.msgbox(msg, width=50)
+        d.msgbox(msg, height=7, width=50)
 
     def textbox_demo(self):
         # Better use the absolute path for displaying in the dialog title
@@ -941,14 +965,13 @@ when leaving the help dialog. {complement}""".format(complement=complement)
             if code == "help":
                 label, status, elements = t
                 d.msgbox("You asked for help concerning the field labelled "
-                         "'{0}'.".format(label), width=50)
+                         "'{0}'.".format(label))
             else:
                 # 't' contains the list of items as filled by the user
                 break
 
         answers = '\n'.join(t)
         d.msgbox("Your answers:\n\n{0}".format(indent(answers, "  ")),
-                 width=0, height=0,
                  title="'form' demo with help facilities", no_collapse=True)
         return t
 
@@ -1016,7 +1039,7 @@ preference below.""" \
             % (name, city, state, country, size, weight, secret_code,
                ' '.join([last_will1, last_will2, last_will3, last_will4]))
 
-        code, tag = d.menu(text, height=23, width=76,
+        code, tag = d.menu(text, height=23, width=76, menu_height=7,
             choices=[("Monday", "Being the first day of the week..."),
                      ("Tuesday", "Comes after Monday"),
                      ("Wednesday", "Before Thursday day"),
@@ -1032,7 +1055,7 @@ preference below.""" \
 item_help=True."""
 
         while True:
-            code, tag = d.menu(text, height=16, width=60,
+            code, tag = d.menu(text, height=16, width=60, menu_height=7,
                 choices=[("Tag 1", "Item 1", "Help text for item 1"),
                          ("Tag 2", "Item 2", "Help text for item 2"),
                          ("Tag 3", "Item 3", "Help text for item 3"),
@@ -1084,8 +1107,7 @@ item_help=True and help_status=True."""
         choices = self.SAMPLE_DATA_FOR_BUILDLIST_AND_CHECKLIST
 
         while True:
-            code, t = d.checklist(text, height=0, width=0, list_height=0,
-                                  choices=choices,
+            code, t = d.checklist(text, choices=choices,
                                   title="A checklist with help facilities",
                                   help_button=True, item_help=True,
                                   help_tags=True, help_status=True)
@@ -1214,8 +1236,7 @@ Keys: SPACE   select or deselect the highlighted item, i.e.,
         items = self.SAMPLE_DATA_FOR_BUILDLIST_AND_CHECKLIST
 
         while True:
-            code, t = d.buildlist(text, height=0, width=0, list_height=0,
-                                  items=items,
+            code, t = d.buildlist(text, items=items,
                                   title="A 'buildlist' with help facilities",
                                   help_button=True, item_help=True,
                                   help_tags=True, help_status=True,
@@ -1240,7 +1261,7 @@ Keys: SPACE   select or deselect the highlighted item, i.e.,
 
     def calendar_demo_with_help(self):
         # Start with the current date
-        day, month, year = 0, 0, 0
+        day, month, year = -1, -1, -1
 
         while True:
             code, date = d.calendar("When do you think Georg Cantor was born?",
@@ -1291,7 +1312,8 @@ and was the first person to give a rigorous definition of real numbers."""
         # the user types characters. Not *that* bad.
         code, password = d.passwordbox("What is your root password, "
                                        "so that I can crack your system "
-                                       "right now?", insecure=True)
+                                       "right now?", height=10, width=60,
+                                       insecure=True)
         return password
 
     def scrollbox_demo(self, name, favorite_day, toppings, sandwich,
@@ -1311,10 +1333,18 @@ and was the first person to give a rigorous definition of real numbers."""
         sandwich_report = "Favorite sandwich: {sandwich}{comment}".format(
             sandwich=sandwich, comment=sandwich_comment)
 
-        if len(desert_island_stuff) == 0:
-            desert_island_string = " nothing!"
+        if desert_island_stuff is None:
+            # The widget was not available, the user didn't see anything.
+            desert_island_string = ""
         else:
-            desert_island_string = "\n\n  " + "\n  ".join(desert_island_stuff)
+            if len(desert_island_stuff) == 0:
+                desert_things = " nothing!"
+            else:
+                desert_things = "\n\n  " + "\n  ".join(desert_island_stuff)
+
+            desert_island_string = \
+                "\nOn a desert island, you would take:{0}\n".format(
+                desert_things)
 
         day, month, year = date
         hour, minute, second = time_
@@ -1325,9 +1355,7 @@ Name: {name}
 Favorite day of the week: {favday}
 Favorite sandwich toppings:{toppings}
 {sandwich_report}
-
-On a desert island, you would take:{desert_island_string}
-
+{desert_island_string}
 Your answer about Georg Cantor's date of birth: \
 {year:04d}-{month:02d}-{day:02d}
 (at precisely {hour:02d}:{min:02d}:{sec:02d}!)
@@ -1424,7 +1452,7 @@ You should now select a node with the space bar."""
             code, tag, new_item_text = d.inputmenu(
                 "Demonstration of 'inputmenu'. Any single item can be either "
                 "accepted as is, or renamed.",
-                height=0, width=60, menu_height=10, choices=choices,
+                width=60, menu_height=10, choices=choices,
                 help_button=True, title="'inputmenu' demo")
 
             if code == "help":
@@ -1443,7 +1471,8 @@ You should now select a node with the space bar."""
 
             break
 
-        d.msgbox(text, width=60, title="Outcome of the 'inputmenu' demo")
+        d.msgbox(text, height=10, width=60,
+                 title="Outcome of the 'inputmenu' demo")
 
     # Help strings used in several places
     FSELECT_HELP = """\

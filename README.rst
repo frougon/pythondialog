@@ -10,7 +10,7 @@ WARNING
 This version is a backport of pythondialog to Python 2. Unless you
 *really* have to use Python 2, you should go to the `pythondialog home
 page`_ and download the reference implementation which, at the time of
-this writing (November 2013) and for the forseeable future, is targeted
+this writing (April 2015) and for the forseeable future, is targeted
 at Python 3.
 
 .. _pythondialog home page: http://pythondialog.sourceforge.net/
@@ -40,30 +40,29 @@ General Public License). Its home page is located at:
   http://pythondialog.sourceforge.net/
 
 and contains a `short example`_, screenshots_, a `summary of the recent
-changes`_, links to the `pydoc3-generated documentation`_, the `Git
-repository`_, the `mailing list`_, the `issue tracker`_, etc.
+changes`_, links to the `documentation`_, the `Git repository`_, the
+`mailing list`_, the `issue tracker`_, etc.
 
 .. _short example:  http://pythondialog.sourceforge.net/#example
 .. _screenshots:    http://pythondialog.sourceforge.net/gallery.html
 .. _summary of the recent changes:
                     http://pythondialog.sourceforge.net/news.html
-.. _pydoc3-generated documentation:
-                    http://pythondialog.sourceforge.net/doc/pythondialog.html
+.. _documentation:  http://pythondialog.sourceforge.net/doc/
 .. _Git repository: https://sourceforge.net/p/pythondialog/code/
 .. _mailing list:   https://sourceforge.net/p/pythondialog/mailman/
 .. _issue tracker:  https://sourceforge.net/p/pythondialog/_list/tickets
 
 If you want to get a quick idea of what this module allows one to do,
-you can download a release tarball and run demo.py::
+you can download a release tarball and run ``demo.py``::
 
-  python2 demo.py
+  PYTHONPATH=. python2 examples/demo.py
 
 Notes:
 
-  - the preceding command uses "python2" because we want to use the
+  - the preceding command uses ``python2`` because we want to use the
     Python 2 backport of pythondialog;
-  - depending on your system, you may have to replace "python2" with
-    "python" or "python2.7", for instance.
+  - depending on your system, you may have to replace ``python2`` with
+    ``python`` or ``python2.7``, for instance.
 
 
 What is pythondialog good for? What are its limitations?
@@ -102,16 +101,15 @@ Requirements
 Quick installation instructions
 -------------------------------
 
-If you have `pip <https://pypi.python.org/pypi/pip>`_ installed, you
-should be able to install this backport of pythondialog with::
+If you have a working `pip <https://pypi.python.org/pypi/pip>`_ setup,
+you should be able to install this backport of pythondialog with::
 
   pip install python2-pythondialog
 
-(which should be run with appropriate privileges; also make sure that
-your 'pip' invocation runs with the Python 2 installation you want to
-install the backport for)
+When doing so, make sure that your ``pip`` executable runs with the
+Python 2 installation you want to install the backport for.
 
-For more detailed instructions, you can read the INSTALL file from a
+For more detailed instructions, you can read the ``INSTALL`` file from a
 release tarball. You may also want to consult the `pip documentation
 <https://pip.pypa.io/>`_.
 
@@ -142,14 +140,15 @@ Backport-specific notes
   at the beginning of your Python files. This method has the additional
   benefit of preparing your transition to Python 3.
 
-* Don't use str() in Python 2 on objects such as pythondialog exceptions
-  or dialog.DialogBackendVersion instances; use unicode() instead, which
-  is the Python 2 equivalent of the Python 3 str() built-in. Of course,
-  using repr() on any pythondialog object should return a byte string
-  when run under Python 2, because this is how the repr() API works in
-  Python 2. The same holds true for str(), but this one is not supported
-  by the Python 2 backport of pythondialog: it is superseded, as already
-  explained, by the much more powerful unicode().
+* Don't use ``str()`` in Python 2 on objects such as pythondialog
+  exceptions or ``dialog.DialogBackendVersion`` instances; use
+  ``unicode()`` instead, which is the Python 2 equivalent of the
+  Python 3 ``str()`` built-in. Of course, using ``repr()`` on any
+  pythondialog object should return a byte string when run under
+  Python 2, because this is how the ``repr()`` API works in Python 2.
+  The same holds true for ``str()``, but this one is not supported by
+  the Python 2 backport of pythondialog: it is superseded, as already
+  explained, by the much more powerful ``unicode()``.
 
 * Before taking potentially expensive decisions, you should realize that
   Unicode support is *much*, much better in Python 3 than in Python 2,
@@ -157,10 +156,10 @@ Backport-specific notes
   Python 2, native string in Python 3). In Python 3, native strings
   (simply called “strings” in the Python documentation) are natural and
   ubiquitous. They can be read and written from/to the standard I/O
-  streams with sane encoding defaults. str() and repr() return native
-  strings, as do all standard library calls whenever expected (i.e.,
-  when the return value is text, as opposed to binary data). Python 3
-  strings are both powerful and easy to use.
+  streams with sane encoding defaults. ``str()`` and ``repr()`` return
+  native strings, as do all standard library calls whenever expected
+  (i.e., when the return value is text, as opposed to binary data).
+  Python 3 strings are both powerful and easy to use.
 
   By contrast, in Python 2, you always have to be very careful about
   what you manipulate: byte strings or Unicode strings. Most library
@@ -172,15 +171,15 @@ Backport-specific notes
   software, while the responsible developers are often not aware of any
   problem---until a bug report is filed, if ever.
 
-  Want to use traceback.format_exc() for instance? What does it return,
-  byte string or Unicode string? Experiment. Answer: byte string. Then,
-  how does it deal with, e.g., accented characters in an OSError
-  exception message? Experiment. Answer: it outputs the repr()
-  representation of an Unicode string that uses backslash escapes for
-  the non-ASCII characters, all of this inside the returned byte string.
-  Conclusion: the messages seen by users will be very ugly and more or
-  less undecipherable for many of them. Does it behave this way in all
-  cases? Tough question. Use the source, Luke...
+  Want to use ``traceback.format_exc()`` for instance? What does it
+  return, byte string or Unicode string? Experiment. Answer: byte
+  string. Then, how does it deal with, e.g., accented characters in an
+  ``OSError`` exception message? Experiment. Answer: it outputs the
+  ``repr()`` representation of an Unicode string that uses backslash
+  escapes for the non-ASCII characters, all of this inside the returned
+  byte string. Conclusion: the messages seen by users will be very ugly
+  and more or less undecipherable for many of them. Does it behave this
+  way in all cases? Tough question. Use the source, Luke...
 
   With other library calls, you might get non-ASCII characters in a byte
   string. Then, the question would be: what encoding has been used to
@@ -205,42 +204,84 @@ Documentation
 
 **Important:** be sure to read the `Backport-specific notes`_ above.
 
-pythondialog is fully documented through Python docstrings. This
-documentation can be browsed with the pydoc standalone program (maybe
-pydoc2 or something such as pydoc2.7, depending on your Python
-installation) or by simply opening dialog.py in a pager or editor. The
-documentation of the latest version as rendered by pydoc3 should be
-available at:
+The pythondialog Manual
+^^^^^^^^^^^^^^^^^^^^^^^
 
-  http://pythondialog.sourceforge.net/doc/pythondialog.html
+The pythondialog Manual is written in `reStructuredText`_ format for the
+`Sphinx`_ documentation generator. The HTML documentation for the latest
+version of pythondialog as rendered by Sphinx should be available at:
 
-To generate the documentation yourself from dialog.py, you can type
-"pydoc dialog" at the command prompt in the pythondialog base directory
-or "pydoc /path/to/dialog.py". Alternatively, you can type::
+  http://pythondialog.sourceforge.net/doc/
+
+.. _pythondialog Manual: http://pythondialog.sourceforge.net/doc/
+.. _reStructuredText: http://docutils.sourceforge.net/rst.html
+.. _Sphinx: http://sphinx-doc.org/
+.. _LaTeX: http://latex-project.org/
+.. _Make: http://www.gnu.org/software/make/
+
+The sources for the pythondialog Manual are located in the ``doc``
+top-level directory of the pythondialog distribution, but the
+documentation build process pulls many parts from dialog.py, mainly
+docstrings.
+
+**Note:**
+
+  Currently, generation of the pythondialog Manual with `Sphinx`_ has
+  only been tested, and is only supported with the reference
+  implementation, on Python 3. As a consequence, the package containing
+  this file may be fine to read or grep through the ``.rst`` files;
+  however, if compilation of said ``.rst`` files with `Sphinx`_ doesn't
+  work, it is currently not considered a bug---simply download the
+  reference implementation if you want to do that.
+
+To generate the documentation yourself from dialog.py and the sources in
+the ``doc`` directory, first make sure you have `Sphinx`_ and `Make`_
+installed. Then, you can go to the ``doc`` directory and type, for
+instance::
+
+  make html
+
+You will then find the output in the ``_build/html`` subdirectory of
+``doc``. `Sphinx`_ can build the documentation in many other formats.
+For instance, if you have `LaTeX`_ installed, you can generate the
+pythondialog Manual in PDF format using::
+
+  make latexpdf
+
+You can run ``make`` from the ``doc`` directory to see a list of the
+available formats. Run ``make clean`` to clean up after the
+documentation build process.
+
+For those who have installed `Sphinx`_ but not `Make`_, it is still
+possible to build the documentation with a command such as::
+
+  sphinx-build -b html . _build/html
+
+run from the ``doc`` directory. Please refer to `sphinx-build`_ for more
+details.
+
+.. _sphinx-build: http://sphinx-doc.org/invocation.html
+
+
+Reading the docstrings from an interactive Python interpreter
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you have already installed pythondialog, you may consult its
+docstrings in an interactive Python interpreter this way::
 
    >>> import dialog; help(dialog)
 
-at a Python command prompt (corresponding to the Python version you
-installed pythondialog for, of course).
-
-You can extract the documentation from dialog.py to an HTML file with
-"pydoc -w dialog" or "pydoc -w /path/to/dialog.py". This will generate
-dialog.html in the current directory.
-
-Alternatively, if pythondialog is already installed, pydoc can act as
-an HTTP server and provide the documentation to web browsers. For
-instance, launching "pydoc -p 1234" will make it listen on TCP
-port 1234. You can then point your browser to http://localhost:1234/ and
-read the documentation.
-
-See the pydoc module documentation for more information.
+but only parts of the documentation are available using this method, and
+the result is much less convenient to use than the `pythondialog
+Manual`_ as generated by `Sphinx`_.
 
 
 Enabling Deprecation Warnings
 -----------------------------
 
-There are a few places in dialog.py that send a DeprecationWarning to
-warn developers about obsolete features. However, because of:
+There are a few places in ``dialog.py`` that send a
+``DeprecationWarning`` to warn developers about obsolete features.
+However, because of:
 
   - the dialog output to the terminal;
   - the fact that such warnings are silenced by default since Python 2.7
@@ -254,10 +295,10 @@ you have to do two things in order to see them:
 For instance, to see the warnings produced when running the demo, you
 can do::
 
-   python2 -Wd demo.py 2>/path/to/file
+  PYTHONPATH=. python2 -Wd examples/demo.py 2>/path/to/file
 
-and examine /path/to/file. This can also help you to find files that are
-still open when your program exits.
+and examine ``/path/to/file``. This can also help you to find files that
+are still open when your program exits.
 
 **Note:**
 
@@ -279,29 +320,34 @@ Troubleshooting
 If you have a problem with a pythondialog call, you should read its
 documentation and the dialog(1) manual page. If this is not enough, you
 can enable logging of shell command-line equivalents of all dialog calls
-made by your program with a simple call to Dialog.setup_debug(), first
-available in pythondialog 2.12. An example of this can be found in
-demo.py.
+made by your program with a simple call to ``Dialog.setup_debug()``,
+first available in pythondialog 2.12. An example of this can be found in
+``demo.py`` from the ``examples`` directory.
 
 As of version 2.12, you can also enable this debugging facility for
-demo.py by calling it with the --debug flag (cf. 'demo.py --help').
+``demo.py`` by calling it with the ``--debug`` flag (cf.
+``demo.py --help``).
 
 
 Using Xdialog instead of dialog
 -------------------------------
 
-As far as I can tell, Xdialog has not been ported to GTK+ 2 or later. It
-is not in Debian stable nor unstable (June 23, 2013). It is not
-installed on my system (because of the GTK+ 1.2 dependency), and
-according to the Xdialog-specific patches I received from Peter Åstrand
-in 2004, was not a drop-in replacement for dialog (in particular,
-Xdialog seemed to want to talk to the caller through stdout instead of
-stderr, grrrrr!).
+As far as I can tell, `Xdialog`_ has not been ported to `GTK+`_ version
+2 or later. It is not in `Debian`_ stable nor unstable (June 23, 2013).
+It is not installed on my system (because of the GTK+ 1.2 dependency),
+and according to the Xdialog-specific patches I received from Peter
+Åstrand in 2004, was not a drop-in replacement for `dialog`_ (in
+particular, Xdialog seemed to want to talk to the caller through stdout
+instead of stderr, grrrrr!).
+
+.. _Xdialog: http://xdialog.free.fr/
+.. _GTK+: http://www.gtk.org/
+.. _Debian: http://www.debian.org/
 
 All this to say that, even though I didn't remove the options to use
 another backend than dialog, nor did I remove the handful of little,
 non-invasive modifications that help pythondialog work better with
-Xdialog, I don't really support the latter. I test everything with
+`Xdialog`_, I don't really support the latter. I test everything with
 dialog, and nothing with Xdialog.
 
 That being said, here is the *old* text of this section (from 2004), in
@@ -339,8 +385,8 @@ added some features to it (mainly the first gauge implementation, I
 guess). Florent Rougon rewrote most parts of the program to make it more
 robust and flexible so that it can give access to most features of the
 dialog program. Peter Åstrand took over maintainership between 2004 and
-2009, with particular care for the Xdialog support. Florent Rougon took
-over maintainership again starting from 2009...
+2009, with particular care for the `Xdialog`_ support. Florent Rougon
+took over maintainership again starting from 2009...
 
 .. 
   # Local Variables:

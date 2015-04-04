@@ -1,16 +1,18 @@
 INSTALLATION
 ============
 
-pythondialog is packaged with Distutils (the still-current standard
-framework for packaging simple Python extensions). With the current
-state of Python packaging and installation tools, there are several ways
-to install the Python 2 backport of pythondialog from source.
+pythondialog is packaged with Distutils. With the current state of
+Python packaging and installation tools, there are several ways to
+install the Python 2 backport of pythondialog from source.
 
-Probably, the easiest and cleanest method at this date (October 2013)
-is to use pip (optionally in a virtualenv). Typically, you just have to
-run one of the following commands with the appropriate privileges:
+Probably, the easiest and cleanest method at this date (April 2015) is
+to use pip, possibly inside a virtual environment created with
+virtualenv or venv.py/pyvenv (at the time of this writing,
+venv.py/pyvenv is only available for Python 3). Typically, assuming you
+have a working pip setup (see below), you just have to run one of the
+following commands:
 
-  pip install python2-pythondialog       (which installs from PyPI)
+  pip install python2-pythondialog   (which normally installs from PyPI)
 
 or
 
@@ -24,27 +26,70 @@ or
 
   pip install http://url/to/python2-pythondialog-X.Y.Z.tar.gz
 
-Note: old versions of pip don't support https.
+Notes:
+  - old versions of pip don't support https;
+  - upgrades can be done by passing '--upgrade' or '-U' to the
+    'pip install' command; please refer to the pip documentation for
+    details.
 
-Uninstallation is as easy as:
+Uninstallation should be as easy as:
 
   pip uninstall python2-pythondialog
 
-For more information about pip and virtualenv, you can visit:
+For more information about pip, venv.py/pyvenv and virtualenv, you can
+visit the following pages:
 
-  <https://pypi.python.org/pypi/pip>
+  <https://pip.pypa.io/>
+  <https://docs.python.org/3/library/venv.html>
+  <https://virtualenv.pypa.io/>
 
-and:
 
-  <https://pypi.python.org/pypi/virtualenv>
+So, what is a "working pip setup"?
+----------------------------------
+
+What I call a "working pip setup" here is a setup where a command that
+is typically something like 'pip', 'pip2' or 'pip2.7' (for a Python 2.7
+installation) can be run to safely install, upgrade and remove packages
+into or from a particular Python installation.
+
+Normally, a given 'pip' executable is tied to a particular Python
+installation that can be discovered by running 'pip --version' (or
+'pip2 --version', etc., depending on the particular 'pip' executable
+name; for sanity's sake, we'll assume 'pip' in the rest of this
+document). For instance, the following would indicate a Python 2.7
+installation based at /some/path:
+
+  % pip --version
+  pip 1.5.6 from /some/path/lib/python2.7/site-packages (python 2.7)
+
+In general, it is safe to run 'pip' from a Python interpreter you
+installed yourself without a Linux package manager or similar. It is
+also safe if the Python interpreter running 'pip' lives in a virtual
+environment created with virtualenv or venv.py/pyvenv. The one case
+where you should probably avoid using a given 'pip' executable is if it
+runs directly under a system Python (typically, /usr/bin/python or
+/usr/bin/pythonX.Y) installed with the package manager of your Linux
+distribution (or any other OS, for that matter): in such a situation,
+'pip' might, if run with superuser privileges, mess with files under the
+control of the OS package manager (i.e., 'dpkg' on Debian and its
+derivatives, 'rpm' on Redhat and Suse, etc.).
+
+Depending on how you installed Python, you may need superuser privileges
+to install, upgrade or remove Python packages inside that installation.
+For instance, this will be the case if you compiled Python yourself and
+performed the installation step ('make install') as root. However,
+running 'pip' with superuser privileges should not be necessary nor
+desirable inside a virtual environment created with virtualenv or
+venv.py/pyvenv.
 
 
 Old way, without pip
 --------------------
 
-The following instructions explain how to install pythondialog directly
-from its setup.py, without using pip. If possible, the method based on
-pip is preferable because it makes uninstallation standard and easy.
+The following instructions explain how to install the Python 2 backport
+of pythondialog directly from its setup.py, without using pip. If
+possible, the method based on pip is preferable because it makes
+uninstallation standard and easy.
 
 Here are the steps:
   - make this file's directory your shell's current directory
@@ -83,9 +128,8 @@ Here are the steps:
 
 
 If this default installation is not what you wish, please read the
-Distutils documentation. In Python 2.1 and above, it is included in the
-base Python documentation and the chapter you'll need is most probably
-"Installing Python Modules".
+Distutils documentation which should be available in the "Installing
+Python Modules" chapter of the Python documentation.
 
 
 UNINSTALLATION
@@ -105,8 +149,8 @@ put on your system. Great! All you have to do is:
 
    while read file; do rm -f "$file"; done < /path/to/foo
 
-under a Bourne-compatible shell and with the appropriate privileges
-(maybe root, depending on how you installed pythondialog).
+under a POSIX-style shell and with appropriate privileges (maybe root,
+depending on how you installed the Python 2 backport of pythondialog).
 
 Note: this will handle file names with spaces correctly, unlike the
 simpler "rm -f $(cat /path/to/foo)".
