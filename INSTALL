@@ -5,7 +5,7 @@ pythondialog is packaged with Distutils. With the current state of
 Python packaging and installation tools, there are several ways to
 install pythondialog from source.
 
-Probably, the easiest and cleanest method at this date (August 2014) is
+Probably, the easiest and cleanest method at this date (April 2015) is
 to use pip, possibly inside a virtual environment created with
 virtualenv or venv.py/pyvenv. Typically, assuming you have a working pip
 setup (see below), you just have to run one of the following commands:
