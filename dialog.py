@@ -1613,9 +1613,9 @@ by :program:`dialog`.
 
             if self.cached_backend_version < minimum_version:
                 raise InadequateBackendVersion(
-                    "the programbox widget requires dialog {0} or later, "
-                    "but you seem to be using version {1}".format(
-                        minimum_version, self.cached_backend_version))
+                    "{0} requires dialog {1} or later, "
+                    "but you seem to be using version {2}".format(
+                        feature, minimum_version, self.cached_backend_version))
 
     def backend_version(self):
         """Get the version of the :program:`dialog`-like program (backend).
