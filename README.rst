@@ -203,11 +203,13 @@ If you have a problem with a pythondialog call, you should read its
 documentation and the dialog(1) manual page. If this is not enough, you
 can enable logging of shell command-line equivalents of all dialog calls
 made by your program with a simple call to ``Dialog.setup_debug()``,
-first available in pythondialog 2.12. An example of this can be found in
-``demo.py`` from the ``examples`` directory.
+first available in pythondialog 2.12 (the ``expand_file_opt`` parameter
+may be useful in versions 3.3 and later). An example of this can be
+found in ``demo.py`` from the ``examples`` directory.
 
 As of version 2.12, you can also enable this debugging facility for
-``demo.py`` by calling it with the ``--debug`` flag (cf.
+``demo.py`` by calling it with the ``--debug`` flag (possibly combined
+with ``--debug-expand-file-opt`` in pythondialog 3.3 and later, cf.
 ``demo.py --help``).
 
 

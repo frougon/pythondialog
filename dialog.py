@@ -877,7 +877,8 @@ class Dialog:
         return self._DIALOG_ERROR
 
     def __init__(self, dialog="dialog", DIALOGRC=None,
-                 compat="dialog", use_stdout=None, *, autowidgetsize=False):
+                 compat="dialog", use_stdout=None, *, autowidgetsize=False,
+                 pass_args_via_file=None):
         """Constructor for :class:`Dialog` instances.
 
         :param str dialog:
@@ -910,6 +911,17 @@ class Dialog:
           :program:`dialog` backend will automatically compute a
           suitable size for the widgets. More details about this option
           are given :ref:`below <autowidgetsize>`.
+        :param pass_args_via_file:
+          whether to use the :option:`--file` option with a temporary
+          file in order to pass arguments to the :program:`dialog`
+          backend, instead of including them directly into the argument
+          list; using :option:`--file` has the advantage of not exposing
+          the “real” arguments to other users through the process table.
+          With the default value (``None``), the option is enabled if
+          the :program:`dialog` version is recent enough to offer a
+          reliable :option:`--file` implementation (i.e., 1.2-20150513
+          or later).
+        :type pass_args_via_file: bool or ``None``
         :return: a :class:`Dialog` instance
 
         .. _Dialog-constructor-compat-arg:
@@ -949,6 +961,9 @@ class Dialog:
 
         .. versionadded:: 3.1
            Support for the *autowidgetsize* parameter.
+
+        .. versionadded:: 3.3
+           Support for the *pass_args_via_file* parameter.
 
         """
         # DIALOGRC differs from the Dialog._DIALOG_* attributes in that:
@@ -998,11 +1013,25 @@ class Dialog:
         self.setup_debug(False)
 
         if compat == "dialog":
+            # Temporary setting to ensure that self.backend_version()
+            # will be able to run even if dialog is too old to support
+            # --file correctly. Will be overwritten later.
+            self.pass_args_via_file = False
             self.cached_backend_version = DialogBackendVersion.fromstring(
                 self.backend_version())
         else:
             # Xdialog doesn't seem to offer --print-version (2013-09-12)
             self.cached_backend_version = None
+
+        if pass_args_via_file is not None:
+            # Always respect explicit settings
+            self.pass_args_via_file = pass_args_via_file
+        elif self.cached_backend_version is not None:
+            self.pass_args_via_file = self.cached_backend_version >= \
+                                      DialogBackendVersion("1.2-20150513")
+        else:
+            # Xdialog doesn't seem to offer --file (2015-05-24)
+            self.pass_args_via_file = False
 
     @classmethod
     def dash_escape(cls, args):
@@ -1085,18 +1114,37 @@ class Dialog:
                       DeprecationWarning)
         self.set_background_title(text)
 
-    def setup_debug(self, enable, file=None, always_flush=False):
+    def setup_debug(self, enable, file=None, always_flush=False, *,
+                    expand_file_opt=False):
         """Setup the debugging parameters.
-
-        When enabled, all :program:`dialog` commands are written to
-        *file* using POSIX shell syntax.
 
         :param bool enable:       whether to enable or disable debugging
         :param file file:         where to write debugging information
         :param bool always_flush: whether to call :meth:`file.flush`
                                   after each command written
+        :param bool expand_file_opt:
+          when :meth:`Dialog.__init__` has been called with
+          :samp:`{pass_args_via_file}=True`, this option causes the
+          :option:`--file` options that would normally be written to
+          *file* to be expanded, yielding a similar result to what would
+          be obtained with :samp:`{pass_args_via_file}=False` (but
+          contrary to :samp:`{pass_args_via_file}=False`, this only
+          affects *file*, not the actual :program:`dialog` calls). This
+          is useful, for instance, for copying some of the
+          :program:`dialog` commands into a shell.
+
+        When *enable* is true, all :program:`dialog` commands are
+        written to *file* using POSIX shell syntax. In this case, you'll
+        probably want to use either :samp:`{expand_file_opt}=True` in
+        this method or :samp:`{pass_args_via_file}=False` in
+        :meth:`Dialog.__init__`, otherwise you'll mostly see
+        :program:`dialog` calls containing only one :option:`--file`
+        option followed by a path to a temporary file.
 
         .. versionadded:: 2.12
+
+        .. versionadded:: 3.3
+           Support for the *expand_file_opt* parameter.
 
         """
         self._debug_enabled = enable
@@ -1113,6 +1161,7 @@ class Dialog:
                 "you must specify a file object when turning debugging on")
 
         self._debug_always_flush = always_flush
+        self._expand_file_opt = expand_file_opt
         self._debug_first_output = True
 
     def _write_command_to_file(self, env, arglist):
@@ -1138,6 +1187,25 @@ class Dialog:
             self._debug_logfile.flush()
 
         self._debug_first_output = False
+
+    def _quote_arg_for_file_opt(self, argument):
+        """
+        Transform a :program:`dialog` argument for safe inclusion via :option:`--file`.
+
+        Since arguments in a file included via :option:`--file` are
+        separated by whitespace, they must be quoted for
+        :program:`dialog` in a way similar to shell quoting.
+
+        """
+        l = ['"']
+
+        for c in argument:
+            if c in ('"', '\\'):
+                l.append("\\" + c)
+            else:
+                l.append(c)
+
+        return ''.join(l + ['"'])
 
     def _call_program(self, cmdargs, *, dash_escape="non-first",
                       use_persistent_args=True,
@@ -1213,12 +1281,25 @@ class Dialog:
             arglist.extend(self.dialog_persistent_arglist)
 
         arglist.extend(_compute_common_args(kwargs) + cmdargs)
+        orig_args = arglist[:] # New object, copy of 'arglist'
+
+        if self.pass_args_via_file:
+            tmpfile = tempfile.NamedTemporaryFile(
+                mode="w", prefix="pythondialog.tmp", delete=False)
+            with tmpfile as f:
+                f.write(' '.join( ( self._quote_arg_for_file_opt(arg)
+                                    for arg in arglist[1:] ) ))
+            args_file = tmpfile.name
+            arglist[1:] = ["--file", args_file]
+        else:
+            args_file = None
 
         if self._debug_enabled:
             # Write the complete command line with environment variables
             # setting to the debug log file (POSIX shell syntax for easy
             # copy-pasting into a terminal, followed by repr(arglist)).
-            self._write_command_to_file(new_environ, arglist)
+            self._write_command_to_file(
+                new_environ, orig_args if self._expand_file_opt else arglist)
 
         # Create a pipe so that the parent process can read dialog's
         # output on stderr (stdout with 'use_stdout')
@@ -1272,7 +1353,7 @@ class Dialog:
         #   the pipe has been read. ]
         with _OSErrorHandling():
             os.close(child_output_wfd)
-        return (child_pid, child_output_rfd)
+        return (child_pid, child_output_rfd, args_file)
 
     def _wait_for_program_termination(self, child_pid, child_output_rfd):
         """Wait for a :program:`dialog`-like process to terminate.
@@ -1364,29 +1445,62 @@ class Dialog:
 
         return (hl_exit_code, child_output)
 
+    def _handle_program_exit(self, child_pid, child_output_rfd, args_file):
+        """Handle exit of a :program:`dialog`-like process.
+
+        This method:
+
+          - waits for the :program:`dialog`-like program termination;
+          - removes the temporary file used to pass its argument list,
+            if any;
+          - and returns the appropriate :term:`Dialog exit code` along
+            with whatever output it produced.
+
+        Notable exceptions:
+
+          any exception raised by :meth:`_wait_for_program_termination`
+
+        """
+        try:
+            exit_code, output = \
+                    self._wait_for_program_termination(child_pid,
+                                                       child_output_rfd)
+        finally:
+            with _OSErrorHandling():
+                if args_file is not None and os.path.exists(args_file):
+                    os.unlink(args_file)
+
+        return (exit_code, output)
+
     def _perform(self, cmdargs, *, dash_escape="non-first",
                  use_persistent_args=True, **kwargs):
         """Perform a complete :program:`dialog`-like program invocation.
 
-        This function invokes the :program:`dialog`-like program, waits
-        for its termination and returns the appropriate :term:`Dialog
-        exit code` along with whatever output it produced.
+        This method:
+
+          - invokes the :program:`dialog`-like program;
+          - waits for its termination;
+          - removes the temporary file used to pass its argument list,
+            if any;
+          - and returns the appropriate :term:`Dialog exit code` along
+            with whatever output it produced.
 
         See :meth:`_call_program` for a description of the parameters.
 
         Notable exceptions:
 
           any exception raised by :meth:`_call_program` or
-          :meth:`_wait_for_program_termination`
+          :meth:`_handle_program_exit`
 
         """
-        (child_pid, child_output_rfd) = \
+        child_pid, child_output_rfd, args_file = \
                     self._call_program(cmdargs, dash_escape=dash_escape,
                                        use_persistent_args=use_persistent_args,
                                        **kwargs)
-        (exit_code, output) = \
-                    self._wait_for_program_termination(child_pid,
-                                                       child_output_rfd)
+        exit_code, output = self._handle_program_exit(child_pid,
+                                                      child_output_rfd,
+                                                      args_file)
+
         return (exit_code, output)
 
     def _strip_xdialog_newline(self, output):
@@ -2364,7 +2478,7 @@ by :program:`dialog`.
             # wfd = File Descriptor for Writing
             (child_stdin_rfd, child_stdin_wfd)  = os.pipe()
 
-            (child_pid, child_output_rfd) = self._call_program(
+            child_pid, child_output_rfd, args_file = self._call_program(
                 ["--gauge", text, str(height), str(width), str(percent)],
                 redir_child_stdin_from_fd=child_stdin_rfd,
                 close_fds=(child_stdin_wfd,), **kwargs)
@@ -2376,7 +2490,8 @@ by :program:`dialog`.
             self._gauge_process = {
                 "pid": child_pid,
                 "stdin": os.fdopen(child_stdin_wfd, "w"),
-                "child_output_rfd": child_output_rfd
+                "child_output_rfd": child_output_rfd,
+                "args_file": args_file
                 }
 
     def gauge_update(self, percent, text="", update_text=False):
@@ -2446,8 +2561,7 @@ by :program:`dialog`.
 
         Notable exceptions:
 
-          - any exception raised by
-            :meth:`_wait_for_program_termination`;
+          - any exception raised by :meth:`_handle_program_exit`;
           - :exc:`PythonDialogIOError` (:exc:`PythonDialogOSError` from
             Python 3.3 onwards) can be raised if closing the pipe used
             to talk to the :program:`dialog`-like program fails.
@@ -2458,9 +2572,9 @@ by :program:`dialog`.
         with _OSErrorHandling():
             p["stdin"].close()
         # According to dialog(1), the output should always be empty.
-        exit_code = \
-                  self._wait_for_program_termination(p["pid"],
-                                                     p["child_output_rfd"])[0]
+        exit_code = self._handle_program_exit(p["pid"],
+                                              p["child_output_rfd"],
+                                              p["args_file"])[0]
         return exit_code
 
     @widget
