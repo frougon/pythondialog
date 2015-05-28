@@ -79,6 +79,18 @@ The *no_shadow* option is worth looking at:
      ``no_shadow=True`` keyword argument to :class:`Dialog` methods (the
      leading two dashes are also consistently removed).
 
+.. note::
+
+   When :meth:`Dialog.__init__` is called with
+   :samp:`{pass_args_via_file}=True` (or without any explicit setting for this
+   option, and the pythondialog as well as :program:`dialog` versions are
+   recent enough so that the option is enabled by default), then the options
+   are not directly passed to :program:`dialog`. Instead, all options are
+   written to a temporary file which :program:`dialog` is pointed to via
+   :option:`--file`. This ensures better confidentiality with respect to other
+   users of the same computer.
+
+
 .. versionadded:: 2.14
    Support for the *default_button* and *no_tags* common options.
 
@@ -480,13 +492,24 @@ Miscellaneous methods
 
 .. automethod:: Dialog.add_persistent_args
 
+.. note::
+
+   When :meth:`Dialog.__init__` is called with
+   :samp:`{pass_args_via_file}=True` (or without any explicit setting for this
+   option, and the pythondialog as well as :program:`dialog` versions are
+   recent enough so that the option is enabled by default), then the arguments
+   are not directly passed to :program:`dialog`. Instead, all arguments are
+   written to a temporary file which :program:`dialog` is pointed to via
+   :option:`--file`. This ensures better confidentiality with respect to other
+   users of the same computer.
+
 .. automethod:: Dialog.dash_escape
 
 .. automethod:: Dialog.dash_escape_nf
 
 .. _examples-of-dash-escaping:
 
-An contrived example using these methods could be the following, which sets a
+A contrived example using these methods could be the following, which sets a
 weird background title starting with two dashes (``--My little program``) for
 the life duration of a :class:`Dialog` instance *d*::
 

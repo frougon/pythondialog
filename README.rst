@@ -10,7 +10,7 @@ WARNING
 This version is a backport of pythondialog to Python 2. Unless you
 *really* have to use Python 2, you should go to the `pythondialog home
 page`_ and download the reference implementation which, at the time of
-this writing (April 2015) and for the forseeable future, is targeted
+this writing (May 2015) and for the forseeable future, is targeted
 at Python 3.
 
 .. _pythondialog home page: http://pythondialog.sourceforge.net/
@@ -83,7 +83,7 @@ Requirements
 ------------
 
 * This backport of pythondialog requires Python 2.6 or later in the 2.x
-  series. It has been tested with Python 2.6 and 2.7.
+  series. It has been tested with Python 2.7.
 
 * The reference implementation supports more recent versions of the
   Python interpreter. Please visit the `pythondialog home page`_ for
@@ -321,11 +321,13 @@ If you have a problem with a pythondialog call, you should read its
 documentation and the dialog(1) manual page. If this is not enough, you
 can enable logging of shell command-line equivalents of all dialog calls
 made by your program with a simple call to ``Dialog.setup_debug()``,
-first available in pythondialog 2.12. An example of this can be found in
-``demo.py`` from the ``examples`` directory.
+first available in pythondialog 2.12 (the ``expand_file_opt`` parameter
+may be useful in versions 3.3 and later). An example of this can be
+found in ``demo.py`` from the ``examples`` directory.
 
 As of version 2.12, you can also enable this debugging facility for
-``demo.py`` by calling it with the ``--debug`` flag (cf.
+``demo.py`` by calling it with the ``--debug`` flag (possibly combined
+with ``--debug-expand-file-opt`` in pythondialog 3.3 and later, cf.
 ``demo.py --help``).
 
 
