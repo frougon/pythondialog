@@ -77,7 +77,7 @@ import dialog
 from dialog import DialogBackendVersion
 
 progname = os.path.basename(sys.argv[0])
-progversion = "0.10"
+progversion = "0.11"
 version_blurb = """Demonstration program and cheap test suite for pythondialog.
 
 Copyright (C) 2002-2010, 2013, 2014, 2015  Florent Rougon
@@ -92,7 +92,7 @@ usage = """Usage: {progname} [option ...]
 Demonstration program and cheap test suite for pythondialog.
 
 Options:
-  -t, --test-suite             test all widgets; implies --fast
+  -t, --test-suite             test all widgets; implies '--fast'
   -f, --fast                   fast mode (e.g., makes the gauge demo run faster)
       --debug                  enable logging of all dialog command lines
       --debug-file=FILE        where to write debug information (default:

@@ -509,7 +509,7 @@ Miscellaneous methods
 
 .. _examples-of-dash-escaping:
 
-An contrived example using these methods could be the following, which sets a
+A contrived example using these methods could be the following, which sets a
 weird background title starting with two dashes (``--My little program``) for
 the life duration of a :class:`Dialog` instance *d*::
 
