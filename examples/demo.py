@@ -1402,8 +1402,11 @@ You should now select a node with the space bar."""
         if os.path.isfile(filepath):
             code, text = d.editbox(filepath, 20, 60,
                                    title="A Cheap Text Editor")
-
-        d.scrollbox(text, title="Resulting text")
+            d.scrollbox(text, title="Resulting text")
+        else:
+            d.msgbox("Skipping the first part of the 'editbox' demo, "
+                     "as '{0}' can't be found.".format(filepath),
+                     title="'msgbox' demo")
 
     def inputmenu_demo(self):
         choices = [ ("1st_tag", "Item 1 text"),
