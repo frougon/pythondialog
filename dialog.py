@@ -2229,7 +2229,7 @@ by :program:`dialog`.
         all text fields are treated as :meth:`passwordbox` widgets
         rather than :meth:`inputbox` widgets.
 
-        By default (as in :program:`dialog)`, nothing is echoed to the
+        By default (as in :program:`dialog`), nothing is echoed to the
         terminal as the user types in the invisible fields. This can be
         confusing to users. Use ``insecure=True`` (keyword argument) if
         you want an asterisk to be echoed for each character entered by
