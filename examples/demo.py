@@ -3,7 +3,7 @@
 
 # demo.py --- Demonstration program and cheap test suite for pythondialog
 #
-# Copyright (C) 2002-2010, 2013, 2014, 2015  Florent Rougon
+# Copyright (C) 2002-2010, 2013-2016  Florent Rougon
 # Copyright (C) 2000  Robb Shecter, Sultanbek Tezadov
 #
 # This program is in the public domain.
@@ -77,10 +77,10 @@ import dialog
 from dialog import DialogBackendVersion
 
 progname = os.path.basename(sys.argv[0])
-progversion = "0.11"
+progversion = "0.12"
 version_blurb = """Demonstration program and cheap test suite for pythondialog.
 
-Copyright (C) 2002-2010, 2013, 2014, 2015  Florent Rougon
+Copyright (C) 2002-2010, 2013-2016  Florent Rougon
 Copyright (C) 2000  Robb Shecter, Sultanbek Tezadov
 
 This is free software; see the source for copying conditions.  There is NO

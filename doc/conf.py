@@ -58,7 +58,7 @@ master_doc = 'index'
 # General information about the project.
 project = 'pythondialog'
 # This applies to the documentation, according to the Sphinx output.
-copyright = '2002-2015, Florent Rougon, Thomas Dickey'
+copyright = '2002-2016, Florent Rougon, Thomas Dickey'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
