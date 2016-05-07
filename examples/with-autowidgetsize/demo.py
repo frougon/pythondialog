@@ -1413,6 +1413,17 @@ You should now select a node with the space bar."""
                      "as '{0}' can't be found.".format(filepath),
                      title="'msgbox' demo")
 
+        l = ["In the previous dialog, the initial contents was",
+             "explicitly written to a file. With Dialog.editbox_str(),",
+             "you can provide it as a string and pythondialog will",
+             "automatically create and delete a temporary file for you",
+             "holding this text for dialog.\n"] + \
+             [ "This is line {0} of a boring sample text.".format(i+1)
+               for i in range(100) ]
+        code, text = d.editbox_str('\n'.join(l), 0, 0,
+                                   title="A Cheap Text Editor")
+        d.scrollbox(text, title="Resulting text")
+
     def inputmenu_demo(self):
         choices = [ ("1st_tag", "Item 1 text"),
                     ("2nd_tag", "Item 2 text"),
