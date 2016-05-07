@@ -15,6 +15,7 @@
 
 import sys
 import os
+import sphinx
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -25,6 +26,11 @@ sys.path.insert(0, os.path.abspath('..'))
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #needs_sphinx = '1.0'
+
+if sphinx.version_info >= (1, 4, 0):
+    # Don't warn when something such as :option:`--some-option` refers to an
+    # option not documented here.
+    suppress_warnings = ['ref.option']
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -52,7 +58,7 @@ master_doc = 'index'
 # General information about the project.
 project = 'pythondialog'
 # This applies to the documentation, according to the Sphinx output.
-copyright = '2002-2015, Florent Rougon, Thomas Dickey'
+copyright = '2002-2016, Florent Rougon, Thomas Dickey'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -108,7 +114,6 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-import sphinx
 if sphinx.version_info >= (1, 3, 0, 'beta', 3):
     html_theme = 'classic'
 else:

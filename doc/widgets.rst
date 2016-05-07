@@ -79,6 +79,8 @@ Edit box
 
    :meth:`~Dialog.editbox` example
 
+.. automethod:: Dialog.editbox_str
+
 
 Progress box
 ^^^^^^^^^^^^

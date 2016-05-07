@@ -3,7 +3,7 @@
 
 # demo.py --- Demonstration program and cheap test suite for pythondialog
 #
-# Copyright (C) 2002-2010, 2013, 2014, 2015  Florent Rougon
+# Copyright (C) 2002-2010, 2013-2016  Florent Rougon
 # Copyright (C) 2000  Robb Shecter, Sultanbek Tezadov
 #
 # This program is in the public domain.
@@ -81,10 +81,10 @@ from io import open
 import atexit
 
 progname = os.path.basename(sys.argv[0])
-progversion = "0.11-py2"
+progversion = "0.12-py2"
 version_blurb = """Demonstration program and cheap test suite for pythondialog.
 
-Copyright (C) 2002-2010, 2013, 2014, 2015  Florent Rougon
+Copyright (C) 2002-2010, 2013-2016  Florent Rougon
 Copyright (C) 2000  Robb Shecter, Sultanbek Tezadov
 
 This is free software; see the source for copying conditions.  There is NO
@@ -1435,7 +1435,21 @@ You should now select a node with the space bar."""
         if os.path.isfile(filepath):
             code, text = d.editbox(filepath, 20, 60,
                                    title="A Cheap Text Editor")
+            d.scrollbox(text, title="Resulting text")
+        else:
+            d.msgbox("Skipping the first part of the 'editbox' demo, "
+                     "as '{0}' can't be found.".format(filepath),
+                     title="'msgbox' demo")
 
+        l = ["In the previous dialog, the initial contents was",
+             "explicitly written to a file. With Dialog.editbox_str(),",
+             "you can provide it as a string and pythondialog will",
+             "automatically create and delete a temporary file for you",
+             "holding this text for dialog.\n"] + \
+             [ "This is line {0} of a boring sample text.".format(i+1)
+               for i in range(100) ]
+        code, text = d.editbox_str('\n'.join(l), 0, 0,
+                                   title="A Cheap Text Editor")
         d.scrollbox(text, title="Resulting text")
 
     def inputmenu_demo(self):

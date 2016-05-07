@@ -1,7 +1,7 @@
 # dialog.py --- A Python interface to the ncurses-based "dialog" utility
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2002, 2003, 2004, 2009, 2010, 2013, 2014, 2015  Florent Rougon
+# Copyright (C) 2002-2004, 2009-2010, 2013-2016  Florent Rougon
 # Copyright (C) 2004  Peter Åstrand
 # Copyright (C) 2000  Robb Shecter, Sultanbek Tezadov
 #
@@ -67,7 +67,7 @@ class VersionInfo(_VersionInfo):
 #: Version of pythondialog as a :class:`VersionInfo` instance.
 #:
 #: .. versionadded:: 2.14
-version_info = VersionInfo(3, 3, 0, None)
+version_info = VersionInfo(3, 4, 0, None)
 #: Version of pythondialog as an Unicode string.
 #:
 #: .. versionadded:: 2.12
@@ -415,6 +415,8 @@ _common_args_syntax = {
     "trim": lambda enable: _simple_option("--trim", enable),
     "version": lambda enable: _simple_option("--version", enable),
     "visit_items": lambda enable: _simple_option("--visit-items", enable),
+    "week_start": lambda start: _dash_escape_nf(
+        ("--week-start", str(start) if isinstance(start, int) else start)),
     "yes_label": lambda s: _dash_escape_nf(("--yes-label", s)) }
 
 
@@ -2289,7 +2291,7 @@ by :program:`dialog`.
         all text fields are treated as :meth:`passwordbox` widgets
         rather than :meth:`inputbox` widgets.
 
-        By default (as in :program:`dialog)`, nothing is echoed to the
+        By default (as in :program:`dialog`), nothing is echoed to the
         terminal as the user types in the invisible fields. This can be
         confusing to users. Use ``insecure=True`` (keyword argument) if
         you want an asterisk to be echoed for each character entered by
@@ -2434,10 +2436,81 @@ by :program:`dialog`.
 
           any exception raised by :meth:`Dialog._perform`
 
+        .. seealso:: method :meth:`editbox_str`
+
         """
         return self._widget_with_string_output(
             ["--editbox", filepath, unicode(height), unicode(width)],
             kwargs)
+
+    def editbox_str(self, init_contents, *args, **kwargs):
+        """
+        Display a basic text editor dialog box (wrapper around :meth:`editbox`).
+
+        :param str init_contents:
+                          initial contents of the dialog box
+        :param args:      positional arguments to pass to :meth:`editbox`
+        :param kwargs:    keyword arguments to pass to :meth:`editbox`
+        :return: a tuple of the form :samp:`({code}, {text})` where:
+
+          - *code* is a :term:`Dialog exit code`;
+          - *text* is the contents of the text entry window on exit.
+
+        :rtype: tuple
+
+        The :meth:`!editbox_str` method is a thin wrapper around
+        :meth:`editbox`. :meth:`!editbox_str` accepts a string as its
+        first argument, instead of a file path. That string is written
+        to a temporary file whose path is passed to :meth:`!editbox`
+        along with the arguments specified via *args* and *kwargs*.
+        Please refer to :meth:`!editbox`\'s documentation for more
+        details.
+
+        Notes:
+
+          - the temporary file is deleted before the method returns;
+          - if *init_contents* does not end with a newline character
+            (``'\\n'``), then this method automatically adds one. This
+            is done in order to avoid unexpected behavior resulting from
+            the fact that, before version 1.3-20160209,
+            :program:`dialog`\'s editbox widget ignored the last line of
+            the input file unless it was terminated by a newline
+            character.
+
+        Notable exceptions:
+
+          - :exc:`PythonDialogOSError`
+          - any exception raised by :meth:`Dialog._perform`
+
+        .. versionadded:: 3.4
+
+        .. seealso:: method :meth:`editbox`
+
+        """
+        if not init_contents.endswith('\n'):
+            # Before version 1.3-20160209, dialog's --editbox widget
+            # doesn't read the last line of the input file unless it
+            # ends with a '\n' character.
+            init_contents += '\n'
+
+        with _OSErrorHandling():
+            tmpfile = tempfile.NamedTemporaryFile(
+                mode="w", prefix="pythondialog.tmp", delete=False)
+            try:
+                with tmpfile as f:
+                    f.write(init_contents)
+                # The temporary file is now closed. According to the tempfile
+                # module documentation, this is necessary if we want to be able
+                # to reopen it reliably regardless of the platform.
+
+                res = self.editbox(tmpfile.name, *args, **kwargs)
+            finally:
+                # The test should always succeed, but I prefer being on the
+                # safe side.
+                if os.path.exists(tmpfile.name):
+                    os.unlink(tmpfile.name)
+
+        return res
 
     @widget
     def fselect(self, filepath, height=0, width=0, **kwargs):
