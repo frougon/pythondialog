@@ -60,13 +60,13 @@ Requirements
 
 * As of version 2.12, the reference implementation of pythondialog
   (which this file belongs to) requires Python 3.0 or later in the 3.x
-  series. pythondialog 3.3.0 has been tested with Python 3.1 and 3.4.
+  series. pythondialog 3.4.0 has been tested with Python 3.5.
 
 * However, in order to help users who are somehow forced to still use
   Python 2 (even though Python 3.0 was released on December 3, 2008), a
   backport of the reference implementation to Python 2 has been
   prepared. At the time of this writing, the latest pythondialog version
-  backported this way is 3.3.0. For up-to-date information about this
+  backported this way is 3.4.0. For up-to-date information about this
   backport, please visit the `pythondialog home page`_.
 
   .. _pythondialog home page: http://pythondialog.sourceforge.net/
