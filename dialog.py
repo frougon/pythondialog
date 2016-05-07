@@ -405,6 +405,8 @@ _common_args_syntax = {
     "trim": lambda enable: _simple_option("--trim", enable),
     "version": lambda enable: _simple_option("--version", enable),
     "visit_items": lambda enable: _simple_option("--visit-items", enable),
+    "week_start": lambda start: _dash_escape_nf(
+        ("--week-start", str(start) if isinstance(start, int) else start)),
     "yes_label": lambda s: _dash_escape_nf(("--yes-label", s)) }
 
 
