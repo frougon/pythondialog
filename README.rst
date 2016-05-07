@@ -45,10 +45,13 @@ As you might infer from the name, dialog is a high-level program that
 generates dialog boxes. So is pythondialog. They allow you to build nice
 interfaces quickly and easily, but you don't have full control over the
 widgets, nor can you create new widgets without modifying dialog itself.
-If you need to do low-level stuff, you should have a look at ncurses or
-slang instead. For sophisticated text-mode interfaces, the `Urwid Python
-library`_ looks rather interesting, too.
+If you need to do low-level stuff, you should have a look at `ncurses`_
+(cf. the ``curses`` module in the Python standard library), `blessings`_
+or slang instead. For sophisticated text-mode interfaces, the `Urwid
+Python library`_ looks rather interesting, too.
 
+.. _ncurses: http://invisible-island.net/ncurses/ncurses.html
+.. _blessings: https://github.com/erikrose/blessings
 .. _Urwid Python library: http://excess.org/urwid/
 
 
