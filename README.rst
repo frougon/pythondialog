@@ -60,14 +60,12 @@ Requirements
 
 * As of version 2.12, the reference implementation of pythondialog
   (which this file belongs to) requires Python 3.0 or later in the 3.x
-  series. pythondialog 3.4.0 has been tested with Python 3.5.
+  series. pythondialog 3.5.0 has been tested with Python 3.8.
 
-* However, in order to help users who are somehow forced to still use
-  Python 2 (even though Python 3.0 was released on December 3, 2008), a
-  backport of the reference implementation to Python 2 has been
-  prepared. At the time of this writing, the latest pythondialog version
-  backported this way is 3.4.0. For up-to-date information about this
-  backport, please visit the `pythondialog home page`_.
+* Versions of pythondialog up to and including 3.4.0 had a backport to
+  Python 2, however this outdated Python dialect isn't supported
+  anymore. You may find pointers to the old packages with Python 2
+  support on the `pythondialog home page`_.
 
   .. _pythondialog home page: http://pythondialog.sourceforge.net/
 
@@ -116,13 +114,13 @@ version of pythondialog as rendered by Sphinx should be available at:
 
 The sources for the pythondialog Manual are located in the ``doc``
 top-level directory of the pythondialog distribution, but the
-documentation build process pulls many parts from dialog.py, mainly
-docstrings.
+documentation build process pulls many parts from ``dialog.py`` (mainly
+docstrings).
 
-To generate the documentation yourself from dialog.py and the sources in
-the ``doc`` directory, first make sure you have `Sphinx`_ and `Make`_
-installed. Then, you can go to the ``doc`` directory and type, for
-instance::
+To generate the documentation yourself from ``dialog.py`` and the
+sources in the ``doc`` directory, first make sure you have `Sphinx`_ and
+`Make`_ installed. Then, you can go to the ``doc`` directory and type,
+for instance::
 
   make html
 
@@ -220,7 +218,7 @@ Using Xdialog instead of dialog
 -------------------------------
 
 As far as I can tell, `Xdialog`_ has not been ported to `GTK+`_ version
-2 or later. It is not in `Debian`_ stable nor unstable (June 23, 2013).
+2 or later. It is not in `Debian`_ stable nor unstable (November 30, 2019).
 It is not installed on my system (because of the GTK+ 1.2 dependency),
 and according to the Xdialog-specific patches I received from Peter
 Åstrand in 2004, was not a drop-in replacement for `dialog`_ (in

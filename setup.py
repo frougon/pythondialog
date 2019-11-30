@@ -22,7 +22,7 @@
 # MA  02110-1301 USA.
 
 import os, sys, subprocess, traceback
-from distutils.core import setup
+from setuptools import setup
 
 
 PACKAGE = "pythondialog"
@@ -105,25 +105,34 @@ generate the {cl!r} file from the Git log. Aborting.""".format(cl=ch_name)
           version=VERSION,
           description="A Python interface to the UNIX dialog utility and "
           "mostly-compatible programs",
-#         Doesn't work great with several authors...
-          author="Robb Shecter, Sultanbek Tezadov, Florent Rougon, "
-                 "Peter Åstrand",
-          author_email="robb@acm.org, http://sultan.da.ru/, f.rougon@free.fr, "
-                       "peter@cendio.se",
+          # According to
+          # <https://packaging.python.org/specifications/core-metadata/> and
+          # the rendering on PyPI, it appears that only the original author can
+          # be listed in 'author'. See the AUTHORS file for other contributors.
+          author="Robb Shecter",
+          author_email="robb@acm.org",
           maintainer="Florent Rougon",
           maintainer_email="f.rougon@free.fr",
           url="http://pythondialog.sourceforge.net/",
-          download_url="http://sourceforge.net/projects/pythondialog/files/\
-pythondialog/{version}/python3-{pkg}-{version}.tar.bz2".format(
-            pkg=PACKAGE, version=VERSION),
+          project_urls={
+            "Documentation": "http://pythondialog.sourceforge.net/doc/",
+            "SourceForge project page":
+              "https://sourceforge.net/projects/pythondialog",
+            "Git repository": "https://sourceforge.net/p/pythondialog/code/",
+            "Mailing list": "https://sourceforge.net/p/pythondialog/mailman/",
+            "Issue tracker":
+              "https://sourceforge.net/p/pythondialog/_list/tickets",
+          },
+          long_description=long_description,
+          long_description_content_type="text/x-rst",
+          keywords="dialog,ncurses,Xdialog,text-mode interface,terminal",
           # Well, there isn't much UNIX-specific code in dialog.py, if at all.
           # I am putting Unix here only because of the dialog dependency...
           # Note: using the "Unix" case instead of "UNIX", because it is
-          # spelled this way in Trove classifiers.
+          # spelled this way in Trove classifiers. This argument should be
+          # unneeded given the Trove classifers, however omitting it leads to
+          # an ugly 'Platform: UNKNOWN' in pythondialog.egg-info/PKG-INFO.
           platforms=["Unix"],
-          long_description=long_description,
-          keywords=["dialog", "ncurses", "Xdialog", "text-mode interface",
-                    "terminal"],
           classifiers=[
             "Programming Language :: Python :: 3",
             "Development Status :: 5 - Production/Stable",
@@ -135,6 +144,7 @@ pythondialog/{version}/python3-{pkg}-{version}.tar.bz2".format(
             "Topic :: Software Development :: Libraries :: Python Modules",
             "Topic :: Software Development :: User Interfaces",
             "Topic :: Software Development :: Widget Sets"],
-          py_modules=["dialog"])
+          py_modules=["dialog"],
+          python_requires=">=3")
 
 if __name__ == "__main__": main()

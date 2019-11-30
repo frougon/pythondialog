@@ -1,16 +1,21 @@
 INSTALLATION
 ============
 
-pythondialog is packaged with Distutils. With the current state of
+pythondialog is packaged with Setuptools. With the current state of
 Python packaging and installation tools, there are several ways to
 install pythondialog from source.
 
-Probably, the easiest and cleanest method at this date (April 2015) is
-to use pip, possibly inside a virtual environment created with
-virtualenv or venv.py/pyvenv. Typically, assuming you have a working pip
-setup (see below), you just have to run one of the following commands:
+Probably, the easiest and cleanest method at this date (December 2019)
+is to use pip, possibly inside a virtual environment created with
+virtualenv or Python's venv module (venv.py/pyvenv). Typically, assuming
+you have a working pip setup (see below), you just have to run one of
+the following commands:
 
   pip install pythondialog       (which normally installs from PyPI)
+
+or
+
+  pip install /path/to/pythondialog-X.Y.Z-py3-none-any.whl
 
 or
 
@@ -20,12 +25,11 @@ or
 
   pip install https://url/to/python3-pythondialog-X.Y.Z.tar.gz
 
-or
-
-  pip install http://url/to/python3-pythondialog-X.Y.Z.tar.gz
+etc.
 
 Notes:
-  - old versions of pip don't support https;
+  - very old versions of pip don't support https---better upgrade pip if
+    you have such an old version;
   - upgrades can be done by passing '--upgrade' or '-U' to the
     'pip install' command; please refer to the pip documentation for
     details.
@@ -81,52 +85,48 @@ desirable inside a virtual environment created with virtualenv or
 venv.py/pyvenv.
 
 
-Old way, without pip
---------------------
+Older ways, without pip
+-----------------------
 
-The following instructions explain how to install pythondialog directly
-from its setup.py, without using pip. If possible, the method based on
-pip is preferable because it makes uninstallation standard and easy.
+The installation method based on pip is much preferred because for one,
+it makes uninstallation standard and easy. In case you really can't use
+pip, the following instructions should help you install pythondialog,
+nevertheless. Here are two ways:
 
-Here are the steps:
-  - make this file's directory your shell's current directory
-  - optionally edit setup.cfg (cf. the "Installing Python Modules"
-    chapter of the Python documentation).
+  1) Because pythondialog only needs dialog.py in the proper place to
+     work, you may simply copy this file to an appropriate directory for
+     your Python installation (probably something like
+     <base_dir>/lib/python3.7/site-packages). For uninstallation, simply
+     remove the file you copied (also byte-compiled files such as
+     dialog.pyc if such files have been created from dialog.py).
 
-  - a) 1) type:
+  2) Another technique can be used if you have Setuptools installed. In
+     this case, you can run:
 
-            python3 ./setup.py build
+       python3 ./setup.py build
 
-          (depending on your system and the Python version you want to
-          install for, you may have to replace "python3" with, for
-          instance, "python3.2" or "python3.3")
+     from the root of the pythondialog distribution, followed by
 
-       2) then, as root (after replacing /usr/local with the actual
-          installation prefix you want to use):
+       python3 ./setup.py install
 
-            python3 ./setup.py install --prefix=/usr/local \
-                                       --record /path/to/foo
+     (the second command might need root privileges, depending on where
+     you are trying to install). This should create a file such as
+     <base_dir>/lib/python3.7/site-packages/pythondialog-3.5.0-py3.7.egg
+     and add an entry to
+     <base_dir>/lib/python3.7/site-packages/easy-install.pth that points
+     to the .egg file. Uninstallation would then be done with
+     'easy_install -m pythondialog' followed by manual removal of the
+     .egg file.
 
-          where foo is a file of your choice which will contain the list
-          of all files installed on your system by the preceding
-          command. This will make uninstallation easy (you could ommit
-          the "--record /path/to/foo", but uninstallation could not be
-          automated, then).
-
-    OR
-
-    b) type, as root (after replacing the installation prefix):
-
-            python3 ./setup.py install --prefix=/usr/local \
-                                       --record /path/to/foo
-
-       This will automatically build the package before installing it.
-       The observations made in a) also apply here.
-
-
-If this default installation is not what you wish, please read the
-Distutils documentation which should be available in the "Installing
-Python Modules" chapter of the Python documentation.
+Be careful if you use 2), especially if you work as root (make sure
+easy_install works on the same Python installation that was used to run
+'python3 ./setup.py install', etc.). I repeat: the supported method is
+with pip, as documented earlier in this file. The tips in this section
+are only given to help people with uncommon constraints such as "I can't
+use pip". Tip 1 (copying dialog.py) is rather straightforward, no real
+problem. Tip 2 has been quickly tested in a venv, appears to work fine
+but uses deprecated tools. You can use it, but will be on your own in
+case things don't go exactly as you expected.
 
 
 UNINSTALLATION
@@ -137,20 +137,13 @@ following command:
 
   pip uninstall pythondialog
 
-(which should be run under the same account that was used to run the
-"pip install" command)
+It should be run under the same account that was used to run the
+'pip install' command.
 
-Otherwise, if you have followed the old installation procedure, you have
-a /path/to/foo file that contains all the files the installation process
-put on your system. Great! All you have to do is:
-
-   while read file; do rm -f "$file"; done < /path/to/foo
-
-under a POSIX-style shell and with appropriate privileges (maybe root,
-depending on how you installed pythondialog).
-
-Note: this will handle file names with spaces correctly, unlike the
-simpler "rm -f $(cat /path/to/foo)".
+On the other hand, if you installed pythondialog using techniques from
+the previous section ("Older ways, without pip"), uninstallation
+instructions were given there along with each of the mentioned
+techniques.
 
 
 # Local Variables:
