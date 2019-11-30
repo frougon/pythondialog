@@ -10,18 +10,20 @@ WARNING
 This version is a backport of pythondialog to Python 2. Unless you
 *really* have to use Python 2, you should go to the `pythondialog home
 page`_ and download the reference implementation which, at the time of
-this writing (May 2016) and for the forseeable future, is targeted
+this writing (December 2019) and for the foreseeable future, is targeted
 at Python 3.
 
 .. _pythondialog home page: http://pythondialog.sourceforge.net/
 
 This version is only here to help users who are somehow forced to still
 use Python 2, even though Python 3.0 was released on December 3, 2008.
-It may be the last update for Python 2. In addition, the reference
-implementation is less likely to have bugs.
+Python 2 has `reached its end of life
+<https://www.python.org/doc/sunset-python-2/>`_, and so does this
+backport. **This backport is now unsupported. Don't expect any further
+updates.**
 
-Before using this backport, be sure to read the `Backport-specific
-notes`_ below.
+If, despite all of these warnings, you still want to use it, be sure to
+read the `Backport-specific notes`_ below.
 
 
 Overview
@@ -85,8 +87,8 @@ Python library`_ looks rather interesting, too.
 Requirements
 ------------
 
-* This backport of pythondialog requires Python 2.6 or later in the 2.x
-  series. It has been tested with Python 2.7.
+* This **now unsupported** backport of pythondialog requires Python 2.6
+  or later in the 2.x series. It has been tested with Python 2.7.
 
 * The reference implementation supports more recent versions of the
   Python interpreter. Please visit the `pythondialog home page`_ for
@@ -104,7 +106,7 @@ Requirements
 Quick installation instructions
 -------------------------------
 
-If you have a working `pip <https://pypi.python.org/pypi/pip>`_ setup,
+If you have a working `pip <https://pypi.org/project/pip/>`_ setup,
 you should be able to install this backport of pythondialog with::
 
   pip install python2-pythondialog
@@ -224,8 +226,8 @@ version of pythondialog as rendered by Sphinx should be available at:
 
 The sources for the pythondialog Manual are located in the ``doc``
 top-level directory of the pythondialog distribution, but the
-documentation build process pulls many parts from dialog.py, mainly
-docstrings.
+documentation build process pulls many parts from ``dialog.py`` (mainly
+docstrings).
 
 **Note:**
 
@@ -237,10 +239,10 @@ docstrings.
   work, it is currently not considered a bug---simply download the
   reference implementation if you want to do that.
 
-To generate the documentation yourself from dialog.py and the sources in
-the ``doc`` directory, first make sure you have `Sphinx`_ and `Make`_
-installed. Then, you can go to the ``doc`` directory and type, for
-instance::
+To generate the documentation yourself from ``dialog.py`` and the
+sources in the ``doc`` directory, first make sure you have `Sphinx`_ and
+`Make`_ installed. Then, you can go to the ``doc`` directory and type,
+for instance::
 
   make html
 
@@ -338,7 +340,7 @@ Using Xdialog instead of dialog
 -------------------------------
 
 As far as I can tell, `Xdialog`_ has not been ported to `GTK+`_ version
-2 or later. It is not in `Debian`_ stable nor unstable (June 23, 2013).
+2 or later. It is not in `Debian`_ stable nor unstable (November 30, 2019).
 It is not installed on my system (because of the GTK+ 1.2 dependency),
 and according to the Xdialog-specific patches I received from Peter
 Åstrand in 2004, was not a drop-in replacement for `dialog`_ (in

@@ -23,7 +23,7 @@
 
 from __future__ import with_statement, unicode_literals, print_function
 import os, sys, subprocess, traceback
-from distutils.core import setup
+from setuptools import setup
 from io import open
 
 
@@ -56,7 +56,7 @@ of that file, you can replace it with a simple shebang line such as
 "#! /usr/bin/perl".""".format(
    prg=args[0],
    underlining="=" * len(args[0]),
-   url="http://git.savannah.gnu.org/gitweb/?p=gnulib.git;a=blob_plain;"
+   url="https://git.savannah.gnu.org/gitweb/?p=gnulib.git;a=blob_plain;"
        "f=build-aux/gitlog-to-changelog"), file=sys.stderr)
         sys.exit(1)
 
@@ -111,25 +111,35 @@ generate the '{cl}' file from the Git log. Aborting.""".format(cl=ch_name)
           version=VERSION,
           description="A Python interface to the UNIX dialog utility and "
           "mostly-compatible programs (Python 2 backport)",
-#         Doesn't work great with several authors...
-          author="Robb Shecter, Sultanbek Tezadov, Florent Rougon, "
-                 "Peter Åstrand",
-          author_email="robb@acm.org, http://sultan.da.ru/, f.rougon@free.fr, "
-                       "peter@cendio.se",
+          # According to
+          # <https://packaging.python.org/specifications/core-metadata/> and
+          # the rendering on PyPI, it appears that only the original author can
+          # be listed in 'author'. See the AUTHORS file for other contributors.
+          author="Robb Shecter",
+          author_email="robb@acm.org",
           maintainer="Florent Rougon",
           maintainer_email="f.rougon@free.fr",
           url="http://pythondialog.sourceforge.net/",
-          download_url="http://sourceforge.net/projects/pythondialog/files/\
-pythondialog/{version}/python2-{pkg}-{version}.tar.bz2".format(
-            pkg=PACKAGE, version=VERSION),
+          project_urls={
+            "Documentation": "http://pythondialog.sourceforge.net/doc/",
+            "SourceForge project page":
+              "https://sourceforge.net/projects/pythondialog",
+            "Git repository": "https://sourceforge.net/p/pythondialog/code/",
+            "Mailing list": "https://sourceforge.net/p/pythondialog/mailman/",
+            "Issue tracker":
+              "https://sourceforge.net/p/pythondialog/_list/tickets",
+          },
+          long_description=long_description,
+          long_description_content_type="text/x-rst",
+          keywords=["dialog", "ncurses", "Xdialog", "text-mode interface",
+                    "terminal"],
           # Well, there isn't much UNIX-specific code in dialog.py, if at all.
           # I am putting Unix here only because of the dialog dependency...
           # Note: using the "Unix" case instead of "UNIX", because it is
-          # spelled this way in Trove classifiers.
+          # spelled this way in Trove classifiers. This argument should be
+          # unneeded given the Trove classifers, however omitting it leads to
+          # an ugly 'Platform: UNKNOWN' in pythondialog.egg-info/PKG-INFO.
           platforms=["Unix"],
-          long_description=long_description,
-          keywords=["dialog", "ncurses", "Xdialog", "text-mode interface",
-                    "terminal"],
           classifiers=[
             "Programming Language :: Python :: 2",
             "Programming Language :: Python :: 2.6",
@@ -143,6 +153,7 @@ pythondialog/{version}/python2-{pkg}-{version}.tar.bz2".format(
             "Topic :: Software Development :: Libraries :: Python Modules",
             "Topic :: Software Development :: User Interfaces",
             "Topic :: Software Development :: Widget Sets"],
-          py_modules=["dialog"])
+          py_modules=["dialog"],
+          python_requires=">=2.6, <3")
 
 if __name__ == "__main__": main()

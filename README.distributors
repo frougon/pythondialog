@@ -4,10 +4,12 @@ Packaging from a release tarball
 ================================
 
 Packaging from an official release tarball ("source distribution" in
-distutils-speak) should be fairly straightforward, as every source
+PyPA-speak[1]) should be fairly straightforward, as every source
 distribution should contain a ChangeLog file that is ready to use. The rest of
 this file mainly concerns developers and people wanting to package
 pythondialog from a clone of the Git repository.
+
+[1] https://packaging.python.org/glossary/#term-source-distribution-or-sdist
 
 
 Management of the ChangeLog file
@@ -15,10 +17,10 @@ Management of the ChangeLog file
 
 Starting from version 2.14.1, the ChangeLog file is not part of the Git
 repository anymore, because it is automatically generated from the Git log
-with the gitlog-to-changelog[1] program. But it must be present in every
+with the gitlog-to-changelog[2] program. But it must be present in every
 released tarball or package!
 
-  [1] http://git.savannah.gnu.org/gitweb/?p=gnulib.git;a=blob_plain;f=build-aux/gitlog-to-changelog
+  [2] https://git.savannah.gnu.org/gitweb/?p=gnulib.git;a=blob_plain;f=build-aux/gitlog-to-changelog
 
 To make this as easy as possible, setup.py does the following:
   - create or refresh (overwriting) ChangeLog from ChangeLog.init and the Git
