@@ -1,7 +1,7 @@
 # dialog.py --- A Python interface to the ncurses-based "dialog" utility
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2002-2004, 2009-2010, 2013-2016  Florent Rougon
+# Copyright (C) 2002-2019  Florent Rougon
 # Copyright (C) 2004  Peter Åstrand
 # Copyright (C) 2000  Robb Shecter, Sultanbek Tezadov
 #
