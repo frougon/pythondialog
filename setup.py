@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # setup.py --- Setup script for pythondialog
-# Copyright (c) 2002, 2003, 2004, 2009, 2010, 2013, 2014, 2015  Florent Rougon
+# Copyright (c) 2002-2019  Florent Rougon
 #
 # This file is part of pythondialog.
 #
