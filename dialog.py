@@ -428,7 +428,7 @@ def _find_in_path(prog_name):
         # Note that the leading empty component in the default value for PATH
         # could lead to the returned path not being absolute.
         PATH = os.getenv("PATH", ":/bin:/usr/bin") # see the execvp(3) man page
-        for d in PATH.split(":"):
+        for d in PATH.split(os.pathsep):
             file_path = os.path.join(d, prog_name)
             if os.path.isfile(file_path) \
                and os.access(file_path, os.R_OK | os.X_OK):
