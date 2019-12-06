@@ -39,6 +39,15 @@ from itertools import imap
 from itertools import izip
 from io import open
 import locale
+import os
+import random
+import re
+import sys
+import tempfile
+import traceback
+import warnings
+from contextlib import contextmanager
+from textwrap import dedent
 
 _VersionInfo = collections.namedtuple(
     "VersionInfo", ("major", "minor", "micro", "releasesuffix"))
@@ -73,10 +82,6 @@ version_info = VersionInfo(3, 4, 0, None)
 #: .. versionadded:: 2.12
 __version__ = unicode(version_info)
 
-
-import sys, os, tempfile, random, re, warnings, traceback
-from contextlib import contextmanager
-from textwrap import dedent
 
 # This is not for calling programs, only to prepare the shell commands that are
 # written to the debug log when debugging is enabled.
