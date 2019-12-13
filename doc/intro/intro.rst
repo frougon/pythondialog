@@ -14,9 +14,9 @@ The *dialog* parameter indicates the executable to use to invoke the backend
 (which must be compatible with dialog_). For instance, one might use something
 like ``dialog="/home/dave/src/dialog-1.2-20140219/dialog"``. The default value
 is ``"dialog"``, and since it does not contain any slash (``/``), it is looked
-up in the :envvar:`PATH` environment variable. See :meth:`Dialog.__init__` for
-a description of all parameters that can be passed to the :class:`Dialog`
-constructor.
+up according to the :envvar:`PATH` environment variable. See
+:meth:`Dialog.__init__` for a description of all parameters that can be passed
+to the :class:`Dialog` constructor.
 
 .. _dialog: http://invisible-island.net/dialog/dialog.html
 
