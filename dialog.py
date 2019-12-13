@@ -895,7 +895,16 @@ class Dialog:
           absolute path to a file that has read and execute permissions,
           and is used as is; otherwise, it is looked for according to
           the contents of the :envvar:`PATH` environment variable, which
-          defaults to ``/bin:/usr/bin`` if unset.
+          defaults to ``/bin:/usr/bin`` if unset. In case you decide to
+          use a relative path containing a ``/``, be *very careful*
+          about the current directory at the time the Dialog instance is
+          created. Indeed, if for instance you use ``"foobar/dialog"``
+          and your program creates the Dialog instance at a time where
+          the current directory is for instance ``/tmp``, then
+          ``/tmp/foobar/dialog`` will be run, which could be risky. If
+          you don't understand this, stay with the default, use a value
+          containing no ``/``, or use an absolute path (i.e., one
+          starting with a ``/``).
         :param str DIALOGRC:
           string to pass to the :program:`dialog`-like program as the
           :envvar:`DIALOGRC` environment variable, or ``None`` if no
