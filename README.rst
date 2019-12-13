@@ -32,7 +32,7 @@ originally written by Savio Lam and later rewritten by Thomas E. Dickey.
 Its purpose is to provide an easy to use, pythonic and as complete as
 possible interface to dialog_ from Python code.
 
-.. _dialog: http://invisible-island.net/dialog/dialog.html
+.. _dialog: https://invisible-island.net/dialog/dialog.html
 
 pythondialog is free software, licensed under the GNU LGPL (GNU Lesser
 General Public License). Its home page is located at:
@@ -77,7 +77,7 @@ If you need to do low-level stuff, you should have a look at `ncurses`_
 or slang instead. For sophisticated text-mode interfaces, the `Urwid
 Python library`_ looks rather interesting, too.
 
-.. _ncurses: http://invisible-island.net/ncurses/ncurses.html
+.. _ncurses: https://invisible-island.net/ncurses/ncurses.html
 .. _blessings: https://github.com/erikrose/blessings
 .. _Urwid Python library: http://excess.org/urwid/
 
@@ -95,7 +95,7 @@ Requirements
 * Apart from that, pythondialog requires the dialog_ program (or a
   drop-in replacement for dialog). You can download dialog from:
 
-    http://invisible-island.net/dialog/dialog.html
+    https://invisible-island.net/dialog/dialog.html
 
   Note that some features of pythondialog may require recent versions of
   dialog.
@@ -218,9 +218,9 @@ version of pythondialog as rendered by Sphinx should be available at:
 
 .. _pythondialog Manual: http://pythondialog.sourceforge.net/doc/
 .. _reStructuredText: http://docutils.sourceforge.net/rst.html
-.. _Sphinx: http://sphinx-doc.org/
-.. _LaTeX: http://latex-project.org/
-.. _Make: http://www.gnu.org/software/make/
+.. _Sphinx: https://www.sphinx-doc.org/en/master/
+.. _LaTeX: https://www.latex-project.org/
+.. _Make: https://www.gnu.org/software/make/
 
 The sources for the pythondialog Manual are located in the ``doc``
 top-level directory of the pythondialog distribution, but the
@@ -263,7 +263,7 @@ possible to build the documentation with a command such as::
 run from the ``doc`` directory. Please refer to `sphinx-build`_ for more
 details.
 
-.. _sphinx-build: http://sphinx-doc.org/invocation.html
+.. _sphinx-build: https://www.sphinx-doc.org/en/master/man/sphinx-build.html
 
 
 Reading the docstrings from an interactive Python interpreter
@@ -314,7 +314,7 @@ are still open when your program exits.
 For more explanations and other methods to enable deprecation warnings,
 please refer to:
 
-  http://docs.python.org/2/whatsnew/2.7.html
+  https://docs.python.org/3/whatsnew/2.7.html
 
 
 Troubleshooting
@@ -346,8 +346,8 @@ particular, Xdialog seemed to want to talk to the caller through stdout
 instead of stderr, grrrrr!).
 
 .. _Xdialog: http://xdialog.free.fr/
-.. _GTK+: http://www.gtk.org/
-.. _Debian: http://www.debian.org/
+.. _GTK+: https://www.gtk.org/
+.. _Debian: https://www.debian.org/
 
 All this to say that, even though I didn't remove the options to use
 another backend than dialog, nor did I remove the handful of little,
