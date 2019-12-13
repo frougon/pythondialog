@@ -8,7 +8,7 @@ The :class:`Dialog` widgets
 This section describes all widgets (or dialog boxes) offered by the
 :class:`Dialog` class. The descriptions of many of them are adapted from the
 :manpage:`dialog(1)` manual page, with the kind permission of `Thomas Dickey
-<http://invisible-island.net/>`_.
+<https://invisible-island.net/>`_.
 
 
 .. note::

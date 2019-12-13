@@ -18,7 +18,7 @@ up according to the :envvar:`PATH` environment variable. See
 :meth:`Dialog.__init__` for a description of all parameters that can be passed
 to the :class:`Dialog` constructor.
 
-.. _dialog: http://invisible-island.net/dialog/dialog.html
+.. _dialog: https://invisible-island.net/dialog/dialog.html
 
 
 Offering a choice between several options using :meth:`!menu`

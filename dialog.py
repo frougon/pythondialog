@@ -948,8 +948,8 @@ class Dialog:
         pythondialog is the well-known dialog_ program written in C,
         based on the ncurses_ library.
 
-        .. _dialog: http://invisible-island.net/dialog/dialog.html
-        .. _ncurses: http://invisible-island.net/ncurses/ncurses.html
+        .. _dialog: https://invisible-island.net/dialog/dialog.html
+        .. _ncurses: https://invisible-island.net/ncurses/ncurses.html
 
         If you want to use a different program such as Xdialog_, you
         should indicate the executable file name with the *dialog*
