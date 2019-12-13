@@ -420,10 +420,10 @@ def _find_in_path(prog_name):
     """Search an executable in the :envvar:`PATH`.
 
     If :envvar:`PATH` is not defined, the default path
-    ``:/bin:/usr/bin`` is used.
+    ``/bin:/usr/bin`` is used.
 
-    Return a path to the file or ``None`` if no readable and executable
-    file is found.
+    Return a path to the file, or ``None`` if no file with a matching
+    basename as well as read and execute permissions is found.
 
     Notable exception:
 
@@ -431,9 +431,7 @@ def _find_in_path(prog_name):
 
     """
     with _OSErrorHandling():
-        # Note that the leading empty component in the default value for PATH
-        # could lead to the returned path not being absolute.
-        PATH = os.getenv("PATH", ":/bin:/usr/bin") # see the execvp(3) man page
+        PATH = os.getenv("PATH", "/bin:/usr/bin") # see the execvp(3) man page
         for d in PATH.split(os.pathsep):
             file_path = os.path.join(d, prog_name)
             if os.path.isfile(file_path) \
@@ -446,14 +444,17 @@ def _path_to_executable(f):
     """Find a path to an executable.
 
     Find a path to an executable, using the same rules as the POSIX
-    exec*p functions (see execvp(3) for instance).
+    exec*p() functions (see execvp(3) for instance).
 
-    If *f* contains a ``/``, it is assumed to be a path and is simply
-    checked for read and write permissions; otherwise, it is looked for
-    according to the contents of the :envvar:`PATH` environment
-    variable, which defaults to ``:/bin:/usr/bin`` if unset.
+    If *f* contains a ``/`` character, it must be a relative or absolute
+    path to a file that has read and execute permissions. If *f* does
+    not contain a ``/`` character, it is looked for according to the
+    contents of the :envvar:`PATH` environment variable, which defaults
+    to ``/bin:/usr/bin`` if unset.
 
-    The returned path is not necessarily absolute.
+    The return value is the result of calling :func:`os.path.realpath`
+    on the path found according to the rules described in the previous
+    paragraph.
 
     Notable exceptions:
 
@@ -463,8 +464,7 @@ def _path_to_executable(f):
     """
     with _OSErrorHandling():
         if '/' in f:
-            if os.path.isfile(f) and \
-                   os.access(f, os.R_OK | os.X_OK):
+            if os.path.isfile(f) and os.access(f, os.R_OK | os.X_OK):
                 res = f
             else:
                 raise ExecutableNotFound("%s cannot be read and executed" % f)
@@ -475,7 +475,7 @@ def _path_to_executable(f):
                     "can't find the executable for the dialog-like "
                     "program")
 
-    return res
+    return os.path.realpath(res)
 
 
 def _to_onoff(val):
@@ -891,10 +891,11 @@ class Dialog:
 
         :param str dialog:
           name of (or path to) the :program:`dialog`-like program to
-          use; if it contains a ``'/'``, it is assumed to be a path and
-          is used as is; otherwise, it is looked for according to the
-          contents of the :envvar:`PATH` environment variable, which
-          defaults to ``":/bin:/usr/bin"`` if unset.
+          use. If it contains a slash (``/``), it must be a relative or
+          absolute path to a file that has read and execute permissions,
+          and is used as is; otherwise, it is looked for according to
+          the contents of the :envvar:`PATH` environment variable, which
+          defaults to ``/bin:/usr/bin`` if unset.
         :param str DIALOGRC:
           string to pass to the :program:`dialog`-like program as the
           :envvar:`DIALOGRC` environment variable, or ``None`` if no
