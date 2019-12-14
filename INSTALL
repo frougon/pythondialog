@@ -1,7 +1,8 @@
 INSTALLATION
 ============
 
-pythondialog is packaged with Setuptools. With the current state of
+Since version 3.5.0, pythondialog is packaged with Setuptools
+(previously, it was packaged with Distutils). With the current state of
 Python packaging and installation tools, there are several ways to
 install pythondialog from source.
 
