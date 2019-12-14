@@ -116,18 +116,16 @@ nevertheless. Here are two ways:
      and add an entry to
      <base_dir>/lib/python3.7/site-packages/easy-install.pth that points
      to the .egg file. Uninstallation would then be done with
-     'easy_install -m pythondialog' followed by manual removal of the
-     .egg file.
+     '<base_dir>/bin/easy_install -m pythondialog' followed by manual
+     removal of the .egg file.
 
-Be careful if you use 2), especially if you work as root (make sure
-easy_install works on the same Python installation that was used to run
-'python3 ./setup.py install', etc.). I repeat: the supported method is
-with pip, as documented earlier in this file. The tips in this section
-are only given to help people with uncommon constraints such as "I can't
-use pip". Tip 1 (copying dialog.py) is rather straightforward, no real
-problem. Tip 2 has been quickly tested in a venv, appears to work fine
-but uses deprecated tools. You can use it, but will be on your own in
-case things don't go exactly as you expected.
+I repeat: the supported method is with pip, as documented earlier in
+this file. The tips in this section are only given to help people with
+uncommon constraints such as "I can't use pip". Tip 1 (copying
+dialog.py) is rather straightforward, no real problem. Tip 2 has been
+quickly tested in a venv, appears to work fine but uses deprecated
+tools. You can use it, but will be on your own in case things don't go
+exactly as you expected.
 
 
 UNINSTALLATION
