@@ -50,7 +50,7 @@ of that file, you can replace it with a simple shebang line such as
 "#! /usr/bin/perl".""".format(
    prg=args[0],
    underlining="=" * len(args[0]),
-   url="http://git.savannah.gnu.org/gitweb/?p=gnulib.git;a=blob_plain;"
+   url="https://git.savannah.gnu.org/gitweb/?p=gnulib.git;a=blob_plain;"
        "f=build-aux/gitlog-to-changelog"), file=sys.stderr)
         sys.exit(1)
 

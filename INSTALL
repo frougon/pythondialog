@@ -111,7 +111,7 @@ nevertheless. Here are two ways:
 
      (the second command might need root privileges, depending on where
      you are trying to install). This should create a file such as
-     <base_dir>/lib/python3.7/site-packages/pythondialog-3.5.0-py3.7.egg
+     <base_dir>/lib/python3.7/site-packages/pythondialog-3.5.1-py3.7.egg
      and add an entry to
      <base_dir>/lib/python3.7/site-packages/easy-install.pth that points
      to the .egg file. Uninstallation would then be done with

@@ -81,7 +81,7 @@ Requirements
 Quick installation instructions
 -------------------------------
 
-If you have a working `pip <https://pypi.python.org/pypi/pip>`_ setup,
+If you have a working `pip <https://pypi.org/project/pip/>`_ setup,
 you should be able to install pythondialog with::
 
   pip install pythondialog
