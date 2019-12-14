@@ -9,6 +9,7 @@ __pycache__/
 # Automatically populated by Setuptools
 /build/
 /pythondialog.egg-info/
+/python2_pythondialog.egg-info/
 
 # Distribution tarballs
 /dist/
