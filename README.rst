@@ -231,13 +231,14 @@ docstrings).
 
 **Note:**
 
-  Currently, generation of the pythondialog Manual with `Sphinx`_ has
-  only been tested, and is only supported with the reference
-  implementation, on Python 3. As a consequence, the package containing
-  this file may be fine to read or grep through the ``.rst`` files;
-  however, if compilation of said ``.rst`` files with `Sphinx`_ doesn't
-  work, it is currently not considered a bug---simply download the
-  reference implementation if you want to do that.
+  Generation of the pythondialog Manual with `Sphinx`_ has only been
+  tested, and is only supported with the reference implementation of
+  pythondialog (i.e., currently, on Python 3). As a consequence, the
+  package containing this file may be fine to read or grep through the
+  ``.rst`` files; however, if compilation of said ``.rst`` files with
+  `Sphinx`_ on Python 2 doesn't work, it is not considered a
+  bug---simply download the reference implementation if you want to do
+  that.
 
 To generate the documentation yourself from ``dialog.py`` and the
 sources in the ``doc`` directory, first make sure you have `Sphinx`_ and
