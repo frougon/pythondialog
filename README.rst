@@ -60,7 +60,7 @@ Requirements
 
 * As of version 2.12, the reference implementation of pythondialog
   (which this file belongs to) requires Python 3.0 or later in the 3.x
-  series. pythondialog 3.5.0 has been tested with Python 3.8.
+  series. pythondialog 3.5.1 has been tested with Python 3.8.
 
 * Versions of pythondialog up to and including 3.5.1 had a backport to
   Python 2, however this outdated Python dialect isn't supported
