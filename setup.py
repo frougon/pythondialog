@@ -144,7 +144,7 @@ generate the '{cl}' file from the Git log. Aborting.""".format(cl=ch_name)
             "Programming Language :: Python :: 2",
             "Programming Language :: Python :: 2.6",
             "Programming Language :: Python :: 2.7",
-            "Development Status :: 5 - Production/Stable",
+            "Development Status :: 7 - Inactive",
             "Environment :: Console :: Curses",
             "Intended Audience :: Developers",
             "License :: OSI Approved :: GNU Library or Lesser General Public "
