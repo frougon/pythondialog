@@ -3,8 +3,8 @@
 
 # demo.py --- Demonstration program and cheap test suite for pythondialog
 #
-# Copyright (C) 2002-2010, 2013-2016  Florent Rougon
 # Copyright (C) 2000  Robb Shecter, Sultanbek Tezadov
+# Copyright (C) 2002-2019  Florent Rougon
 #
 # This program is in the public domain.
 
@@ -998,7 +998,7 @@ when leaving the help dialog. {complement}""".format(complement=complement)
              9, 20, 54, 0, READ_ONLY),
             ("Read-only field...", 10, 1, "... that doesn't go into the "
              "output list", 10, 20, 0, 0, 0x0),
-            ("\/3r`/ 53kri7 (0d3", 11, 1, "", 11, 20, 15, 20, HIDDEN) ]
+            (r"\/3r`/ 53kri7 (0d3", 11, 1, "", 11, 20, 15, 20, HIDDEN) ]
 
         code, fields = d.mixedform(
             "Please fill in some personal information:", elements, width=77)
