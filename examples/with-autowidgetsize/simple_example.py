@@ -20,6 +20,11 @@ locale.setlocale(locale.LC_ALL, '')
 d = Dialog(dialog="dialog", autowidgetsize=True)
 d.set_background_title("A Simple Example")
 
+# With Python strings, we don't need dialog to change '\n' to a newline char:
+# tell the dialog program to use the strings as we prepared them. The same
+# technique can be used to pass other options to dialog(1).
+d.add_persistent_args(["--no-nl-expand"])
+
 
 # *****************************************************************************
 # *                             'msgbox' example                              *
@@ -34,7 +39,9 @@ pythondialog usage in its simplest form.
 
 With not too old versions of dialog, the size of dialog boxes is \
 automatically computed when one passes width=0 and height=0 to the \
-widget call. This is the method used here in most cases.""",
+widget call. This is the method used here in most cases.
+
+(Little detail: here is why we passed --no-nl-expand to dialog above: \\n)""",
          title="'msgbox' example")
 
 

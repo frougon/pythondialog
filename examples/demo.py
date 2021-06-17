@@ -349,6 +349,11 @@ class MyApp:
         self.term_rows, self.term_cols, self.backend_version = \
             self.get_term_size_and_backend_version()
 
+        # With Python strings, we don't need dialog to change '\n' to a newline
+        # char: tell the dialog program to use the strings as we prepared them.
+        # The same technique can be used to pass other options to dialog(1).
+        d.add_persistent_args(["--no-nl-expand"])
+
     def setup_debug(self):
         if params["debug"]:
             debug_file = open(params["debug_filename"], "w")
