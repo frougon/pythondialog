@@ -818,12 +818,14 @@ class Dialog:
     _DIALOG_EXTRA     = 4
     _DIALOG_HELP      = 5
     _DIALOG_ITEM_HELP = 6
+    _DIALOG_TIMEOUT   = 7
     # cf. also _lowlevel_exit_codes and _dialog_exit_code_ll_to_hl which are
     # created by __init__(). It is not practical to define everything here,
     # because there is no equivalent of 'self' for the class outside method
     # definitions.
-    _lowlevel_exit_code_varnames = frozenset(("OK", "CANCEL", "ESC", "ERROR",
-                                              "EXTRA", "HELP", "ITEM_HELP"))
+    _lowlevel_exit_code_varnames = frozenset(
+        ("OK", "CANCEL", "ESC", "ERROR", "EXTRA", "HELP", "ITEM_HELP",
+         "TIMEOUT"))
 
     # High-level exit codes, AKA "Dialog exit codes". These are the codes that
     # pythondialog-based applications should use.
@@ -843,6 +845,9 @@ class Dialog:
     #: :term:`Dialog exit code` corresponding to the ``DIALOG_HELP`` and
     #: ``DIALOG_ITEM_HELP`` :term:`dialog exit statuses <dialog exit status>`
     HELP   = "help"
+    #: :term:`Dialog exit code` corresponding to the ``DIALOG_TIMEOUT``
+    #: :term:`dialog exit status`
+    TIMEOUT = "timeout"
 
     # Define properties to maintain backward-compatibility while warning about
     # the obsolete attributes (which used to refer to the low-level exit codes

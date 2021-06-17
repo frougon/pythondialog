@@ -70,10 +70,10 @@ Glossary
    standard Dialog exit code
       A :dfn:`standard Dialog exit code` is a particular :term:`Dialog exit
       code`. Namely, it is one of the following strings: ``"ok"``,
-      ``"cancel"``, ``"esc"``, ``"help"`` and ``"extra"``, respectively
-      available as :attr:`Dialog.OK`, :attr:`Dialog.CANCEL`,
-      :attr:`Dialog.ESC`, :attr:`Dialog.HELP` and :attr:`Dialog.EXTRA`,
-      *i.e.,* attributes of the :class:`Dialog` class.
+      ``"cancel"``, ``"esc"``, ``"help"``, ``"extra"`` and ``"timeout"``,
+      respectively available as :attr:`Dialog.OK`, :attr:`Dialog.CANCEL`,
+      :attr:`Dialog.ESC`, :attr:`Dialog.HELP`, :attr:`Dialog.EXTRA` and
+      :attr:`Dialog.TIMEOUT`, *i.e.,* attributes of the :class:`Dialog` class.
 
    dialog exit status
    low-level exit code
@@ -81,8 +81,8 @@ Glossary
       integer returned by the :program:`dialog` backend upon exit, whose
       different possible values are referred to as ``DIALOG_OK``,
       ``DIALOG_CANCEL``, ``DIALOG_ESC``, ``DIALOG_ERROR``, ``DIALOG_EXTRA``,
-      ``DIALOG_HELP`` and ``DIALOG_ITEM_HELP`` in the :manpage:`dialog(1)`
-      manual page.
+      ``DIALOG_HELP``, ``DIALOG_ITEM_HELP`` and ``DIALOG_TIMEOUT`` in the
+      :manpage:`dialog(1)` manual page.
 
       See :ref:`dialog-exit-status` for more details.
 

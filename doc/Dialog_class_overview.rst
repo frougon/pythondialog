@@ -127,13 +127,13 @@ user.
 A :dfn:`Dialog exit code`, or :dfn:`high-level exit code`, is a string
 indicating how/why a widget-producing method ended. Most widgets return one of
 the :term:`standard Dialog exit codes <standard Dialog exit code>`: ``"ok"``,
-``"cancel"``, ``"esc"``, ``"help"`` and ``"extra"``, respectively available as
-:attr:`Dialog.OK`, :attr:`Dialog.CANCEL`, :attr:`Dialog.ESC`,
-:attr:`Dialog.HELP` and :attr:`Dialog.EXTRA`, *i.e.,* attributes of the
-:class:`Dialog` class. However, some widgets may return additional,
-non-standard exit codes; for instance, the :meth:`~Dialog.inputmenu` widget
-may return ``"accepted"`` or ``"renamed"`` in addition to the standard Dialog
-exit codes.
+``"cancel"``, ``"esc"``, ``"help"``, ``"extra"`` and ``"timeout"``,
+respectively available as :attr:`Dialog.OK`, :attr:`Dialog.CANCEL`,
+:attr:`Dialog.ESC`, :attr:`Dialog.HELP`, :attr:`Dialog.EXTRA` and
+:attr:`Dialog.TIMEOUT`, *i.e.,* attributes of the :class:`Dialog` class.
+However, some widgets may return additional, non-standard exit codes; for
+instance, the :meth:`~Dialog.inputmenu` widget may return ``"accepted"`` or
+``"renamed"`` in addition to the standard Dialog exit codes.
 
 When getting a Dialog exit code from a widget-producing method, user code
 should compare it with :attr:`Dialog.OK` and friends (or equivalently, with
@@ -153,6 +153,8 @@ Dialog exit codes <standard Dialog exit code>`:
 .. autoattribute:: Dialog.EXTRA
 
 .. autoattribute:: Dialog.HELP
+
+.. autoattribute:: Dialog.TIMEOUT
 
 The following attributes are obsolete and should not be used in pythondialog
 3.0 and later:
@@ -179,8 +181,8 @@ derived by pythondialog from an integer called :dfn:`dialog exit status`, or
 :dfn:`low-level exit code`. This integer is returned by the :program:`dialog`
 backend upon exit. The different possible values for the dialog exit status
 are referred to as ``DIALOG_OK``, ``DIALOG_CANCEL``, ``DIALOG_ESC``,
-``DIALOG_ERROR``, ``DIALOG_EXTRA``, ``DIALOG_HELP`` and ``DIALOG_ITEM_HELP``
-in the :manpage:`dialog(1)` manual page.
+``DIALOG_ERROR``, ``DIALOG_EXTRA``, ``DIALOG_HELP``, ``DIALOG_ITEM_HELP``
+and  ``DIALOG_TIMEOUT`` in the :manpage:`dialog(1)` manual page.
 
 .. note::
 
