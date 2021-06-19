@@ -61,7 +61,7 @@ def generate_changelog(ch_name, write_to_stdout=False):
     orig_ch_name = "{0}.init".format(ch_name)
     # Most recent commit in the file referenced by 'orig_ch_name' (normally,
     # ChangeLog.init)
-    last_commit_in_ch_init = "b69a76b550d62fd5965a3e37957aa3fbc11e1a5f"
+    last_commit_in_ch_init = "df4f82a63cc11f9ba389810e1a913c97a8fa5029"
 
     if write_to_stdout:
         run_gitlog_to_changelog(last_commit_in_ch_init)
