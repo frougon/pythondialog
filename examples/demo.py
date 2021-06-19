@@ -428,6 +428,7 @@ The dialog-like program displaying this message box reports version \
         answer = self.yesno_demo(with_help=True)
         self.msgbox_demo(answer)
         self.textbox_demo()
+        self.timeout_demo()
         name = self.inputbox_demo_with_help()
         size, weight, city, state, country, last_will1, last_will2, \
             last_will3, last_will4, secret_code = self.mixedform_demo()
@@ -838,6 +839,15 @@ You have all my support, be brave!""",
             d.msgbox("Your wish is my command, Master.", width=40,
                      title="Exiting")
             sys.exit(0)
+
+    def timeout_demo(self):
+        msg = "If you take more than five seconds to validate this, I'll " \
+              "know. :)"
+        code = d.msgbox(msg, title="Widget with a timeout", timeout=5)
+        if code == d.TIMEOUT:
+            d.msgbox("Timeout expired.")
+        else:
+            d.msgbox("You answered in less than five seconds.")
 
     def inputbox_demo(self):
         code, answer = d.inputbox("What's your name?", init="Snow White")
