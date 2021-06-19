@@ -1523,6 +1523,10 @@ class Dialog:
         exit_code, output = self._handle_program_exit(child_pid,
                                                       child_output_rfd,
                                                       args_file)
+        # dialog outputs '\ntimeout\n' when a timeout occurs, but this is
+        # useless for us and would disturb output parsing code.
+        if exit_code == self.TIMEOUT:
+            output = ""
 
         return (exit_code, output)
 
