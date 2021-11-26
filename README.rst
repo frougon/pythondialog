@@ -17,17 +17,17 @@ possible interface to dialog_ from Python code.
 pythondialog is free software, licensed under the GNU LGPL (GNU Lesser
 General Public License). Its home page is located at:
 
-  http://pythondialog.sourceforge.net/
+  https://pythondialog.sourceforge.io/
 
 and contains a `short example`_, screenshots_, a `summary of the recent
 changes`_, links to the `documentation`_, the `Git repository`_, the
 `mailing list`_, the `issue tracker`_, etc.
 
-.. _short example:  http://pythondialog.sourceforge.net/#example
-.. _screenshots:    http://pythondialog.sourceforge.net/gallery.html
+.. _short example:  https://pythondialog.sourceforge.io/#example
+.. _screenshots:    https://pythondialog.sourceforge.io/gallery.html
 .. _summary of the recent changes:
-                    http://pythondialog.sourceforge.net/news.html
-.. _documentation:  http://pythondialog.sourceforge.net/doc/
+                    https://pythondialog.sourceforge.io/news.html
+.. _documentation:  https://pythondialog.sourceforge.io/doc/
 .. _Git repository: https://sourceforge.net/p/pythondialog/code/
 .. _mailing list:   https://sourceforge.net/p/pythondialog/mailman/
 .. _issue tracker:  https://sourceforge.net/p/pythondialog/_list/tickets
@@ -66,7 +66,7 @@ Requirements
   anymore. You may find pointers to the old packages with Python 2
   support on the `pythondialog home page`_.
 
-  .. _pythondialog home page: http://pythondialog.sourceforge.net/
+  .. _pythondialog home page: https://pythondialog.sourceforge.io/
 
 * Apart from that, pythondialog requires the dialog_ program (or a
   drop-in replacement for dialog). You can download dialog from:
@@ -103,9 +103,9 @@ The pythondialog Manual is written in `reStructuredText`_ format for the
 `Sphinx`_ documentation generator. The HTML documentation for the latest
 version of pythondialog as rendered by Sphinx should be available at:
 
-  http://pythondialog.sourceforge.net/doc/
+  https://pythondialog.sourceforge.io/doc/
 
-.. _pythondialog Manual: http://pythondialog.sourceforge.net/doc/
+.. _pythondialog Manual: https://pythondialog.sourceforge.io/doc/
 .. _reStructuredText: http://docutils.sourceforge.net/rst.html
 .. _Sphinx: https://www.sphinx-doc.org/en/master/
 .. _LaTeX: https://www.latex-project.org/

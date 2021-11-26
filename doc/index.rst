@@ -22,7 +22,7 @@ E. Dickey. Its purpose is to provide an easy to use, pythonic and
 comprehensive Python interface to :program:`dialog`. This allows one to make
 simple text-mode user interfaces on Unix-like systems.
 
-.. _pythondialog: http://pythondialog.sourceforge.net/
+.. _pythondialog: https://pythondialog.sourceforge.io/
 .. _dialog: https://invisible-island.net/dialog/dialog.html
 
 pythondialog's functionality is contained within the :mod:`dialog` Python

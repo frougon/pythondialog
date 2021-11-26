@@ -218,7 +218,7 @@ For an example that is slightly different from the one exposed in this
 chapter, you can look at the :file:`simple_example.py` file that comes with
 pythondialog, in the :file:`examples` directory. It is a very simple and
 straightforward example using a few basic widgets. The `pythondialog website
-<http://pythondialog.sourceforge.net/>`_ also has a very simple example that
+<https://pythondialog.sourceforge.io/>`_ also has a very simple example that
 can be used to get started.
 
 Once you are comfortable with the basics, you can study the :file:`demo.py`

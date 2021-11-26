@@ -113,9 +113,9 @@ generate the {cl!r} file from the Git log. Aborting.""".format(cl=ch_name)
           author_email="robb@acm.org",
           maintainer="Florent Rougon",
           maintainer_email="f.rougon@free.fr",
-          url="http://pythondialog.sourceforge.net/",
+          url="https://pythondialog.sourceforge.io/",
           project_urls={
-            "Documentation": "http://pythondialog.sourceforge.net/doc/",
+            "Documentation": "https://pythondialog.sourceforge.io/doc/",
             "SourceForge project page":
               "https://sourceforge.net/projects/pythondialog",
             "Git repository": "https://sourceforge.net/p/pythondialog/code/",
