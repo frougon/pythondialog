@@ -69,7 +69,7 @@ class VersionInfo(_VersionInfo):
 #: Version of pythondialog as a :class:`VersionInfo` instance.
 #:
 #: .. versionadded:: 2.14
-version_info = VersionInfo(3, 5, 2, None)
+version_info = VersionInfo(3, 5, 3, None)
 #: Version of pythondialog as a string.
 #:
 #: .. versionadded:: 2.12
