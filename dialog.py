@@ -3676,7 +3676,7 @@ by :program:`dialog`.
         Display nodes organized in a tree structure. Each node has a
         *tag*, an *item* text, a selected *status*, and a *depth* in
         the tree. Only the *item* texts are displayed in the widget;
-        *tag*\s are only used for the return value. Only one node can
+        *tag*\\ s are only used for the return value. Only one node can
         be selected at a given time, as for the :meth:`radiolist`
         widget.
 
