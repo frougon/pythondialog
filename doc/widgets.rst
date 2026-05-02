@@ -61,7 +61,7 @@ Text box
 Scroll box
 ^^^^^^^^^^
 
-.. Automethod:: Dialog.scrollbox
+.. automethod:: Dialog.scrollbox
 
 .. figure:: screenshots/scrollbox.png
    :align: center
